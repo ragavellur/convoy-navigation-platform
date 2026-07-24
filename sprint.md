@@ -25,9 +25,7 @@
 
 ### 🔄 In Progress
 
-- [ ] [TASK-007] Implement user registration (PocketBase auth) (FR-AUTH-01)
-- [ ] [TASK-008] Implement user login with session management (FR-AUTH-02)
-- [ ] [TASK-009] JWT token management & secure storage (FR-AUTH-04)
+(none)
 
 ### 📋 Backlog (remaining)
 
@@ -37,6 +35,9 @@
 
 ### ✅ Done
 
+- [x] [TASK-007] Implement user registration (PocketBase auth) (FR-AUTH-01)
+- [x] [TASK-008] Implement user login with session management (FR-AUTH-02)
+- [x] [TASK-009] JWT token management & secure storage (FR-AUTH-04)
 - [x] [TASK-003] Configure ESLint, Prettier, Husky (shared config)
 - [x] [TASK-002] Set up React + Vite + TypeScript web project (FR-WEB-01)
 - [x] [TASK-010] Integrate MapLibre GL JS into web project (FR-WEB-04)
