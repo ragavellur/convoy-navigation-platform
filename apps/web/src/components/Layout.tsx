@@ -1,5 +1,5 @@
 import { Outlet, Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../stores/AuthContext'
+import { useAuth } from '../hooks/useAuth'
 
 function Layout() {
   const { isAuthenticated, user, logout } = useAuth()

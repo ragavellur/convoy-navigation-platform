@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../stores/AuthContext'
+import { useAuth } from '../hooks/useAuth'
 
 function RegisterPage() {
   const [name, setName] = useState('')
@@ -26,7 +26,7 @@ function RegisterPage() {
     try {
       await register(email, password, name)
       navigate('/map')
-    } catch (err) {
+    } catch (_err) {
       setError('Registration failed. Email may already be in use.')
     } finally {
       setIsLoading(false)
@@ -42,10 +42,7 @@ function RegisterPage() {
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             Already have an account?{' '}
-            <Link
-              to="/login"
-              className="font-medium text-indigo-600 hover:text-indigo-500"
-            >
+            <Link to="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
               Sign in
             </Link>
           </p>

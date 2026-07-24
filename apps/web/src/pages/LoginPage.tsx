@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../stores/AuthContext'
+import { useAuth } from '../hooks/useAuth'
 
 function LoginPage() {
   const [email, setEmail] = useState('')
@@ -18,7 +18,7 @@ function LoginPage() {
     try {
       await login(email, password)
       navigate('/map')
-    } catch (err) {
+    } catch (_err) {
       setError('Invalid email or password')
     } finally {
       setIsLoading(false)
@@ -34,10 +34,7 @@ function LoginPage() {
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             Or{' '}
-            <Link
-              to="/register"
-              className="font-medium text-indigo-600 hover:text-indigo-500"
-            >
+            <Link to="/register" className="font-medium text-indigo-600 hover:text-indigo-500">
               create a new account
             </Link>
           </p>

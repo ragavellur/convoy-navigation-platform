@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile
     container_name: convoy-pocketbase
     ports:
-      - "${POCKETBASE_PORT:-8090}:8090"
+      - '${POCKETBASE_PORT:-8090}:8090'
     volumes:
       - pocketbase_data:/pb/pb_data
       - ./pb_migrations:/pb/pb_migrations
@@ -14,7 +14,7 @@ services:
       - POCKETBASE_ADMIN_EMAIL=${POCKETBASE_ADMIN_EMAIL:-admin@convoy.local}
       - POCKETBASE_ADMIN_PASSWORD=${POCKETBASE_ADMIN_PASSWORD:-admin123456}
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8090/_/"]
+      test: ['CMD', 'curl', '-f', 'http://localhost:8090/_/']
       interval: 30s
       timeout: 10s
       retries: 3
@@ -26,12 +26,12 @@ services:
     image: osrm/osrm-backend:latest
     container_name: convoy-osrm
     ports:
-      - "${OSRM_PORT:-5001}:5000"
+      - '${OSRM_PORT:-5001}:5000'
     volumes:
       - osrm_data:/data
     command: osrm-routed --algorithm mld /data/planet-latest.osrm
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      test: ['CMD', 'curl', '-f', 'http://localhost:5000/health']
       interval: 30s
       timeout: 10s
       retries: 3
@@ -43,7 +43,7 @@ services:
     image: mediagis/nominatim:4.4
     container_name: convoy-nominatim
     ports:
-      - "${NOMINATIM_PORT:-8080}:8080"
+      - '${NOMINATIM_PORT:-8080}:8080'
     volumes:
       - nominatim_data:/var/lib/postgresql/14/main
     environment:
@@ -57,7 +57,7 @@ services:
       - NOMINATIM_IMPORT_GB_POSTCODES=false
       - NOMINATIM_IMPORT_WIKIPEDIA_DATA=false
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/status"]
+      test: ['CMD', 'curl', '-f', 'http://localhost:8080/status']
       interval: 30s
       timeout: 10s
       retries: 3
@@ -69,12 +69,12 @@ services:
     image: redis:7-alpine
     container_name: convoy-redis
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - '${REDIS_PORT:-6379}:6379'
     volumes:
       - redis_data:/data
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-convoyredis123}
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-convoyredis123}", "ping"]
+      test: ['CMD', 'redis-cli', '-a', '${REDIS_PASSWORD:-convoyredis123}', 'ping']
       interval: 30s
       timeout: 10s
       retries: 3

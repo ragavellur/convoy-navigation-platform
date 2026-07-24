@@ -8,35 +8,180 @@
       "startDate": "2026-07-24",
       "endDate": "2026-08-07",
       "tasks": [
-        {"id": "TASK-000", "title": "Copy PRD document to project folder", "status": "done", "priority": "high"},
-        {"id": "TASK-000A", "title": "Create comprehensive project plan (PRD_analysis.md)", "status": "done", "priority": "high"},
-        {"id": "TASK-000B", "title": "Initialize git repository and configure user", "status": "done", "priority": "high"},
-        {"id": "TASK-000C", "title": "Create GitHub repository (public) and push code", "status": "done", "priority": "high"},
-        {"id": "TASK-000D", "title": "Enable GitHub Pages for sprint board", "status": "done", "priority": "high"},
-        {"id": "TASK-000E", "title": "Create sprint-board.html and sprint-data.json", "status": "done", "priority": "high"},
-        {"id": "TASK-000F", "title": "Update Agents.md with sprint tracking rules", "status": "done", "priority": "high"},
-        {"id": "TASK-001", "title": "Initialize monorepo structure (Turborepo) with apps/web, apps/mobile, packages/shared", "status": "done", "priority": "high"},
-        {"id": "TASK-005", "title": "Configure Docker Compose for all backend services", "status": "done", "priority": "high"},
-        {"id": "TASK-005A", "title": "Set up PocketBase Docker container with persistent volume", "status": "done", "priority": "high"},
-        {"id": "TASK-005B", "title": "Set up OSRM Docker container with map data volume", "status": "done", "priority": "high"},
-        {"id": "TASK-005C", "title": "Set up Nominatim Docker container with geocoding data", "status": "done", "priority": "high"},
-        {"id": "TASK-005D", "title": "Set up Redis Docker container for session caching", "status": "done", "priority": "medium"},
-        {"id": "TASK-005E", "title": "Configure Docker network isolation and health checks", "status": "done", "priority": "high"},
-        {"id": "TASK-005F", "title": "Create .env file with all environment variables", "status": "done", "priority": "medium"},
-        {"id": "TASK-006", "title": "Design database schema in PocketBase (convoys, members, telemetry, messages)", "status": "done", "priority": "high"},
-        {"id": "TASK-004", "title": "Set up PocketBase instance (auth + database + realtime)", "status": "done", "priority": "high"},
-        {"id": "TASK-002", "title": "Set up React + Vite + TypeScript web project (FR-WEB-01)", "status": "done", "priority": "high"},
-        {"id": "TASK-003", "title": "Configure ESLint, Prettier, Husky (shared config)", "status": "in-progress", "priority": "medium"},
-        {"id": "TASK-007", "title": "Implement user registration (PocketBase auth) (FR-AUTH-01)", "status": "backlog", "priority": "high"},
-        {"id": "TASK-008", "title": "Implement user login with session management (FR-AUTH-02)", "status": "backlog", "priority": "high"},
-        {"id": "TASK-009", "title": "JWT token management & secure storage (FR-AUTH-04)", "status": "backlog", "priority": "high"},
-        {"id": "TASK-010", "title": "Integrate MapLibre GL JS into web project (FR-WEB-04)", "status": "done", "priority": "high"},
-        {"id": "TASK-011", "title": "Self-host Nominatim geocoder via Docker", "status": "done", "priority": "medium"},
-        {"id": "TASK-012", "title": "Self-host OSRM routing engine via Docker", "status": "done", "priority": "medium"},
-        {"id": "TASK-013", "title": "Create basic map page with zoom/pan controls", "status": "done", "priority": "high"},
-        {"id": "TASK-014", "title": "Create PWA manifest.json with icons (FR-WEB-02)", "status": "backlog", "priority": "medium"},
-        {"id": "TASK-015", "title": "Set up shared API client library (packages/shared)", "status": "backlog", "priority": "medium"},
-        {"id": "TASK-016", "title": "Create responsive layout shell (desktop/tablet/mobile) (FR-WEB-05)", "status": "backlog", "priority": "medium"}
+        {
+          "id": "TASK-000",
+          "title": "Copy PRD document to project folder",
+          "status": "done",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-000A",
+          "title": "Create comprehensive project plan (PRD_analysis.md)",
+          "status": "done",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-000B",
+          "title": "Initialize git repository and configure user",
+          "status": "done",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-000C",
+          "title": "Create GitHub repository (public) and push code",
+          "status": "done",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-000D",
+          "title": "Enable GitHub Pages for sprint board",
+          "status": "done",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-000E",
+          "title": "Create sprint-board.html and sprint-data.json",
+          "status": "done",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-000F",
+          "title": "Update Agents.md with sprint tracking rules",
+          "status": "done",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-001",
+          "title": "Initialize monorepo structure (Turborepo) with apps/web, apps/mobile, packages/shared",
+          "status": "done",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-005",
+          "title": "Configure Docker Compose for all backend services",
+          "status": "done",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-005A",
+          "title": "Set up PocketBase Docker container with persistent volume",
+          "status": "done",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-005B",
+          "title": "Set up OSRM Docker container with map data volume",
+          "status": "done",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-005C",
+          "title": "Set up Nominatim Docker container with geocoding data",
+          "status": "done",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-005D",
+          "title": "Set up Redis Docker container for session caching",
+          "status": "done",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-005E",
+          "title": "Configure Docker network isolation and health checks",
+          "status": "done",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-005F",
+          "title": "Create .env file with all environment variables",
+          "status": "done",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-006",
+          "title": "Design database schema in PocketBase (convoys, members, telemetry, messages)",
+          "status": "done",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-004",
+          "title": "Set up PocketBase instance (auth + database + realtime)",
+          "status": "done",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-002",
+          "title": "Set up React + Vite + TypeScript web project (FR-WEB-01)",
+          "status": "done",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-003",
+          "title": "Configure ESLint, Prettier, Husky (shared config)",
+          "status": "in-progress",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-007",
+          "title": "Implement user registration (PocketBase auth) (FR-AUTH-01)",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-008",
+          "title": "Implement user login with session management (FR-AUTH-02)",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-009",
+          "title": "JWT token management & secure storage (FR-AUTH-04)",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-010",
+          "title": "Integrate MapLibre GL JS into web project (FR-WEB-04)",
+          "status": "done",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-011",
+          "title": "Self-host Nominatim geocoder via Docker",
+          "status": "done",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-012",
+          "title": "Self-host OSRM routing engine via Docker",
+          "status": "done",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-013",
+          "title": "Create basic map page with zoom/pan controls",
+          "status": "done",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-014",
+          "title": "Create PWA manifest.json with icons (FR-WEB-02)",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-015",
+          "title": "Set up shared API client library (packages/shared)",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-016",
+          "title": "Create responsive layout shell (desktop/tablet/mobile) (FR-WEB-05)",
+          "status": "backlog",
+          "priority": "medium"
+        }
       ]
     },
     {
@@ -46,16 +191,66 @@
       "startDate": "2026-08-07",
       "endDate": "2026-08-21",
       "tasks": [
-        {"id": "TASK-017", "title": "Implement place autocomplete search using Nominatim (FR-MAP-02)", "status": "backlog", "priority": "high"},
-        {"id": "TASK-018", "title": "Build search UI with auto-suggest dropdown", "status": "backlog", "priority": "high"},
-        {"id": "TASK-019", "title": "Implement route calculation via OSRM API (FR-MAP-03)", "status": "backlog", "priority": "high"},
-        {"id": "TASK-020", "title": "Build route polyline renderer on MapLibre (FR-MAP-04)", "status": "backlog", "priority": "high"},
-        {"id": "TASK-021", "title": "Add traffic condition visual overlay to route segments (FR-MAP-07)", "status": "backlog", "priority": "medium"},
-        {"id": "TASK-022", "title": "Build off-route detection and recalculation logic (FR-MAP-06)", "status": "backlog", "priority": "high"},
-        {"id": "TASK-023", "title": "Add route summary panel (distance, ETA, time)", "status": "backlog", "priority": "medium"},
-        {"id": "TASK-024", "title": "Implement route alternatives selection", "status": "backlog", "priority": "low"},
-        {"id": "TASK-025", "title": "Cache frequently used routes in PocketBase", "status": "backlog", "priority": "low"},
-        {"id": "TASK-026", "title": "Build desktop sidebar layout (map + roster side-by-side) (FR-WEB-09)", "status": "backlog", "priority": "medium"}
+        {
+          "id": "TASK-017",
+          "title": "Implement place autocomplete search using Nominatim (FR-MAP-02)",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-018",
+          "title": "Build search UI with auto-suggest dropdown",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-019",
+          "title": "Implement route calculation via OSRM API (FR-MAP-03)",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-020",
+          "title": "Build route polyline renderer on MapLibre (FR-MAP-04)",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-021",
+          "title": "Add traffic condition visual overlay to route segments (FR-MAP-07)",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-022",
+          "title": "Build off-route detection and recalculation logic (FR-MAP-06)",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-023",
+          "title": "Add route summary panel (distance, ETA, time)",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-024",
+          "title": "Implement route alternatives selection",
+          "status": "backlog",
+          "priority": "low"
+        },
+        {
+          "id": "TASK-025",
+          "title": "Cache frequently used routes in PocketBase",
+          "status": "backlog",
+          "priority": "low"
+        },
+        {
+          "id": "TASK-026",
+          "title": "Build desktop sidebar layout (map + roster side-by-side) (FR-WEB-09)",
+          "status": "backlog",
+          "priority": "medium"
+        }
       ]
     },
     {
@@ -65,18 +260,78 @@
       "startDate": "2026-08-21",
       "endDate": "2026-09-04",
       "tasks": [
-        {"id": "TASK-027", "title": "Implement Create Convoy API (PocketBase collection) (FR-CNV-01)", "status": "backlog", "priority": "high"},
-        {"id": "TASK-028", "title": "Generate unique trip_id with security tokens", "status": "backlog", "priority": "high"},
-        {"id": "TASK-029", "title": "Build deep link generation system (FR-CNV-02)", "status": "backlog", "priority": "high"},
-        {"id": "TASK-030", "title": "Implement deep link parsing & validation (FR-CNV-03)", "status": "backlog", "priority": "high"},
-        {"id": "TASK-031", "title": "Build convoy join flow - web redirect", "status": "backlog", "priority": "high"},
-        {"id": "TASK-032", "title": "Implement vehicle type selection UI (FR-CNV-04)", "status": "backlog", "priority": "medium"},
-        {"id": "TASK-033", "title": "Build convoy host dashboard (FR-CNV-05)", "status": "backlog", "priority": "medium"},
-        {"id": "TASK-034", "title": "Implement host controls (remove member, end session)", "status": "backlog", "priority": "medium"},
-        {"id": "TASK-035", "title": "Build session state management (active/inactive/cleanup)", "status": "backlog", "priority": "high"},
-        {"id": "TASK-036", "title": "Implement convoy roster data model", "status": "backlog", "priority": "medium"},
-        {"id": "TASK-037", "title": "Add deep link sharing via WhatsApp/SMS/Email", "status": "backlog", "priority": "low"},
-        {"id": "TASK-038", "title": "Build convoy invite notification system", "status": "backlog", "priority": "low"}
+        {
+          "id": "TASK-027",
+          "title": "Implement Create Convoy API (PocketBase collection) (FR-CNV-01)",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-028",
+          "title": "Generate unique trip_id with security tokens",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-029",
+          "title": "Build deep link generation system (FR-CNV-02)",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-030",
+          "title": "Implement deep link parsing & validation (FR-CNV-03)",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-031",
+          "title": "Build convoy join flow - web redirect",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-032",
+          "title": "Implement vehicle type selection UI (FR-CNV-04)",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-033",
+          "title": "Build convoy host dashboard (FR-CNV-05)",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-034",
+          "title": "Implement host controls (remove member, end session)",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-035",
+          "title": "Build session state management (active/inactive/cleanup)",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-036",
+          "title": "Implement convoy roster data model",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-037",
+          "title": "Add deep link sharing via WhatsApp/SMS/Email",
+          "status": "backlog",
+          "priority": "low"
+        },
+        {
+          "id": "TASK-038",
+          "title": "Build convoy invite notification system",
+          "status": "backlog",
+          "priority": "low"
+        }
       ]
     },
     {
@@ -86,16 +341,66 @@
       "startDate": "2026-09-04",
       "endDate": "2026-09-18",
       "tasks": [
-        {"id": "TASK-039", "title": "Set up PocketBase Realtime subscriptions", "status": "backlog", "priority": "high"},
-        {"id": "TASK-040", "title": "Implement browser Geolocation API streaming (FR-GPS-01)", "status": "backlog", "priority": "high"},
-        {"id": "TASK-041", "title": "Build adaptive polling logic (FR-GPS-02)", "status": "backlog", "priority": "high"},
-        {"id": "TASK-042", "title": "Create custom map markers for vehicle types (FR-GPS-03)", "status": "backlog", "priority": "medium"},
-        {"id": "TASK-043", "title": "Implement marker LERP interpolation (FR-GPS-04)", "status": "backlog", "priority": "high"},
-        {"id": "TASK-044", "title": "Add dead-reckoning for smooth transitions", "status": "backlog", "priority": "medium"},
-        {"id": "TASK-045", "title": "Build heading & velocity vector display (FR-GPS-05)", "status": "backlog", "priority": "low"},
-        {"id": "TASK-046", "title": "Implement PocketBase Realtime for position broadcast (FR-GPS-06)", "status": "backlog", "priority": "high"},
-        {"id": "TASK-047", "title": "Add position update throttling & debouncing", "status": "backlog", "priority": "medium"},
-        {"id": "TASK-048", "title": "Build location permission handling flow (browser prompt)", "status": "backlog", "priority": "medium"}
+        {
+          "id": "TASK-039",
+          "title": "Set up PocketBase Realtime subscriptions",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-040",
+          "title": "Implement browser Geolocation API streaming (FR-GPS-01)",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-041",
+          "title": "Build adaptive polling logic (FR-GPS-02)",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-042",
+          "title": "Create custom map markers for vehicle types (FR-GPS-03)",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-043",
+          "title": "Implement marker LERP interpolation (FR-GPS-04)",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-044",
+          "title": "Add dead-reckoning for smooth transitions",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-045",
+          "title": "Build heading & velocity vector display (FR-GPS-05)",
+          "status": "backlog",
+          "priority": "low"
+        },
+        {
+          "id": "TASK-046",
+          "title": "Implement PocketBase Realtime for position broadcast (FR-GPS-06)",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-047",
+          "title": "Add position update throttling & debouncing",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-048",
+          "title": "Build location permission handling flow (browser prompt)",
+          "status": "backlog",
+          "priority": "medium"
+        }
       ]
     },
     {
@@ -105,17 +410,72 @@
       "startDate": "2026-09-18",
       "endDate": "2026-10-02",
       "tasks": [
-        {"id": "TASK-049", "title": "Build vehicle roster sidebar component (FR-ROS-01)", "status": "backlog", "priority": "medium"},
-        {"id": "TASK-050", "title": "Implement expandable/collapsible drawer UI", "status": "backlog", "priority": "medium"},
-        {"id": "TASK-051", "title": "Add vehicle type classification display (FR-ROS-02)", "status": "backlog", "priority": "low"},
-        {"id": "TASK-052", "title": "Build status indicators (In-Transit/Stopped/Offline) (FR-ROS-03)", "status": "backlog", "priority": "medium"},
-        {"id": "TASK-053", "title": "Add speed & ETA display per member (FR-ROS-04)", "status": "backlog", "priority": "low"},
-        {"id": "TASK-054", "title": "Implement Focus on Member map interaction (FR-ROS-05)", "status": "backlog", "priority": "low"},
-        {"id": "TASK-055", "title": "Build convoy member avatar & info cards", "status": "backlog", "priority": "low"},
-        {"id": "TASK-056", "title": "Add member count badge on roster toggle", "status": "backlog", "priority": "low"},
-        {"id": "TASK-057", "title": "Implement real-time roster updates via PocketBase Realtime", "status": "backlog", "priority": "medium"},
-        {"id": "TASK-058", "title": "Touch-optimized gestures for tablet/mobile web (FR-WEB-10)", "status": "backlog", "priority": "low"},
-        {"id": "TASK-059", "title": "Add dark mode support for map & UI", "status": "backlog", "priority": "low"}
+        {
+          "id": "TASK-049",
+          "title": "Build vehicle roster sidebar component (FR-ROS-01)",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-050",
+          "title": "Implement expandable/collapsible drawer UI",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-051",
+          "title": "Add vehicle type classification display (FR-ROS-02)",
+          "status": "backlog",
+          "priority": "low"
+        },
+        {
+          "id": "TASK-052",
+          "title": "Build status indicators (In-Transit/Stopped/Offline) (FR-ROS-03)",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-053",
+          "title": "Add speed & ETA display per member (FR-ROS-04)",
+          "status": "backlog",
+          "priority": "low"
+        },
+        {
+          "id": "TASK-054",
+          "title": "Implement Focus on Member map interaction (FR-ROS-05)",
+          "status": "backlog",
+          "priority": "low"
+        },
+        {
+          "id": "TASK-055",
+          "title": "Build convoy member avatar & info cards",
+          "status": "backlog",
+          "priority": "low"
+        },
+        {
+          "id": "TASK-056",
+          "title": "Add member count badge on roster toggle",
+          "status": "backlog",
+          "priority": "low"
+        },
+        {
+          "id": "TASK-057",
+          "title": "Implement real-time roster updates via PocketBase Realtime",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-058",
+          "title": "Touch-optimized gestures for tablet/mobile web (FR-WEB-10)",
+          "status": "backlog",
+          "priority": "low"
+        },
+        {
+          "id": "TASK-059",
+          "title": "Add dark mode support for map & UI",
+          "status": "backlog",
+          "priority": "low"
+        }
       ]
     },
     {
@@ -125,20 +485,90 @@
       "startDate": "2026-10-02",
       "endDate": "2026-10-16",
       "tasks": [
-        {"id": "TASK-060", "title": "Set up mediasoup SFU server", "status": "backlog", "priority": "high"},
-        {"id": "TASK-061", "title": "Implement WebRTC voice channel (FR-VCE-01)", "status": "backlog", "priority": "high"},
-        {"id": "TASK-062", "title": "Build voice room join/leave logic", "status": "backlog", "priority": "high"},
-        {"id": "TASK-063", "title": "Implement Push-to-Talk broadcast system (FR-VCE-02)", "status": "backlog", "priority": "high"},
-        {"id": "TASK-064", "title": "Build PTT UI button with hold-to-talk", "status": "backlog", "priority": "medium"},
-        {"id": "TASK-065", "title": "Implement volume reduction (80%) for non-speakers", "status": "backlog", "priority": "medium"},
-        {"id": "TASK-066", "title": "Add Opus codec with adaptive bitrate (FR-VCE-03)", "status": "backlog", "priority": "high"},
-        {"id": "TASK-067", "title": "Implement voice priority flag signaling (FR-VCE-04)", "status": "backlog", "priority": "medium"},
-        {"id": "TASK-068", "title": "Build 1-on-1 text chat (FR-CHT-01)", "status": "backlog", "priority": "medium"},
-        {"id": "TASK-069", "title": "Build group text chat room (FR-CHT-02)", "status": "backlog", "priority": "high"},
-        {"id": "TASK-070", "title": "Add chat message persistence to PocketBase", "status": "backlog", "priority": "medium"},
-        {"id": "TASK-071", "title": "Build chat UI with message bubbles & timestamps", "status": "backlog", "priority": "medium"},
-        {"id": "TASK-072", "title": "Add typing indicators & read receipts", "status": "backlog", "priority": "low"},
-        {"id": "TASK-073", "title": "Implement chat notification sounds", "status": "backlog", "priority": "low"}
+        {
+          "id": "TASK-060",
+          "title": "Set up mediasoup SFU server",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-061",
+          "title": "Implement WebRTC voice channel (FR-VCE-01)",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-062",
+          "title": "Build voice room join/leave logic",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-063",
+          "title": "Implement Push-to-Talk broadcast system (FR-VCE-02)",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-064",
+          "title": "Build PTT UI button with hold-to-talk",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-065",
+          "title": "Implement volume reduction (80%) for non-speakers",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-066",
+          "title": "Add Opus codec with adaptive bitrate (FR-VCE-03)",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-067",
+          "title": "Implement voice priority flag signaling (FR-VCE-04)",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-068",
+          "title": "Build 1-on-1 text chat (FR-CHT-01)",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-069",
+          "title": "Build group text chat room (FR-CHT-02)",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-070",
+          "title": "Add chat message persistence to PocketBase",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-071",
+          "title": "Build chat UI with message bubbles & timestamps",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-072",
+          "title": "Add typing indicators & read receipts",
+          "status": "backlog",
+          "priority": "low"
+        },
+        {
+          "id": "TASK-073",
+          "title": "Implement chat notification sounds",
+          "status": "backlog",
+          "priority": "low"
+        }
       ]
     },
     {
@@ -148,18 +578,78 @@
       "startDate": "2026-10-16",
       "endDate": "2026-10-30",
       "tasks": [
-        {"id": "TASK-074", "title": "Configure Service Worker with Workbox (FR-WEB-03)", "status": "backlog", "priority": "high"},
-        {"id": "TASK-075", "title": "Implement map tile caching strategy (IndexedDB + SW) (FR-WEB-08)", "status": "backlog", "priority": "high"},
-        {"id": "TASK-076", "title": "Implement offline mode - view cached convoy state (FR-WEB-08)", "status": "backlog", "priority": "high"},
-        {"id": "TASK-077", "title": "Implement background sync for location updates (FR-WEB-03)", "status": "backlog", "priority": "medium"},
-        {"id": "TASK-078", "title": "Set up Web Push Notifications (FR-WEB-07)", "status": "backlog", "priority": "medium"},
-        {"id": "TASK-079", "title": "Implement push notification permission flow", "status": "backlog", "priority": "medium"},
-        {"id": "TASK-080", "title": "Create PWA install prompt UI (beforeinstallprompt)", "status": "backlog", "priority": "medium"},
-        {"id": "TASK-081", "title": "Add service worker update notification", "status": "backlog", "priority": "low"},
-        {"id": "TASK-082", "title": "Optimize PWA Lighthouse score (>90 target)", "status": "backlog", "priority": "high"},
-        {"id": "TASK-083", "title": "Test PWA on Chrome, Safari, Firefox, Edge", "status": "backlog", "priority": "high"},
-        {"id": "TASK-084", "title": "Implement web app caching for static assets", "status": "backlog", "priority": "medium"},
-        {"id": "TASK-085", "title": "Add PWA meta tags and Open Graph tags", "status": "backlog", "priority": "low"}
+        {
+          "id": "TASK-074",
+          "title": "Configure Service Worker with Workbox (FR-WEB-03)",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-075",
+          "title": "Implement map tile caching strategy (IndexedDB + SW) (FR-WEB-08)",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-076",
+          "title": "Implement offline mode - view cached convoy state (FR-WEB-08)",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-077",
+          "title": "Implement background sync for location updates (FR-WEB-03)",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-078",
+          "title": "Set up Web Push Notifications (FR-WEB-07)",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-079",
+          "title": "Implement push notification permission flow",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-080",
+          "title": "Create PWA install prompt UI (beforeinstallprompt)",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-081",
+          "title": "Add service worker update notification",
+          "status": "backlog",
+          "priority": "low"
+        },
+        {
+          "id": "TASK-082",
+          "title": "Optimize PWA Lighthouse score (>90 target)",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-083",
+          "title": "Test PWA on Chrome, Safari, Firefox, Edge",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-084",
+          "title": "Implement web app caching for static assets",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-085",
+          "title": "Add PWA meta tags and Open Graph tags",
+          "status": "backlog",
+          "priority": "low"
+        }
       ]
     },
     {
@@ -169,19 +659,84 @@
       "startDate": "2026-10-30",
       "endDate": "2026-11-13",
       "tasks": [
-        {"id": "TASK-086", "title": "Set up React Native / Expo project for Android", "status": "backlog", "priority": "high"},
-        {"id": "TASK-087", "title": "Configure Android build (EAS Build)", "status": "backlog", "priority": "high"},
-        {"id": "TASK-088", "title": "Integrate MapLibre GL Native SDK", "status": "backlog", "priority": "high"},
-        {"id": "TASK-089", "title": "Port authentication flow to React Native", "status": "backlog", "priority": "high"},
-        {"id": "TASK-090", "title": "Port map screen to React Native", "status": "backlog", "priority": "high"},
-        {"id": "TASK-091", "title": "Implement native GPS background service", "status": "backlog", "priority": "high"},
-        {"id": "TASK-092", "title": "Port adaptive polling logic to native", "status": "backlog", "priority": "medium"},
-        {"id": "TASK-093", "title": "Port convoy join/create flow to mobile", "status": "backlog", "priority": "high"},
-        {"id": "TASK-094", "title": "Implement deep link handling (Android intent filters)", "status": "backlog", "priority": "high"},
-        {"id": "TASK-095", "title": "Port vehicle roster sidebar to mobile", "status": "backlog", "priority": "medium"},
-        {"id": "TASK-096", "title": "Implement turn-by-turn navigation with TTS (FR-MAP-05)", "status": "backlog", "priority": "medium"},
-        {"id": "TASK-097", "title": "Port chat UI to React Native", "status": "backlog", "priority": "medium"},
-        {"id": "TASK-098", "title": "Implement push notifications (FCM)", "status": "backlog", "priority": "high"}
+        {
+          "id": "TASK-086",
+          "title": "Set up React Native / Expo project for Android",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-087",
+          "title": "Configure Android build (EAS Build)",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-088",
+          "title": "Integrate MapLibre GL Native SDK",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-089",
+          "title": "Port authentication flow to React Native",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-090",
+          "title": "Port map screen to React Native",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-091",
+          "title": "Implement native GPS background service",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-092",
+          "title": "Port adaptive polling logic to native",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-093",
+          "title": "Port convoy join/create flow to mobile",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-094",
+          "title": "Implement deep link handling (Android intent filters)",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-095",
+          "title": "Port vehicle roster sidebar to mobile",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-096",
+          "title": "Implement turn-by-turn navigation with TTS (FR-MAP-05)",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-097",
+          "title": "Port chat UI to React Native",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-098",
+          "title": "Implement push notifications (FCM)",
+          "status": "backlog",
+          "priority": "high"
+        }
       ]
     },
     {
@@ -191,13 +746,48 @@
       "startDate": "2026-11-13",
       "endDate": "2026-11-27",
       "tasks": [
-        {"id": "TASK-099", "title": "Configure iOS build (EAS Build)", "status": "backlog", "priority": "high"},
-        {"id": "TASK-100", "title": "Implement iOS-specific deep links (Universal Links)", "status": "backlog", "priority": "high"},
-        {"id": "TASK-101", "title": "Implement iOS background location mode", "status": "backlog", "priority": "high"},
-        {"id": "TASK-102", "title": "Implement iOS push notifications (APNs)", "status": "backlog", "priority": "high"},
-        {"id": "TASK-103", "title": "Test iOS-specific UI (safe area, notch, dynamic island)", "status": "backlog", "priority": "medium"},
-        {"id": "TASK-104", "title": "iOS App Store submission preparation", "status": "backlog", "priority": "medium"},
-        {"id": "TASK-105", "title": "Test iOS WebRTC compatibility", "status": "backlog", "priority": "high"}
+        {
+          "id": "TASK-099",
+          "title": "Configure iOS build (EAS Build)",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-100",
+          "title": "Implement iOS-specific deep links (Universal Links)",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-101",
+          "title": "Implement iOS background location mode",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-102",
+          "title": "Implement iOS push notifications (APNs)",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-103",
+          "title": "Test iOS-specific UI (safe area, notch, dynamic island)",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-104",
+          "title": "iOS App Store submission preparation",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-105",
+          "title": "Test iOS WebRTC compatibility",
+          "status": "backlog",
+          "priority": "high"
+        }
       ]
     },
     {
@@ -207,19 +797,84 @@
       "startDate": "2026-11-27",
       "endDate": "2026-12-11",
       "tasks": [
-        {"id": "TASK-106", "title": "Optimize battery consumption across all states", "status": "backlog", "priority": "high"},
-        {"id": "TASK-107", "title": "Implement location update batching", "status": "backlog", "priority": "medium"},
-        {"id": "TASK-108", "title": "Write unit tests for all services (>85% coverage)", "status": "backlog", "priority": "high"},
-        {"id": "TASK-109", "title": "Write integration tests for API endpoints", "status": "backlog", "priority": "high"},
-        {"id": "TASK-110", "title": "Write E2E tests for web (Playwright)", "status": "backlog", "priority": "high"},
-        {"id": "TASK-111", "title": "Write E2E tests for Android (Detox)", "status": "backlog", "priority": "medium"},
-        {"id": "TASK-112", "title": "Performance profiling & optimization", "status": "backlog", "priority": "medium"},
-        {"id": "TASK-113", "title": "Add error boundaries & crash reporting (Sentry)", "status": "backlog", "priority": "medium"},
-        {"id": "TASK-114", "title": "Implement analytics tracking", "status": "backlog", "priority": "low"},
-        {"id": "TASK-115", "title": "Accessibility audit (WCAG 2.1 AA) - web", "status": "backlog", "priority": "medium"},
-        {"id": "TASK-116", "title": "Security audit (OWASP Mobile + Web)", "status": "backlog", "priority": "high"},
-        {"id": "TASK-117", "title": "Load testing for PocketBase Realtime", "status": "backlog", "priority": "medium"},
-        {"id": "TASK-118", "title": "API documentation (OpenAPI/Swagger)", "status": "backlog", "priority": "low"}
+        {
+          "id": "TASK-106",
+          "title": "Optimize battery consumption across all states",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-107",
+          "title": "Implement location update batching",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-108",
+          "title": "Write unit tests for all services (>85% coverage)",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-109",
+          "title": "Write integration tests for API endpoints",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-110",
+          "title": "Write E2E tests for web (Playwright)",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-111",
+          "title": "Write E2E tests for Android (Detox)",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-112",
+          "title": "Performance profiling & optimization",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-113",
+          "title": "Add error boundaries & crash reporting (Sentry)",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-114",
+          "title": "Implement analytics tracking",
+          "status": "backlog",
+          "priority": "low"
+        },
+        {
+          "id": "TASK-115",
+          "title": "Accessibility audit (WCAG 2.1 AA) - web",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-116",
+          "title": "Security audit (OWASP Mobile + Web)",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-117",
+          "title": "Load testing for PocketBase Realtime",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-118",
+          "title": "API documentation (OpenAPI/Swagger)",
+          "status": "backlog",
+          "priority": "low"
+        }
       ]
     },
     {
@@ -229,20 +884,90 @@
       "startDate": "2026-12-11",
       "endDate": "2026-12-18",
       "tasks": [
-        {"id": "TASK-119", "title": "Set up CI/CD pipeline (GitHub Actions)", "status": "backlog", "priority": "high"},
-        {"id": "TASK-120", "title": "Configure production Docker images", "status": "backlog", "priority": "high"},
-        {"id": "TASK-121", "title": "Set up Docker Swarm / K3s orchestration", "status": "backlog", "priority": "medium"},
-        {"id": "TASK-122", "title": "Configure production PocketBase instance", "status": "backlog", "priority": "high"},
-        {"id": "TASK-123", "title": "Set up Redis for session caching", "status": "backlog", "priority": "medium"},
-        {"id": "TASK-124", "title": "Configure CDN for map tiles", "status": "backlog", "priority": "medium"},
-        {"id": "TASK-125", "title": "Set up monitoring & alerting (Grafana/Prometheus)", "status": "backlog", "priority": "high"},
-        {"id": "TASK-126", "title": "Configure logging aggregation", "status": "backlog", "priority": "medium"},
-        {"id": "TASK-127", "title": "Set up staging environment", "status": "backlog", "priority": "high"},
-        {"id": "TASK-128", "title": "Perform staging validation", "status": "backlog", "priority": "high"},
-        {"id": "TASK-129", "title": "Deploy web PWA to production (Vercel/Cloudflare)", "status": "backlog", "priority": "high"},
-        {"id": "TASK-130", "title": "Submit Android app to Google Play", "status": "backlog", "priority": "high"},
-        {"id": "TASK-131", "title": "Production deployment & smoke testing", "status": "backlog", "priority": "high"},
-        {"id": "TASK-132", "title": "Post-launch monitoring setup", "status": "backlog", "priority": "medium"}
+        {
+          "id": "TASK-119",
+          "title": "Set up CI/CD pipeline (GitHub Actions)",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-120",
+          "title": "Configure production Docker images",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-121",
+          "title": "Set up Docker Swarm / K3s orchestration",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-122",
+          "title": "Configure production PocketBase instance",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-123",
+          "title": "Set up Redis for session caching",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-124",
+          "title": "Configure CDN for map tiles",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-125",
+          "title": "Set up monitoring & alerting (Grafana/Prometheus)",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-126",
+          "title": "Configure logging aggregation",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-127",
+          "title": "Set up staging environment",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-128",
+          "title": "Perform staging validation",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-129",
+          "title": "Deploy web PWA to production (Vercel/Cloudflare)",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-130",
+          "title": "Submit Android app to Google Play",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-131",
+          "title": "Production deployment & smoke testing",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-132",
+          "title": "Post-launch monitoring setup",
+          "status": "backlog",
+          "priority": "medium"
+        }
       ]
     }
   ]

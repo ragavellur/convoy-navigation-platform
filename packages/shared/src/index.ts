@@ -1,38 +1,38 @@
 export interface User {
-  id: string;
-  name: string;
-  email: string;
-  avatar?: string;
+  id: string
+  name: string
+  email: string
+  avatar?: string
 }
 
 export interface Convoy {
-  id: string;
-  hostUserId: string;
+  id: string
+  hostUserId: string
   destination: {
-    lat: number;
-    lng: number;
-    name: string;
-  };
-  isActive: boolean;
-  createdAt: Date;
+    lat: number
+    lng: number
+    name: string
+  }
+  isActive: boolean
+  createdAt: Date
 }
 
 export interface Vehicle {
-  id: string;
-  convoyId: string;
-  type: 'SUV' | 'Sedan' | 'Motorcycle' | 'Passenger';
-  label: string;
-  occupants: User[];
+  id: string
+  convoyId: string
+  type: 'SUV' | 'Sedan' | 'Motorcycle' | 'Passenger'
+  label: string
+  occupants: User[]
 }
 
 export interface Telemetry {
-  userId: string;
-  convoyId: string;
+  userId: string
+  convoyId: string
   position: {
-    lat: number;
-    lng: number;
-  };
-  speed: number;
-  heading: number;
-  lastUpdated: Date;
+    lat: number
+    lng: number
+  }
+  speed: number
+  heading: number
+  lastUpdated: Date
 }

@@ -12,6 +12,7 @@
 ## Sprint 1: Web Foundation & Core (Week 1-2)
 
 ### 📌 Backlog
+
 - [x] [TASK-005] Configure Docker Compose for all backend services
 - [x] [TASK-005A] Set up PocketBase Docker container with persistent volume
 - [x] [TASK-005B] Set up OSRM Docker container with map data volume
@@ -23,9 +24,11 @@
 - [x] [TASK-004] Set up PocketBase instance (auth + database + realtime)
 
 ### 🔄 In Progress
+
 - [ ] [TASK-003] Configure ESLint, Prettier, Husky (shared config)
 
 ### 📋 Backlog (remaining)
+
 - [ ] [TASK-007] Implement user registration (PocketBase auth) (FR-AUTH-01)
 - [ ] [TASK-008] Implement user login with session management (FR-AUTH-02)
 - [ ] [TASK-009] JWT token management & secure storage (FR-AUTH-04)
@@ -34,6 +37,7 @@
 - [ ] [TASK-016] Create responsive layout shell (desktop/tablet/mobile) (FR-WEB-05)
 
 ### ✅ Done
+
 - [x] [TASK-002] Set up React + Vite + TypeScript web project (FR-WEB-01)
 - [x] [TASK-010] Integrate MapLibre GL JS into web project (FR-WEB-04)
 - [x] [TASK-011] Self-host Nominatim geocoder via Docker
@@ -53,6 +57,7 @@
 ## Sprint 2: Web Navigation & Search (Week 3-4)
 
 ### 📌 Backlog
+
 - [ ] [TASK-017] Implement place autocomplete search using Nominatim (FR-MAP-02)
 - [ ] [TASK-018] Build search UI with auto-suggest dropdown
 - [ ] [TASK-019] Implement route calculation via OSRM API (FR-MAP-03)
@@ -73,6 +78,7 @@
 ## Sprint 3: Web Convoy Sessions (Week 5-6)
 
 ### 📌 Backlog
+
 - [ ] [TASK-027] Implement "Create Convoy" API (PocketBase collection) (FR-CNV-01)
 - [ ] [TASK-028] Generate unique trip_id with security tokens
 - [ ] [TASK-029] Build deep link generation system (FR-CNV-02)
@@ -95,6 +101,7 @@
 ## Sprint 4: Web Real-Time Tracking (Week 7-8)
 
 ### 📌 Backlog
+
 - [ ] [TASK-039] Set up PocketBase Realtime subscriptions
 - [ ] [TASK-040] Implement browser Geolocation API streaming (FR-GPS-01)
 - [ ] [TASK-041] Build adaptive polling logic (FR-GPS-02):
@@ -118,6 +125,7 @@
 ## Sprint 5: Web UI & Roster (Week 9-10)
 
 ### 📌 Backlog
+
 - [ ] [TASK-049] Build vehicle roster sidebar component (FR-ROS-01)
 - [ ] [TASK-050] Implement expandable/collapsible drawer UI
 - [ ] [TASK-051] Add vehicle type classification display (FR-ROS-02)
@@ -139,6 +147,7 @@
 ## Sprint 6: Web Communication Module (Week 11-12)
 
 ### 📌 Backlog
+
 - [ ] [TASK-060] Set up mediasoup SFU server
 - [ ] [TASK-061] Implement WebRTC voice channel (FR-VCE-01)
 - [ ] [TASK-062] Build voice room join/leave logic
@@ -163,6 +172,7 @@
 ## Sprint 7: Web PWA Polish (Week 13-14)
 
 ### 📌 Backlog
+
 - [ ] [TASK-074] Configure Service Worker with Workbox (FR-WEB-03)
 - [ ] [TASK-075] Implement map tile caching strategy (IndexedDB + SW) (FR-WEB-08)
 - [ ] [TASK-076] Implement offline mode - view cached convoy state (FR-WEB-08)
@@ -185,6 +195,7 @@
 ## Sprint 8: Android Foundation (Week 15-16)
 
 ### 📌 Backlog
+
 - [ ] [TASK-086] Set up React Native / Expo project for Android
 - [ ] [TASK-087] Configure Android build (EAS Build)
 - [ ] [TASK-088] Integrate MapLibre GL Native SDK
@@ -208,6 +219,7 @@
 ## Sprint 9: iOS Foundation (Week 17-18)
 
 ### 📌 Backlog
+
 - [ ] [TASK-099] Configure iOS build (EAS Build)
 - [ ] [TASK-100] Implement iOS-specific deep links (Universal Links)
 - [ ] [TASK-101] Implement iOS background location mode
@@ -225,6 +237,7 @@
 ## Sprint 10: Polish & Testing (Week 19-20)
 
 ### 📌 Backlog
+
 - [ ] [TASK-106] Optimize battery consumption across all states
 - [ ] [TASK-107] Implement location update batching
 - [ ] [TASK-108] Write unit tests for all services (>85% coverage)
@@ -248,6 +261,7 @@
 ## Sprint 11: Deploy & Launch (Week 21)
 
 ### 📌 Backlog
+
 - [ ] [TASK-119] Set up CI/CD pipeline (GitHub Actions)
 - [ ] [TASK-120] Configure production Docker images
 - [ ] [TASK-121] Set up Docker Swarm / K3s orchestration
@@ -271,20 +285,20 @@
 
 ## Progress Summary
 
-| Sprint | Total Tasks | Backlog | In Progress | Done | Platform |
-|--------|-------------|---------|-------------|------|----------|
-| Sprint 1 | 30 | 12 | 0 | 18 | Web + Docker |
-| Sprint 2 | 10 | 10 | 0 | 0 | Web |
-| Sprint 3 | 12 | 12 | 0 | 0 | Web |
-| Sprint 4 | 10 | 10 | 0 | 0 | Web |
-| Sprint 5 | 11 | 11 | 0 | 0 | Web |
-| Sprint 6 | 14 | 14 | 0 | 0 | Web |
-| Sprint 7 | 12 | 12 | 0 | 0 | Web PWA |
-| Sprint 8 | 13 | 13 | 0 | 0 | Android |
-| Sprint 9 | 7 | 7 | 0 | 0 | iOS |
-| Sprint 10 | 13 | 13 | 0 | 0 | All |
-| Sprint 11 | 14 | 14 | 0 | 0 | All |
-| **Total** | **146** | **128** | **0** | **18** | |
+| Sprint    | Total Tasks | Backlog | In Progress | Done   | Platform     |
+| --------- | ----------- | ------- | ----------- | ------ | ------------ |
+| Sprint 1  | 30          | 12      | 0           | 18     | Web + Docker |
+| Sprint 2  | 10          | 10      | 0           | 0      | Web          |
+| Sprint 3  | 12          | 12      | 0           | 0      | Web          |
+| Sprint 4  | 10          | 10      | 0           | 0      | Web          |
+| Sprint 5  | 11          | 11      | 0           | 0      | Web          |
+| Sprint 6  | 14          | 14      | 0           | 0      | Web          |
+| Sprint 7  | 12          | 12      | 0           | 0      | Web PWA      |
+| Sprint 8  | 13          | 13      | 0           | 0      | Android      |
+| Sprint 9  | 7           | 7       | 0           | 0      | iOS          |
+| Sprint 10 | 13          | 13      | 0           | 0      | All          |
+| Sprint 11 | 14          | 14      | 0           | 0      | All          |
+| **Total** | **146**     | **128** | **0**       | **18** |              |
 
 ---
 

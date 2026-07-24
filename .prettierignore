@@ -1,0 +1,9 @@
+node_modules
+dist
+build
+.turbo
+*.lock
+coverage
+.env
+.env.*
+!.env.example

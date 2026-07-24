@@ -1,4 +1,4 @@
-import { useAuth } from '../stores/AuthContext'
+import { useAuth } from '../hooks/useAuth'
 
 function ProfilePage() {
   const { user } = useAuth()

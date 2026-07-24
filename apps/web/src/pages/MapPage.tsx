@@ -44,9 +44,7 @@ function MapPage() {
       )}
       <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg p-4 max-w-sm">
         <h3 className="font-semibold text-gray-900">Convoy Map</h3>
-        <p className="text-sm text-gray-600 mt-1">
-          Real-time vehicle tracking will appear here.
-        </p>
+        <p className="text-sm text-gray-600 mt-1">Real-time vehicle tracking will appear here.</p>
       </div>
     </div>
   )

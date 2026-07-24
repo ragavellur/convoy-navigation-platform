@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import { AuthProvider } from './stores/AuthContext'
+import { AuthProvider } from './stores/AuthProvider'
 import Layout from './components/Layout'
 import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
