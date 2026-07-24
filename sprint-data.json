@@ -21,7 +21,7 @@
         {"id": "TASK-005B", "title": "Set up OSRM Docker container with map data volume", "status": "done", "priority": "high"},
         {"id": "TASK-005C", "title": "Set up Nominatim Docker container with geocoding data", "status": "done", "priority": "high"},
         {"id": "TASK-005D", "title": "Set up Redis Docker container for session caching", "status": "done", "priority": "medium"},
-        {"id": "TASK-005E", "title": "Configure Docker network isolation and health checks", "status": "backlog", "priority": "high"},
+        {"id": "TASK-005E", "title": "Configure Docker network isolation and health checks", "status": "in-progress", "priority": "high"},
         {"id": "TASK-005F", "title": "Create .env file with all environment variables", "status": "backlog", "priority": "medium"},
         {"id": "TASK-006", "title": "Design database schema in PocketBase (convoys, members, telemetry, messages)", "status": "backlog", "priority": "high"},
         {"id": "TASK-004", "title": "Set up PocketBase instance (auth + database + realtime)", "status": "backlog", "priority": "high"},
