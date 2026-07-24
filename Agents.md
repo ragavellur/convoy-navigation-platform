@@ -203,10 +203,16 @@ For any new project, initialize the sprint tracking system:
 * **DONE** → Task completed AND **user-authorized** (never mark done without approval)
 
 ### Mandatory Update Protocol
-1. **Before starting work**: Update task status to `in-progress` in `sprint-data.json`
+1. **Before starting work**: Update task status to `in-progress` in `sprint-data.json` AND `sprint.md`, then **commit and push** so the sprint board reflects real-time status
 2. **After completing work**: Present results to user for review
-3. **Only after user says "LGTM" / "approved"**: Update task status to `done`
-4. **Always sync**: Update `sprint.md` to match `sprint-data.json`
+3. **Only after user says "LGTM" / "approved"**: Update task status to `done` in `sprint-data.json` AND `sprint.md`
+4. **Always sync**: Keep `sprint.md` in sync with `sprint-data.json`
+5. **Commit on completion**: Commit and push all changes after user approval
+
+```
+FLOW: Update sprint files to in-progress → Commit/push → Execute task → Present for review → Wait for "LGTM" → Update to done → Commit/push
+DENIED: Marking in-progress without committing sprint files to git.
+```
 
 ### Never Mark Done Without Authorization
 ```

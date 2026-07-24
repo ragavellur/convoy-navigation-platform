@@ -16,7 +16,7 @@
 - [x] [TASK-005A] Set up PocketBase Docker container with persistent volume
 - [x] [TASK-005B] Set up OSRM Docker container with map data volume
 - [x] [TASK-005C] Set up Nominatim Docker container with geocoding data
-- [ ] [TASK-005D] Set up Redis Docker container for session caching
+- [x] [TASK-005D] Set up Redis Docker container for session caching
 - [ ] [TASK-005E] Configure Docker network isolation and health checks
 - [ ] [TASK-005F] Create .env file with all environment variables
 - [ ] [TASK-006] Design database schema in PocketBase (convoys, members, telemetry, messages)
@@ -271,7 +271,7 @@
 
 | Sprint | Total Tasks | Backlog | In Progress | Done | Platform |
 |--------|-------------|---------|-------------|------|----------|
-| Sprint 1 | 30 | 17 | 0 | 13 | Web + Docker |
+| Sprint 1 | 30 | 16 | 0 | 14 | Web + Docker |
 | Sprint 2 | 10 | 10 | 0 | 0 | Web |
 | Sprint 3 | 12 | 12 | 0 | 0 | Web |
 | Sprint 4 | 10 | 10 | 0 | 0 | Web |
@@ -282,7 +282,7 @@
 | Sprint 9 | 7 | 7 | 0 | 0 | iOS |
 | Sprint 10 | 13 | 13 | 0 | 0 | All |
 | Sprint 11 | 14 | 14 | 0 | 0 | All |
-| **Total** | **146** | **133** | **0** | **13** | |
+| **Total** | **146** | **132** | **0** | **14** | |
 
 ---
 
