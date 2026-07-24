@@ -1,16 +1,53 @@
-import { useState } from 'react'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { AuthProvider } from './stores/AuthContext'
+import Layout from './components/Layout'
+import HomePage from './pages/HomePage'
+import LoginPage from './pages/LoginPage'
+import RegisterPage from './pages/RegisterPage'
+import MapPage from './pages/MapPage'
+import ConvoyPage from './pages/ConvoyPage'
+import ProfilePage from './pages/ProfilePage'
+import NotFoundPage from './pages/NotFoundPage'
+import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <div className="App">
-      <h1>Convoy Navigation Platform</h1>
-      <p>Web Client - Coming Soon</p>
-      <button onClick={() => setCount((count) => count + 1)}>
-        Count: {count}
-      </button>
-    </div>
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          <Route path="/" element={<Layout />}>
+            <Route index element={<HomePage />} />
+            <Route path="login" element={<LoginPage />} />
+            <Route path="register" element={<RegisterPage />} />
+            <Route
+              path="map"
+              element={
+                <ProtectedRoute>
+                  <MapPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="convoy"
+              element={
+                <ProtectedRoute>
+                  <ConvoyPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="profile"
+              element={
+                <ProtectedRoute>
+                  <ProfilePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="*" element={<NotFoundPage />} />
+          </Route>
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
   )
 }
 
