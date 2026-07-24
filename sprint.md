@@ -21,20 +21,24 @@
 - [x] [TASK-005F] Create .env file with all environment variables
 - [x] [TASK-006] Design database schema in PocketBase (convoys, members, telemetry, messages)
 - [x] [TASK-004] Set up PocketBase instance (auth + database + realtime)
+
+### 🔄 In Progress
 - [ ] [TASK-003] Configure ESLint, Prettier, Husky (shared config)
+
+### 📋 Backlog (remaining)
 - [ ] [TASK-007] Implement user registration (PocketBase auth) (FR-AUTH-01)
 - [ ] [TASK-008] Implement user login with session management (FR-AUTH-02)
 - [ ] [TASK-009] JWT token management & secure storage (FR-AUTH-04)
-- [ ] [TASK-010] Integrate MapLibre GL JS into web project (FR-WEB-04)
-- [ ] [TASK-011] Self-host Nominatim geocoder via Docker
-- [ ] [TASK-012] Self-host OSRM routing engine via Docker
-- [ ] [TASK-013] Create basic map page with zoom/pan controls
 - [ ] [TASK-014] Create PWA manifest.json with icons (FR-WEB-02)
 - [ ] [TASK-015] Set up shared API client library (packages/shared)
 - [ ] [TASK-016] Create responsive layout shell (desktop/tablet/mobile) (FR-WEB-05)
 
 ### ✅ Done
 - [x] [TASK-002] Set up React + Vite + TypeScript web project (FR-WEB-01)
+- [x] [TASK-010] Integrate MapLibre GL JS into web project (FR-WEB-04)
+- [x] [TASK-011] Self-host Nominatim geocoder via Docker
+- [x] [TASK-012] Self-host OSRM routing engine via Docker
+- [x] [TASK-013] Create basic map page with zoom/pan controls
 - [x] [TASK-000] Copy PRD document to project folder
 - [x] [TASK-000A] Create comprehensive project plan (PRD_analysis.md)
 - [x] [TASK-000B] Initialize git repository and configure user
