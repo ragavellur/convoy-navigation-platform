@@ -46,6 +46,19 @@ All code structures must conform to project architecture and be managed through 
 * **Feature Branches**: Branch from `main` using the strict naming convention: `feature/issue-[ID]-short-description`.
 * **Commit Guidelines**: Follow the Conventional Commits specification: `<type>(<scope>): <short description>`. Commit atomically after passing unit test verification for an individual function. Never submit massive multi-file commits.
 
+### Mandatory Local Changes Review
+Before ANY commit or push operation, you MUST present ALL local changes for user review:
+
+1. **Show `git status`**: Display all modified, untracked, and staged files
+2. **Show `git diff`**: Display the actual code changes for each modified file
+3. **Wait for approval**: User must explicitly approve with "LGTM" / "approved" before proceeding
+4. **Never commit without review**: Even if changes are small or obvious, always present them
+
+```
+DENIED: Committing or pushing code without presenting local changes for review.
+REQUIRED: Present git status + git diff → Wait for "LGTM" / "approved" → Then commit/push
+```
+
 ### Pull Requests (PRs)
 * **PR Automation**: Once the issue's Acceptance Criteria from the PRD are met, draft the PR using the GitHub API tool.
 * **PR Template Requirement**: Every PR description must include:
@@ -126,6 +139,7 @@ Do not bypass these rules under any circumstances. Below are common anti-pattern
 | "This change is minor, so I can push directly to `main`." | **Denied.** Direct pushes to protected branches are disabled. Open a feature branch. |
 | "I bypassed formatting because the linter has minor configuration bugs." | **Denied.** Fix or report the lint issue; unformatted code will fail the GitHub Action check. |
 | "I'll just make this quick change without asking." | **Denied.** ALL file modifications require explicit user approval before execution. Present the plan first, wait for "LGTM" / "approved", then execute. |
+| "I'll commit this now and show you later." | **Denied.** ALL commits must be presented for review BEFORE committing. Show git status + git diff → Wait for approval → Then commit. |
 | "I'll figure out the infrastructure later." | **Denied.** Infrastructure requirements (Docker, deployment, hosting) must be captured in PRD and sprint planning BEFORE development begins. |
 | "I'll just start coding without a plan." | **Denied.** Present execution plan first. Wait for explicit "LGTM" / "approved" before ANY file modifications, shell commands, or code execution. |
 
@@ -135,10 +149,46 @@ Do not bypass these rules under any circumstances. Below are common anti-pattern
 
 All task progress must be tracked in `sprint-data.json` and visualized via `sprint-board.html`.
 
-### Sprint Board Files
+### Sprint Board Files (Generic - Can be used in any project)
 * `sprint-data.json` — Single source of truth for task states (backlog/in-progress/done)
 * `sprint-board.html` — Visual Kanban board (open in browser to view progress)
 * `sprint.md` — Markdown mirror of sprint board (auto-synced)
+
+### Sprint Board Initialization
+For any new project, initialize the sprint tracking system:
+
+1. **Create `sprint-data.json`** with this structure:
+   ```json
+   {
+     "projectName": "Your Project Name",
+     "sprints": [
+       {
+         "id": "sprint-1",
+         "name": "Sprint 1: [Theme]",
+         "startDate": "YYYY-MM-DD",
+         "endDate": "YYYY-MM-DD",
+         "tasks": [
+           {
+             "id": "TASK-001",
+             "title": "Task description",
+             "status": "backlog",
+             "priority": "high"
+           }
+         ]
+       }
+     ]
+   }
+   ```
+
+2. **Create `sprint-board.html`** — Visual Kanban board that fetches `sprint-data.json` via HTTP
+   * Host on GitHub Pages for remote access
+   * Click "Start" to move task to In Progress
+   * Click "Complete" to mark done (requires user authorization first)
+   * Progress bar and stats update automatically
+
+3. **Create `sprint.md`** — Markdown mirror of sprint board
+   * Keep in sync with `sprint-data.json`
+   * Use for quick reference in terminal or IDE
 
 ### Task Status Rules
 * **BACKLOG** → Task not yet started
@@ -156,9 +206,3 @@ All task progress must be tracked in `sprint-data.json` and visualized via `spri
 DENIED: Auto-marking tasks as complete without user verification.
 REQUIRED: User must explicitly approve completion (e.g., "LGTM", "approved", "looks good").
 ```
-
-### Sprint Board Usage
-* Open `sprint-board.html` in browser to view visual progress
-* Click "Start" to move task to In Progress
-* Click "Complete" to mark done (requires user authorization first)
-* Progress bar and stats update automatically
