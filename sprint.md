@@ -25,13 +25,12 @@
 
 ### 🔄 In Progress
 
-(none)
-
-### 📋 Backlog (remaining)
-
 - [ ] [TASK-007] Implement user registration (PocketBase auth) (FR-AUTH-01)
 - [ ] [TASK-008] Implement user login with session management (FR-AUTH-02)
 - [ ] [TASK-009] JWT token management & secure storage (FR-AUTH-04)
+
+### 📋 Backlog (remaining)
+
 - [ ] [TASK-014] Create PWA manifest.json with icons (FR-WEB-02)
 - [ ] [TASK-015] Set up shared API client library (packages/shared)
 - [ ] [TASK-016] Create responsive layout shell (desktop/tablet/mobile) (FR-WEB-05)

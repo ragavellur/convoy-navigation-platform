@@ -125,19 +125,19 @@
         {
           "id": "TASK-007",
           "title": "Implement user registration (PocketBase auth) (FR-AUTH-01)",
-          "status": "backlog",
+          "status": "in-progress",
           "priority": "high"
         },
         {
           "id": "TASK-008",
           "title": "Implement user login with session management (FR-AUTH-02)",
-          "status": "backlog",
+          "status": "in-progress",
           "priority": "high"
         },
         {
           "id": "TASK-009",
           "title": "JWT token management & secure storage (FR-AUTH-04)",
-          "status": "backlog",
+          "status": "in-progress",
           "priority": "high"
         },
         {
