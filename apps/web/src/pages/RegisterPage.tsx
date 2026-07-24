@@ -12,22 +12,41 @@ function RegisterPage() {
   const { register } = useAuth()
   const navigate = useNavigate()
 
+  const validateForm = (): string | null => {
+    if (!name.trim()) return 'Name is required'
+    if (!email.trim()) return 'Email is required'
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return 'Invalid email format'
+    if (password.length < 8) return 'Password must be at least 8 characters'
+    if (!/[A-Z]/.test(password)) return 'Password must contain at least one uppercase letter'
+    if (!/[a-z]/.test(password)) return 'Password must contain at least one lowercase letter'
+    if (!/[0-9]/.test(password)) return 'Password must contain at least one number'
+    if (password !== confirmPassword) return 'Passwords do not match'
+    return null
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
 
-    if (password !== confirmPassword) {
-      setError('Passwords do not match')
+    const validationError = validateForm()
+    if (validationError) {
+      setError(validationError)
       return
     }
 
     setIsLoading(true)
 
     try {
-      await register(email, password, name)
+      await register(email, password, name.trim())
       navigate('/map')
-    } catch (_err) {
-      setError('Registration failed. Email may already be in use.')
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : 'Registration failed. Email may already be in use.'
+      if (message.includes('already')) {
+        setError('An account with this email already exists.')
+      } else {
+        setError(message || 'Registration failed. Please try again.')
+      }
     } finally {
       setIsLoading(false)
     }
@@ -99,7 +118,7 @@ function RegisterPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Password"
+                placeholder="Password (min 8 chars, uppercase, lowercase, number)"
               />
             </div>
             <div>

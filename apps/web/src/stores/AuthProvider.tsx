@@ -1,31 +1,42 @@
-import { useEffect, useState, ReactNode } from 'react'
+import { useEffect, useState, useCallback, ReactNode } from 'react'
 import { User } from '../types'
 import pb from '../services/pocketbase'
 import { AuthContext, AuthContextType } from './AuthContext'
 
+function getInitialUser(): User | null {
+  if (pb.authStore.isValid && pb.authStore.record) {
+    return pb.authStore.record as unknown as User
+  }
+  return null
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [user, setUser] = useState<User | null>(getInitialUser)
+
+  const syncUser = useCallback(() => {
+    if (pb.authStore.isValid && pb.authStore.record) {
+      setUser(pb.authStore.record as unknown as User)
+    } else {
+      setUser(null)
+    }
+  }, [])
 
   useEffect(() => {
-    const initAuth = async () => {
-      if (pb.authStore.isValid) {
-        setUser(pb.authStore.record as unknown as User)
-      }
-      setIsLoading(false)
-    }
-    initAuth()
-
     const unsubscribe = pb.authStore.onChange(() => {
-      if (pb.authStore.isValid) {
-        setUser(pb.authStore.record as unknown as User)
-      } else {
-        setUser(null)
-      }
+      syncUser()
     })
-
     return () => unsubscribe()
-  }, [])
+  }, [syncUser])
+
+  useEffect(() => {
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'pocketbase_auth') {
+        syncUser()
+      }
+    }
+    window.addEventListener('storage', handleStorage)
+    return () => window.removeEventListener('storage', handleStorage)
+  }, [syncUser])
 
   const login = async (email: string, password: string) => {
     const authData = await pb.collection('users').authWithPassword(email, password)
@@ -47,13 +58,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null)
   }
 
+  const refreshSession = async (): Promise<boolean> => {
+    if (!pb.authStore.isValid) {
+      return false
+    }
+    try {
+      await pb.collection('users').authRefresh()
+      return true
+    } catch {
+      pb.authStore.clear()
+      setUser(null)
+      return false
+    }
+  }
+
   const value: AuthContextType = {
     user,
     isAuthenticated: !!user,
-    isLoading,
+    isLoading: false,
     login,
     register,
     logout,
+    refreshSession,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

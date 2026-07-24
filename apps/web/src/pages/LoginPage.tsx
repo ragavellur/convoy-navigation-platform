@@ -13,13 +13,26 @@ function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+
+    if (!email.trim() || !password) {
+      setError('Please enter both email and password')
+      return
+    }
+
     setIsLoading(true)
 
     try {
       await login(email, password)
       navigate('/map')
-    } catch (_err) {
-      setError('Invalid email or password')
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : ''
+      if (message.includes('Failed to authenticate')) {
+        setError('Invalid email or password')
+      } else if (message.includes('network')) {
+        setError('Network error. Please check your connection.')
+      } else {
+        setError('Login failed. Please try again.')
+      }
     } finally {
       setIsLoading(false)
     }
@@ -89,6 +102,10 @@ function LoginPage() {
               {isLoading ? 'Signing in...' : 'Sign in'}
             </button>
           </div>
+
+          <p className="text-xs text-center text-gray-500">
+            Your session will be remembered until you sign out.
+          </p>
         </form>
       </div>
     </div>
