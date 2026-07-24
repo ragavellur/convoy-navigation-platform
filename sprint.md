@@ -17,6 +17,7 @@
 - [x] [TASK-005B] Set up OSRM Docker container with map data volume
 - [x] [TASK-005C] Set up Nominatim Docker container with geocoding data
 - [x] [TASK-005D] Set up Redis Docker container for session caching
+- [x] [TASK-005E] Configure Docker network isolation and health checks
 - [ ] [TASK-005F] Create .env file with all environment variables
 - [ ] [TASK-006] Design database schema in PocketBase (convoys, members, telemetry, messages)
 - [ ] [TASK-004] Set up PocketBase instance (auth + database + realtime)
@@ -34,7 +35,6 @@
 - [ ] [TASK-016] Create responsive layout shell (desktop/tablet/mobile) (FR-WEB-05)
 
 ### 🔄 In Progress
-- [ ] [TASK-005E] Configure Docker network isolation and health checks
 
 ### ✅ Done
 - [x] [TASK-000] Copy PRD document to project folder
@@ -271,7 +271,7 @@
 
 | Sprint | Total Tasks | Backlog | In Progress | Done | Platform |
 |--------|-------------|---------|-------------|------|----------|
-| Sprint 1 | 30 | 16 | 0 | 14 | Web + Docker |
+| Sprint 1 | 30 | 15 | 0 | 15 | Web + Docker |
 | Sprint 2 | 10 | 10 | 0 | 0 | Web |
 | Sprint 3 | 12 | 12 | 0 | 0 | Web |
 | Sprint 4 | 10 | 10 | 0 | 0 | Web |
@@ -282,7 +282,7 @@
 | Sprint 9 | 7 | 7 | 0 | 0 | iOS |
 | Sprint 10 | 13 | 13 | 0 | 0 | All |
 | Sprint 11 | 14 | 14 | 0 | 0 | All |
-| **Total** | **146** | **132** | **0** | **14** | |
+| **Total** | **146** | **131** | **0** | **15** | |
 
 ---
 
