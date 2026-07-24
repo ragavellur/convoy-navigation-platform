@@ -12,7 +12,7 @@
 ## Sprint 1: Web Foundation & Core (Week 1-2)
 
 ### 📌 Backlog
-- [ ] [TASK-005] Configure Docker Compose for all backend services
+- [x] [TASK-005] Configure Docker Compose for all backend services
 - [ ] [TASK-005A] Set up PocketBase Docker container with persistent volume
 - [ ] [TASK-005B] Set up OSRM Docker container with map data volume
 - [ ] [TASK-005C] Set up Nominatim Docker container with geocoding data
@@ -271,7 +271,7 @@
 
 | Sprint | Total Tasks | Backlog | In Progress | Done | Platform |
 |--------|-------------|---------|-------------|------|----------|
-| Sprint 1 | 30 | 21 | 0 | 9 | Web + Docker |
+| Sprint 1 | 30 | 20 | 0 | 10 | Web + Docker |
 | Sprint 2 | 10 | 10 | 0 | 0 | Web |
 | Sprint 3 | 12 | 12 | 0 | 0 | Web |
 | Sprint 4 | 10 | 10 | 0 | 0 | Web |
@@ -282,7 +282,7 @@
 | Sprint 9 | 7 | 7 | 0 | 0 | iOS |
 | Sprint 10 | 13 | 13 | 0 | 0 | All |
 | Sprint 11 | 14 | 14 | 0 | 0 | All |
-| **Total** | **146** | **137** | **0** | **9** | |
+| **Total** | **146** | **136** | **0** | **10** | |
 
 ---
 

@@ -1,0 +1,87 @@
+services:
+  pocketbase:
+    build:
+      context: ./docker/pocketbase
+      dockerfile: Dockerfile
+    container_name: convoy-pocketbase
+    ports:
+      - "${POCKETBASE_PORT:-8090}:8090"
+    volumes:
+      - pocketbase_data:/pb/pb_migrations
+      - pocketbase_data:/pb/pb_hooks
+    environment:
+      - POCKETBASE_ADMIN_EMAIL=${POCKETBASE_ADMIN_EMAIL:-admin@convoy.local}
+      - POCKETBASE_ADMIN_PASSWORD=${POCKETBASE_ADMIN_PASSWORD:-admin123456}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8090/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - convoy-network
+
+  osrm:
+    image: osrm/osrm-backend:latest
+    container_name: convoy-osrm
+    ports:
+      - "${OSRM_PORT:-5000}:5000"
+    volumes:
+      - osrm_data:/data
+    command: osrm-routed --algorithm mld /data/planet-latest.osrm
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - convoy-network
+
+  nominatim:
+    image: mediagis/nominatim:latest
+    container_name: convoy-nominatim
+    ports:
+      - "${NOMINATIM_PORT:-8080}:8080"
+    volumes:
+      - nominatim_data:/var/lib/postgresql/14/main
+    environment:
+      - POSTGRES_PASSWORD=${NOMINATIM_DB_PASSWORD:-nominatim}
+      - POSTGRES_USER=${NOMINATIM_DB_USER:-nominatim}
+      - POSTGRES_DB=${NOMINATIM_DB_NAME:-nominatim}
+      - NOMINATIM_DATABASE_DSN=postgresql://nominatim:nominatim@localhost:5432/nominatim
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - convoy-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: convoy-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-convoyredis123}
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-convoyredis123}", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - convoy-network
+
+volumes:
+  pocketbase_data:
+  osrm_data:
+  nominatim_data:
+  redis_data:
+
+networks:
+  convoy-network:
+    driver: bridge
