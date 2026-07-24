@@ -18,7 +18,6 @@
 - [x] [TASK-005C] Set up Nominatim Docker container with geocoding data
 - [x] [TASK-005D] Set up Redis Docker container for session caching
 - [x] [TASK-005E] Configure Docker network isolation and health checks
-- [ ] [TASK-005F] Create .env file with all environment variables
 - [ ] [TASK-006] Design database schema in PocketBase (convoys, members, telemetry, messages)
 - [ ] [TASK-004] Set up PocketBase instance (auth + database + realtime)
 - [ ] [TASK-002] Set up React + Vite + TypeScript web project (FR-WEB-01)
@@ -35,6 +34,7 @@
 - [ ] [TASK-016] Create responsive layout shell (desktop/tablet/mobile) (FR-WEB-05)
 
 ### 🔄 In Progress
+- [ ] [TASK-005F] Create .env file with all environment variables
 
 ### ✅ Done
 - [x] [TASK-000] Copy PRD document to project folder
