@@ -1,18 +1,30 @@
-import { Outlet, Link, useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 
 function Layout() {
   const { isAuthenticated, user, logout } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const handleLogout = () => {
     logout()
     navigate('/login')
+    setIsMobileMenuOpen(false)
   }
 
+  const navLinks = isAuthenticated
+    ? [
+        { to: '/map', label: 'Map' },
+        { to: '/convoy', label: 'Convoy' },
+        { to: '/profile', label: 'Profile' },
+      ]
+    : []
+
   return (
-    <div className="min-h-screen bg-gray-100">
-      <nav className="bg-white shadow-sm">
+    <div className="min-h-screen bg-gray-100 flex flex-col">
+      <nav className="bg-white shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
@@ -26,42 +38,34 @@ function Layout() {
                 >
                   Home
                 </Link>
-                {isAuthenticated && (
-                  <>
-                    <Link
-                      to="/map"
-                      className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-gray-900"
-                    >
-                      Map
-                    </Link>
-                    <Link
-                      to="/convoy"
-                      className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-gray-900"
-                    >
-                      Convoy
-                    </Link>
-                  </>
-                )}
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.to}
+                    to={link.to}
+                    className={`inline-flex items-center px-1 pt-1 text-sm font-medium ${
+                      location.pathname === link.to
+                        ? 'text-indigo-600 border-b-2 border-indigo-600'
+                        : 'text-gray-500 hover:text-gray-900'
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
               </div>
             </div>
-            <div className="flex items-center">
+            <div className="hidden md:flex md:items-center md:space-x-4">
               {isAuthenticated ? (
-                <div className="flex items-center space-x-4">
-                  <Link
-                    to="/profile"
-                    className="text-sm font-medium text-gray-700 hover:text-gray-900"
-                  >
-                    {user?.name || user?.email}
-                  </Link>
+                <>
+                  <span className="text-sm text-gray-700">{user?.name || user?.email}</span>
                   <button
                     onClick={handleLogout}
                     className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-indigo-600 hover:bg-indigo-700"
                   >
                     Logout
                   </button>
-                </div>
+                </>
               ) : (
-                <div className="flex items-center space-x-4">
+                <>
                   <Link
                     to="/login"
                     className="text-sm font-medium text-gray-700 hover:text-gray-900"
@@ -74,15 +78,147 @@ function Layout() {
                   >
                     Register
                   </Link>
+                </>
+              )}
+            </div>
+            <div className="flex items-center md:hidden">
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
+                aria-label="Toggle menu"
+              >
+                {isMobileMenuOpen ? (
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                ) : (
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 6h16M4 12h16M4 18h16"
+                    />
+                  </svg>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+        {isMobileMenuOpen && (
+          <div className="md:hidden border-t border-gray-200">
+            <div className="px-2 pt-2 pb-3 space-y-1">
+              <Link
+                to="/"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="block px-3 py-2 rounded-md text-base font-medium text-gray-900 hover:bg-gray-50"
+              >
+                Home
+              </Link>
+              {navLinks.map((link) => (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`block px-3 py-2 rounded-md text-base font-medium ${
+                    location.pathname === link.to
+                      ? 'text-indigo-600 bg-indigo-50'
+                      : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+            <div className="border-t border-gray-200 px-4 py-3">
+              {isAuthenticated ? (
+                <div className="space-y-2">
+                  <p className="text-sm text-gray-700">{user?.name || user?.email}</p>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left px-3 py-2 rounded-md text-base font-medium text-red-600 hover:bg-red-50"
+                  >
+                    Logout
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Link
+                    to="/login"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    to="/register"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block px-3 py-2 rounded-md text-base font-medium text-indigo-600 hover:bg-indigo-50"
+                  >
+                    Register
+                  </Link>
                 </div>
               )}
             </div>
           </div>
-        </div>
+        )}
       </nav>
-      <main>
+
+      <main className="flex-1 pb-16 md:pb-0">
         <Outlet />
       </main>
+
+      {isAuthenticated && (
+        <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 md:hidden z-50">
+          <div className="flex justify-around">
+            {navLinks.map((link) => {
+              const isActive = location.pathname === link.to
+              return (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  className={`flex flex-col items-center py-2 px-3 ${
+                    isActive ? 'text-indigo-600' : 'text-gray-500'
+                  }`}
+                >
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    {link.to === '/map' && (
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
+                      />
+                    )}
+                    {link.to === '/convoy' && (
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                      />
+                    )}
+                    {link.to === '/profile' && (
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                      />
+                    )}
+                  </svg>
+                  <span className="text-xs mt-1">{link.label}</span>
+                </Link>
+              )
+            })}
+          </div>
+        </nav>
+      )}
     </div>
   )
 }

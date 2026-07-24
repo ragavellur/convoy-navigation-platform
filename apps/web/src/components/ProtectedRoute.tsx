@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { ReactNode } from 'react'
+import pb from '../services/pocketbase'
 
 interface ProtectedRouteProps {
   children: ReactNode
@@ -24,7 +25,9 @@ function ProtectedRoute({ children }: ProtectedRouteProps) {
     )
   }
 
-  if (!isAuthenticated) {
+  const storeValid = pb.authStore.isValid
+
+  if (!isAuthenticated || !storeValid) {
     return <Navigate to="/login" replace />
   }
 

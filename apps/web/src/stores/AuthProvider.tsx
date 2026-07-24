@@ -10,8 +10,13 @@ function getInitialUser(): User | null {
   return null
 }
 
+function clearAuthStorage() {
+  localStorage.removeItem('pocketbase_auth')
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(getInitialUser)
+  const [isLoading] = useState(false)
 
   const syncUser = useCallback(() => {
     if (pb.authStore.isValid && pb.authStore.record) {
@@ -22,20 +27,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   useEffect(() => {
-    const unsubscribe = pb.authStore.onChange(() => {
+    const handleStorage = () => {
       syncUser()
-    })
-    return () => unsubscribe()
-  }, [syncUser])
-
-  useEffect(() => {
-    const handleStorage = (e: StorageEvent) => {
-      if (e.key === 'pocketbase_auth') {
-        syncUser()
-      }
     }
     window.addEventListener('storage', handleStorage)
-    return () => window.removeEventListener('storage', handleStorage)
+    window.addEventListener('popstate', handleStorage)
+    return () => {
+      window.removeEventListener('storage', handleStorage)
+      window.removeEventListener('popstate', handleStorage)
+    }
   }, [syncUser])
 
   const login = async (email: string, password: string) => {
@@ -49,14 +49,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       password,
       passwordConfirm: password,
       name,
+      role: 'member',
+      status: 'active',
     })
     await login(email, password)
   }
 
-  const logout = () => {
+  const logout = useCallback(() => {
     pb.authStore.clear()
+    clearAuthStorage()
     setUser(null)
-  }
+  }, [])
 
   const refreshSession = async (): Promise<boolean> => {
     if (!pb.authStore.isValid) {
@@ -67,6 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return true
     } catch {
       pb.authStore.clear()
+      clearAuthStorage()
       setUser(null)
       return false
     }
@@ -75,7 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value: AuthContextType = {
     user,
     isAuthenticated: !!user,
-    isLoading: false,
+    isLoading,
     login,
     register,
     logout,

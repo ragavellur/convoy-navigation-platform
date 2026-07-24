@@ -36,3 +36,20 @@ export interface Telemetry {
   heading: number
   lastUpdated: Date
 }
+
+export {
+  createClient,
+  createAuthApi,
+  createConvoyApi,
+  createVehicleApi,
+  createTelemetryApi,
+} from './api'
+
+export type {
+  AuthLoginParams,
+  AuthRegisterParams,
+  ConvoyCreateParams,
+  ConvoyJoinParams,
+  VehicleCreateParams,
+  TelemetryUpdateParams,
+} from './api'
