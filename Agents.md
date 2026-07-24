@@ -30,6 +30,12 @@ Before creating or modifying any codebase features, execute the planning protoco
 2. **Design Standard**: Enforce Domain-Driven Design (DDD) with clean, decoupled layers (API Layer -> Domain/Business Layer -> Infrastructure/Data Layer).
 3. **Execution Plan**: Output a step-by-step implementation strategy in the chat, mapping exactly how the code will fulfill the PRD's Acceptance Criteria.
 4. **Checkpoint Verification**: Wait for human approval (`LGTM`) or sub-agent confirmation before modifying files or installing dependencies.
+5. **Pull Latest Code**: Before starting ANY new task, ALWAYS run `git pull origin main` to ensure you have the latest changes from other contributors. This prevents merge conflicts and ensures consistency.
+
+```
+DENIED: Starting a new task without pulling latest code first.
+REQUIRED: Run `git pull origin main` → Then update sprint status → Then execute task
+```
 
 ---
 
@@ -142,6 +148,7 @@ Do not bypass these rules under any circumstances. Below are common anti-pattern
 | "I'll commit this now and show you later." | **Denied.** ALL commits must be presented for review BEFORE committing. Show git status + git diff → Wait for approval → Then commit. |
 | "I'll figure out the infrastructure later." | **Denied.** Infrastructure requirements (Docker, deployment, hosting) must be captured in PRD and sprint planning BEFORE development begins. |
 | "I'll just start coding without a plan." | **Denied.** Present execution plan first. Wait for explicit "LGTM" / "approved" before ANY file modifications, shell commands, or code execution. |
+| "I'll just start a new task without pulling latest code." | **Denied.** ALWAYS run `git pull origin main` before starting ANY new task to prevent merge conflicts and ensure consistency. |
 
 ---
 

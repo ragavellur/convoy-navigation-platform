@@ -18,7 +18,7 @@
         {"id": "TASK-001", "title": "Initialize monorepo structure (Turborepo) with apps/web, apps/mobile, packages/shared", "status": "done", "priority": "high"},
         {"id": "TASK-005", "title": "Configure Docker Compose for all backend services", "status": "done", "priority": "high"},
         {"id": "TASK-005A", "title": "Set up PocketBase Docker container with persistent volume", "status": "done", "priority": "high"},
-        {"id": "TASK-005B", "title": "Set up OSRM Docker container with map data volume", "status": "backlog", "priority": "high"},
+        {"id": "TASK-005B", "title": "Set up OSRM Docker container with map data volume", "status": "done", "priority": "high"},
         {"id": "TASK-005C", "title": "Set up Nominatim Docker container with geocoding data", "status": "backlog", "priority": "high"},
         {"id": "TASK-005D", "title": "Set up Redis Docker container for session caching", "status": "backlog", "priority": "medium"},
         {"id": "TASK-005E", "title": "Configure Docker network isolation and health checks", "status": "backlog", "priority": "high"},
