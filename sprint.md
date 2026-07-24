@@ -25,7 +25,7 @@
 
 ### 🔄 In Progress
 
-- [ ] [TASK-003] Configure ESLint, Prettier, Husky (shared config)
+(none)
 
 ### 📋 Backlog (remaining)
 
@@ -38,6 +38,7 @@
 
 ### ✅ Done
 
+- [x] [TASK-003] Configure ESLint, Prettier, Husky (shared config)
 - [x] [TASK-002] Set up React + Vite + TypeScript web project (FR-WEB-01)
 - [x] [TASK-010] Integrate MapLibre GL JS into web project (FR-WEB-04)
 - [x] [TASK-011] Self-host Nominatim geocoder via Docker

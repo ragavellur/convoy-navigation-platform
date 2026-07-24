@@ -119,7 +119,7 @@
         {
           "id": "TASK-003",
           "title": "Configure ESLint, Prettier, Husky (shared config)",
-          "status": "in-progress",
+          "status": "done",
           "priority": "medium"
         },
         {
