@@ -24,7 +24,7 @@
         {"id": "TASK-005E", "title": "Configure Docker network isolation and health checks", "status": "done", "priority": "high"},
         {"id": "TASK-005F", "title": "Create .env file with all environment variables", "status": "done", "priority": "medium"},
         {"id": "TASK-006", "title": "Design database schema in PocketBase (convoys, members, telemetry, messages)", "status": "done", "priority": "high"},
-        {"id": "TASK-004", "title": "Set up PocketBase instance (auth + database + realtime)", "status": "backlog", "priority": "high"},
+        {"id": "TASK-004", "title": "Set up PocketBase instance (auth + database + realtime)", "status": "in-progress", "priority": "high"},
         {"id": "TASK-002", "title": "Set up React + Vite + TypeScript web project (FR-WEB-01)", "status": "backlog", "priority": "high"},
         {"id": "TASK-003", "title": "Configure ESLint, Prettier, Husky (shared config)", "status": "backlog", "priority": "medium"},
         {"id": "TASK-007", "title": "Implement user registration (PocketBase auth) (FR-AUTH-01)", "status": "backlog", "priority": "high"},

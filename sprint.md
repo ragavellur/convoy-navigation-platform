@@ -20,7 +20,6 @@
 - [x] [TASK-005E] Configure Docker network isolation and health checks
 - [x] [TASK-005F] Create .env file with all environment variables
 - [x] [TASK-006] Design database schema in PocketBase (convoys, members, telemetry, messages)
-- [ ] [TASK-004] Set up PocketBase instance (auth + database + realtime)
 - [ ] [TASK-002] Set up React + Vite + TypeScript web project (FR-WEB-01)
 - [ ] [TASK-003] Configure ESLint, Prettier, Husky (shared config)
 - [ ] [TASK-007] Implement user registration (PocketBase auth) (FR-AUTH-01)
@@ -35,6 +34,7 @@
 - [ ] [TASK-016] Create responsive layout shell (desktop/tablet/mobile) (FR-WEB-05)
 
 ### 🔄 In Progress
+- [ ] [TASK-004] Set up PocketBase instance (auth + database + realtime)
 
 ### ✅ Done
 - [x] [TASK-000] Copy PRD document to project folder
