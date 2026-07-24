@@ -91,6 +91,30 @@ Automated workflows govern environment stability. You are responsible for ensuri
 
 ---
 
+# 🐳 PHASE 5A: DOCKER-FIRST ARCHITECTURE
+
+All backend services MUST run in Docker containers. No exceptions.
+
+### Infrastructure Requirements
+* **Docker Compose**: All services defined in `docker-compose.yml` at project root
+* **Service Containers**: PocketBase, OSRM, Nominatim, mediasoup SFU - each in its own container
+* **Network Isolation**: Services communicate via Docker network, not host machine
+* **Volume Persistence**: Database data and map tiles persisted via Docker volumes
+* **Environment Variables**: All config via `.env` file, no hardcoded values
+
+### Container Standards
+* **Base Images**: Use official images or minimal Alpine-based images
+* **Health Checks**: Every container must have a health check endpoint
+* **Restart Policy**: `unless-stopped` for all production containers
+* **Resource Limits**: CPU and memory limits defined for each service
+
+### Development Workflow
+* **Local Dev**: `docker-compose up` starts all backend services
+* **Hot Reload**: Frontend runs outside Docker, connects to containerized backend
+* **Database Migrations**: Run inside containers, not on host machine
+
+---
+
 # 🚫 ANTI-RATIONALIZATION & BOUNDARIES
 Do not bypass these rules under any circumstances. Below are common anti-patterns you must explicitly reject:
 
@@ -102,6 +126,8 @@ Do not bypass these rules under any circumstances. Below are common anti-pattern
 | "This change is minor, so I can push directly to `main`." | **Denied.** Direct pushes to protected branches are disabled. Open a feature branch. |
 | "I bypassed formatting because the linter has minor configuration bugs." | **Denied.** Fix or report the lint issue; unformatted code will fail the GitHub Action check. |
 | "I'll just make this quick change without asking." | **Denied.** ALL file modifications require explicit user approval before execution. Present the plan first, wait for "LGTM" / "approved", then execute. |
+| "I'll figure out the infrastructure later." | **Denied.** Infrastructure requirements (Docker, deployment, hosting) must be captured in PRD and sprint planning BEFORE development begins. |
+| "I'll just start coding without a plan." | **Denied.** Present execution plan first. Wait for explicit "LGTM" / "approved" before ANY file modifications, shell commands, or code execution. |
 
 ---
 

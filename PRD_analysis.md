@@ -254,5 +254,74 @@ A real-time, multi-user convoy navigation and communication ecosystem designed t
 
 ---
 
+## 10. Docker-First Architecture (Mandatory)
+
+All backend services MUST run in Docker containers. No exceptions.
+
+### Container Stack
+
+| Service | Image | Port | Purpose |
+|---------|-------|------|---------|
+| **PocketBase** | `ghcr.io/pocketbase/pocketbase:latest` | 8090 | Auth + Database + Realtime |
+| **OSRM** | `osrm/osrm-backend` | 5000 | Route calculation engine |
+| **Nominatim** | `mediagis/nominatim` | 8080 | Geocoding / Place search |
+| **Mediasoup SFU** | Custom Dockerfile | 7400 | WebRTC voice/video |
+| **Redis** | `redis:alpine` | 6379 | Session caching + Pub/Sub |
+
+### Docker Compose Structure
+
+```
+docker-compose.yml
+├── services/
+│   ├── pocketbase/
+│   │   ├── Dockerfile
+│   │   └── pb_data/          # Volume mount for persistence
+│   ├── osrm/
+│   │   └── data/             # Preprocessed OSM data
+│   ├── nominatim/
+│   │   └── data/             # Geocoding database
+│   ├── mediasoup/
+│   │   └── Dockerfile
+│   └── redis/
+│       └── redis.conf
+├── .env                      # All environment variables
+└── scripts/
+    ├── init-db.sh            # Database initialization
+    └── download-map-data.sh  # OSM data download
+```
+
+### Volume Persistence
+
+| Volume | Container | Purpose |
+|--------|-----------|---------|
+| `pb_data` | PocketBase | User accounts, convoy data, messages |
+| `nominatim_data` | Nominatim | Geocoding database (20GB+) |
+| `osrm_data` | OSRM | Preprocessed routing data |
+| `redis_data` | Redis | Session cache persistence |
+
+### Environment Variables (.env)
+
+```env
+# PocketBase
+POCKETBASE_ADMIN_EMAIL=admin@convoy.local
+POCKETBASE_ADMIN_PASSWORD=changeme
+
+# OSRM
+OSRM_DATA_FILE=/data/india-latest.osrm
+
+# Nominatim
+NOMINATIM_DB_DIR=/var/lib/postgresql/14/main
+NOMINATIM_IMPORT_STYLE=street
+
+# Mediasoup
+MEDIASOUP_LISTEN_IP=0.0.0.0
+MEDIASOUP_ANNOUNCED_IP=your-server-ip
+
+# Redis
+REDIS_PASSWORD=changeme
+```
+
+---
+
 **Status:** Plan Finalized
-**Next Step:** Begin Sprint 1 execution (Web Client First)
+**Next Step:** Begin Sprint 1 execution (Docker Infrastructure First)

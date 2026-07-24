@@ -4,6 +4,7 @@
 **Mapping Stack:** OpenStreetMap (OSM) Ecosystem
 **Platform Order:** Web (PWA) → Android → iOS
 **Backend:** PocketBase (Auth + Database + Realtime)
+**Infrastructure:** Docker-First (All services in containers)
 **Created:** 2026-07-24
 
 ---
@@ -11,11 +12,17 @@
 ## Sprint 1: Web Foundation & Core (Week 1-2)
 
 ### 📌 Backlog
+- [ ] [TASK-005] Configure Docker Compose for all backend services
+- [ ] [TASK-005A] Set up PocketBase Docker container with persistent volume
+- [ ] [TASK-005B] Set up OSRM Docker container with map data volume
+- [ ] [TASK-005C] Set up Nominatim Docker container with geocoding data
+- [ ] [TASK-005D] Set up Redis Docker container for session caching
+- [ ] [TASK-005E] Configure Docker network isolation and health checks
+- [ ] [TASK-005F] Create .env file with all environment variables
+- [ ] [TASK-006] Design database schema in PocketBase (convoys, members, telemetry, messages)
+- [ ] [TASK-004] Set up PocketBase instance (auth + database + realtime)
 - [ ] [TASK-002] Set up React + Vite + TypeScript web project (FR-WEB-01)
 - [ ] [TASK-003] Configure ESLint, Prettier, Husky (shared config)
-- [ ] [TASK-004] Set up PocketBase instance (auth + database + realtime)
-- [ ] [TASK-005] Configure Docker Compose for local dev (PocketBase + OSRM + Nominatim)
-- [ ] [TASK-006] Design database schema in PocketBase (convoys, members, telemetry, messages)
 - [ ] [TASK-007] Implement user registration (PocketBase auth) (FR-AUTH-01)
 - [ ] [TASK-008] Implement user login with session management (FR-AUTH-02)
 - [ ] [TASK-009] JWT token management & secure storage (FR-AUTH-04)
@@ -264,7 +271,7 @@
 
 | Sprint | Total Tasks | Backlog | In Progress | Done | Platform |
 |--------|-------------|---------|-------------|------|----------|
-| Sprint 1 | 24 | 15 | 0 | 9 | Web |
+| Sprint 1 | 30 | 21 | 0 | 9 | Web + Docker |
 | Sprint 2 | 10 | 10 | 0 | 0 | Web |
 | Sprint 3 | 12 | 12 | 0 | 0 | Web |
 | Sprint 4 | 10 | 10 | 0 | 0 | Web |
@@ -275,7 +282,7 @@
 | Sprint 9 | 7 | 7 | 0 | 0 | iOS |
 | Sprint 10 | 13 | 13 | 0 | 0 | All |
 | Sprint 11 | 14 | 14 | 0 | 0 | All |
-| **Total** | **140** | **131** | **0** | **9** | |
+| **Total** | **146** | **137** | **0** | **9** | |
 
 ---
 
