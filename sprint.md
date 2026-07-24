@@ -11,7 +11,6 @@
 ## Sprint 1: Web Foundation & Core (Week 1-2)
 
 ### 📌 Backlog
-- [ ] [TASK-001] Initialize monorepo structure (Turborepo) with `apps/web`, `apps/mobile`, `packages/shared`
 - [ ] [TASK-002] Set up React + Vite + TypeScript web project (FR-WEB-01)
 - [ ] [TASK-003] Configure ESLint, Prettier, Husky (shared config)
 - [ ] [TASK-004] Set up PocketBase instance (auth + database + realtime)
@@ -38,6 +37,7 @@
 - [x] [TASK-000D] Enable GitHub Pages for sprint board
 - [x] [TASK-000E] Create sprint-board.html and sprint-data.json
 - [x] [TASK-000F] Update Agents.md with sprint tracking rules
+- [x] [TASK-001] Initialize monorepo structure (Turborepo) with apps/web, apps/mobile, packages/shared
 
 ---
 
@@ -264,7 +264,7 @@
 
 | Sprint | Total Tasks | Backlog | In Progress | Done | Platform |
 |--------|-------------|---------|-------------|------|----------|
-| Sprint 1 | 24 | 16 | 0 | 8 | Web |
+| Sprint 1 | 24 | 15 | 0 | 9 | Web |
 | Sprint 2 | 10 | 10 | 0 | 0 | Web |
 | Sprint 3 | 12 | 12 | 0 | 0 | Web |
 | Sprint 4 | 10 | 10 | 0 | 0 | Web |
@@ -275,7 +275,7 @@
 | Sprint 9 | 7 | 7 | 0 | 0 | iOS |
 | Sprint 10 | 13 | 13 | 0 | 0 | All |
 | Sprint 11 | 14 | 14 | 0 | 0 | All |
-| **Total** | **140** | **132** | **0** | **8** | |
+| **Total** | **140** | **131** | **0** | **9** | |
 
 ---
 

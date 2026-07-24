@@ -15,7 +15,7 @@
         {"id": "TASK-000D", "title": "Enable GitHub Pages for sprint board", "status": "done", "priority": "high"},
         {"id": "TASK-000E", "title": "Create sprint-board.html and sprint-data.json", "status": "done", "priority": "high"},
         {"id": "TASK-000F", "title": "Update Agents.md with sprint tracking rules", "status": "done", "priority": "high"},
-        {"id": "TASK-001", "title": "Initialize monorepo structure (Turborepo) with apps/web, apps/mobile, packages/shared", "status": "backlog", "priority": "high"},
+        {"id": "TASK-001", "title": "Initialize monorepo structure (Turborepo) with apps/web, apps/mobile, packages/shared", "status": "done", "priority": "high"},
         {"id": "TASK-002", "title": "Set up React + Vite + TypeScript web project (FR-WEB-01)", "status": "backlog", "priority": "high"},
         {"id": "TASK-003", "title": "Configure ESLint, Prettier, Husky (shared config)", "status": "backlog", "priority": "medium"},
         {"id": "TASK-004", "title": "Set up PocketBase instance (auth + database + realtime)", "status": "backlog", "priority": "high"},
