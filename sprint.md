@@ -33,10 +33,8 @@
 - [ ] [TASK-015] Set up shared API client library (packages/shared)
 - [ ] [TASK-016] Create responsive layout shell (desktop/tablet/mobile) (FR-WEB-05)
 
-### 🔄 In Progress
-- [ ] [TASK-002] Set up React + Vite + TypeScript web project (FR-WEB-01)
-
 ### ✅ Done
+- [x] [TASK-002] Set up React + Vite + TypeScript web project (FR-WEB-01)
 - [x] [TASK-000] Copy PRD document to project folder
 - [x] [TASK-000A] Create comprehensive project plan (PRD_analysis.md)
 - [x] [TASK-000B] Initialize git repository and configure user
