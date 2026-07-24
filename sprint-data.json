@@ -167,19 +167,19 @@
         {
           "id": "TASK-014",
           "title": "Create PWA manifest.json with icons (FR-WEB-02)",
-          "status": "backlog",
+          "status": "in-progress",
           "priority": "medium"
         },
         {
           "id": "TASK-015",
           "title": "Set up shared API client library (packages/shared)",
-          "status": "backlog",
+          "status": "in-progress",
           "priority": "medium"
         },
         {
           "id": "TASK-016",
           "title": "Create responsive layout shell (desktop/tablet/mobile) (FR-WEB-05)",
-          "status": "backlog",
+          "status": "in-progress",
           "priority": "medium"
         }
       ]

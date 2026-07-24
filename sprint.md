@@ -25,13 +25,13 @@
 
 ### 🔄 In Progress
 
-(none)
-
-### 📋 Backlog (remaining)
-
 - [ ] [TASK-014] Create PWA manifest.json with icons (FR-WEB-02)
 - [ ] [TASK-015] Set up shared API client library (packages/shared)
 - [ ] [TASK-016] Create responsive layout shell (desktop/tablet/mobile) (FR-WEB-05)
+
+### 📋 Backlog (remaining)
+
+(none — Sprint 1 complete after these)
 
 ### ✅ Done
 
