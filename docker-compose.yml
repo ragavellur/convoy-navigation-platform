@@ -7,8 +7,9 @@ services:
     ports:
       - "${POCKETBASE_PORT:-8090}:8090"
     volumes:
-      - pocketbase_data:/pb/pb_migrations
-      - pocketbase_data:/pb/pb_hooks
+      - pocketbase_data:/pb/pb_data
+      - ./pb_migrations:/pb/pb_migrations
+      - ./pb_hooks:/pb/pb_hooks
     environment:
       - POCKETBASE_ADMIN_EMAIL=${POCKETBASE_ADMIN_EMAIL:-admin@convoy.local}
       - POCKETBASE_ADMIN_PASSWORD=${POCKETBASE_ADMIN_PASSWORD:-admin123456}

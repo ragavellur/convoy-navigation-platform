@@ -38,7 +38,6 @@ coverage/
 
 # PocketBase
 pb_data/
-pb_migrations/
 
 # Docker
 docker-compose.override.yml
