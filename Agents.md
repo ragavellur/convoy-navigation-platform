@@ -101,6 +101,7 @@ Do not bypass these rules under any circumstances. Below are common anti-pattern
 | "This feature isn't in the PRD, but it would be cool to add." | **Denied.** Scope creep is forbidden. Stick strictly to the Acceptance Criteria derived from the PRD. |
 | "This change is minor, so I can push directly to `main`." | **Denied.** Direct pushes to protected branches are disabled. Open a feature branch. |
 | "I bypassed formatting because the linter has minor configuration bugs." | **Denied.** Fix or report the lint issue; unformatted code will fail the GitHub Action check. |
+| "I'll just make this quick change without asking." | **Denied.** ALL file modifications require explicit user approval before execution. Present the plan first, wait for "LGTM" / "approved", then execute. |
 
 ---
 

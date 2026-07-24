@@ -33,6 +33,11 @@
 ### ✅ Done
 - [x] [TASK-000] Copy PRD document to project folder
 - [x] [TASK-000A] Create comprehensive project plan (PRD_analysis.md)
+- [x] [TASK-000B] Initialize git repository and configure user
+- [x] [TASK-000C] Create GitHub repository (public) and push code
+- [x] [TASK-000D] Enable GitHub Pages for sprint board
+- [x] [TASK-000E] Create sprint-board.html and sprint-data.json
+- [x] [TASK-000F] Update Agents.md with sprint tracking rules
 
 ---
 
@@ -259,7 +264,7 @@
 
 | Sprint | Total Tasks | Backlog | In Progress | Done | Platform |
 |--------|-------------|---------|-------------|------|----------|
-| Sprint 1 | 18 | 16 | 0 | 2 | Web |
+| Sprint 1 | 24 | 16 | 0 | 8 | Web |
 | Sprint 2 | 10 | 10 | 0 | 0 | Web |
 | Sprint 3 | 12 | 12 | 0 | 0 | Web |
 | Sprint 4 | 10 | 10 | 0 | 0 | Web |
@@ -270,7 +275,7 @@
 | Sprint 9 | 7 | 7 | 0 | 0 | iOS |
 | Sprint 10 | 13 | 13 | 0 | 0 | All |
 | Sprint 11 | 14 | 14 | 0 | 0 | All |
-| **Total** | **134** | **132** | **0** | **2** | |
+| **Total** | **140** | **132** | **0** | **8** | |
 
 ---
 
