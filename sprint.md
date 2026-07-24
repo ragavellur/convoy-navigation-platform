@@ -25,16 +25,15 @@
 
 ### 🔄 In Progress
 
-- [ ] [TASK-014] Create PWA manifest.json with icons (FR-WEB-02)
-- [ ] [TASK-015] Set up shared API client library (packages/shared)
-- [ ] [TASK-016] Create responsive layout shell (desktop/tablet/mobile) (FR-WEB-05)
-
-### 📋 Backlog (remaining)
-
-(none — Sprint 1 complete after these)
+(none — Sprint 1 complete)
 
 ### ✅ Done
 
+- [x] [TASK-014] Create PWA manifest.json with icons (FR-WEB-02)
+- [x] [TASK-015] Set up shared API client library (packages/shared)
+- [x] [TASK-016] Create responsive layout shell (desktop/tablet/mobile) (FR-WEB-05)
+- [x] [TASK-016A] Fix auth guard - pb.authStore.onChange overriding localStorage handler
+- [x] [TASK-017] Sprint 1 Review - 10/10 tests pass, all acceptance criteria met
 - [x] [TASK-007] Implement user registration (PocketBase auth) (FR-AUTH-01)
 - [x] [TASK-008] Implement user login with session management (FR-AUTH-02)
 - [x] [TASK-009] JWT token management & secure storage (FR-AUTH-04)
@@ -288,7 +287,7 @@
 
 | Sprint    | Total Tasks | Backlog | In Progress | Done   | Platform     |
 | --------- | ----------- | ------- | ----------- | ------ | ------------ |
-| Sprint 1  | 30          | 12      | 0           | 18     | Web + Docker |
+| Sprint 1  | 32          | 12      | 0           | 20     | Web + Docker |
 | Sprint 2  | 10          | 10      | 0           | 0      | Web          |
 | Sprint 3  | 12          | 12      | 0           | 0      | Web          |
 | Sprint 4  | 10          | 10      | 0           | 0      | Web          |
@@ -299,7 +298,7 @@
 | Sprint 9  | 7           | 7       | 0           | 0      | iOS          |
 | Sprint 10 | 13          | 13      | 0           | 0      | All          |
 | Sprint 11 | 14          | 14      | 0           | 0      | All          |
-| **Total** | **146**     | **128** | **0**       | **18** |              |
+| **Total** | **148**     | **128** | **0**       | **20** |              |
 
 ---
 

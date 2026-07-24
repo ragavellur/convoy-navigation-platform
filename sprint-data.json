@@ -167,20 +167,32 @@
         {
           "id": "TASK-014",
           "title": "Create PWA manifest.json with icons (FR-WEB-02)",
-          "status": "in-progress",
+          "status": "done",
           "priority": "medium"
         },
         {
           "id": "TASK-015",
           "title": "Set up shared API client library (packages/shared)",
-          "status": "in-progress",
+          "status": "done",
           "priority": "medium"
         },
         {
           "id": "TASK-016",
           "title": "Create responsive layout shell (desktop/tablet/mobile) (FR-WEB-05)",
-          "status": "in-progress",
+          "status": "done",
           "priority": "medium"
+        },
+        {
+          "id": "TASK-016A",
+          "title": "Fix auth guard - pb.authStore.onChange overriding localStorage handler",
+          "status": "done",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-017",
+          "title": "Sprint 1 Review - 10/10 tests pass, all acceptance criteria met",
+          "status": "done",
+          "priority": "high"
         }
       ]
     },
