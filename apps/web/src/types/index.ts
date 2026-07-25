@@ -140,3 +140,52 @@ export interface TelemetryUpdate {
   accuracy?: number
   timestamp: number
 }
+
+export interface RouteStep {
+  maneuver: {
+    location: [number, number]
+    type: string
+    modifier?: string
+  }
+  name: string
+  distance: number
+  duration: number
+}
+
+export interface RouteLeg {
+  steps: RouteStep[]
+  distance: number
+  duration: number
+}
+
+export interface Route {
+  geometry: string
+  legs: RouteLeg[]
+  distance: number
+  duration: number
+  weight: number
+}
+
+export interface RouteResponse {
+  code: string
+  routes: Route[]
+  waypoints: Array<{
+    location: [number, number]
+    name: string
+  }>
+}
+
+export interface SearchResult {
+  id: string
+  name: string
+  displayName: string
+  lat: number
+  lng: number
+  boundingBox?: [number, number, number, number]
+}
+
+export interface RouteSummary {
+  distance: number
+  duration: number
+  steps: RouteStep[]
+}

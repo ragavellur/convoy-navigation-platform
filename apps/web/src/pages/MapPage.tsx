@@ -1,11 +1,39 @@
 import { useEffect, useRef, useState } from 'react'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
+import SearchBar from '../components/SearchBar'
+import type { SearchResult } from '../types'
 
 function MapPage() {
   const mapContainer = useRef<HTMLDivElement>(null)
   const map = useRef<maplibregl.Map | null>(null)
   const [mapLoaded, setMapLoaded] = useState(false)
+  const [mapBounds, setMapBounds] = useState<[number, number, number, number] | undefined>()
+
+  function updateBounds() {
+    if (!map.current) return
+    const bounds = map.current.getBounds()
+    setMapBounds([bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()])
+  }
+
+  function handleSearchResult(result: SearchResult) {
+    if (!map.current) return
+
+    map.current.flyTo({
+      center: [result.lng, result.lat],
+      zoom: 15,
+      duration: 1500,
+    })
+
+    new maplibregl.Marker({ color: '#6366f1' })
+      .setLngLat([result.lng, result.lat])
+      .setPopup(
+        new maplibregl.Popup({ offset: 25 }).setHTML(
+          `<div class="p-2"><div class="font-medium text-gray-900">${result.name}</div><div class="text-xs text-gray-500 mt-1">${result.displayName}</div></div>`,
+        ),
+      )
+      .addTo(map.current)
+  }
 
   useEffect(() => {
     if (!mapContainer.current || map.current) return
@@ -23,6 +51,11 @@ function MapPage() {
 
     map.current.on('load', () => {
       setMapLoaded(true)
+      updateBounds()
+    })
+
+    map.current.on('moveend', () => {
+      updateBounds()
     })
 
     return () => {
@@ -42,6 +75,9 @@ function MapPage() {
           </div>
         </div>
       )}
+      <div className="absolute top-4 left-4 z-10">
+        <SearchBar onResultSelect={handleSearchResult} mapBounds={mapBounds} />
+      </div>
       <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg p-4 max-w-sm">
         <h3 className="font-semibold text-gray-900">Convoy Map</h3>
         <p className="text-sm text-gray-600 mt-1">Real-time vehicle tracking will appear here.</p>
