@@ -67,13 +67,12 @@
 
 ### 🔄 In Progress
 
-- [ ] [TASK-019] Implement route calculation via OSRM API (FR-MAP-03)
-- [ ] [TASK-020] Build route polyline renderer on MapLibre (FR-MAP-04)
-
 ### ✅ Done
 
 - [x] [TASK-017] Implement place autocomplete search using Nominatim (FR-MAP-02)
 - [x] [TASK-018] Build search UI with auto-suggest dropdown
+- [x] [TASK-019] Implement route calculation via OSRM API (FR-MAP-03)
+- [x] [TASK-020] Build route polyline renderer on MapLibre (FR-MAP-04)
 
 ---
 
