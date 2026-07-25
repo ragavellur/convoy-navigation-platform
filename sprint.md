@@ -92,14 +92,17 @@
 
 ### 🔄 In Progress
 
-- [ ] [TASK-029] Build deep link generation system (FR-CNV-02)
-- [ ] [TASK-030] Implement deep link parsing & validation (FR-CNV-03)
-- [ ] [TASK-031] Build convoy join flow - web redirect (open web app directly)
+- [ ] [TASK-032] Implement vehicle type selection UI (FR-CNV-04)
+- [ ] [TASK-033] Build convoy host dashboard (FR-CNV-05)
+- [ ] [TASK-034] Implement host controls (remove member, end session)
 
 ### ✅ Done
 
 - [x] [TASK-027] Implement "Create Convoy" API (PocketBase collection) (FR-CNV-01)
 - [x] [TASK-028] Generate unique trip_id with security tokens
+- [x] [TASK-029] Build deep link generation system (FR-CNV-02)
+- [x] [TASK-030] Implement deep link parsing & validation (FR-CNV-03)
+- [x] [TASK-031] Build convoy join flow - web redirect (open web app directly)
 - [x] [TASK-036] Implement convoy roster data model
 
 ---

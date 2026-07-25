@@ -287,37 +287,37 @@
         {
           "id": "TASK-029",
           "title": "Build deep link generation system (FR-CNV-02)",
-          "status": "in-progress",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-030",
           "title": "Implement deep link parsing & validation (FR-CNV-03)",
-          "status": "in-progress",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-031",
           "title": "Build convoy join flow - web redirect",
-          "status": "in-progress",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-032",
           "title": "Implement vehicle type selection UI (FR-CNV-04)",
-          "status": "backlog",
+          "status": "in-progress",
           "priority": "medium"
         },
         {
           "id": "TASK-033",
           "title": "Build convoy host dashboard (FR-CNV-05)",
-          "status": "backlog",
+          "status": "in-progress",
           "priority": "medium"
         },
         {
           "id": "TASK-034",
           "title": "Implement host controls (remove member, end session)",
-          "status": "backlog",
+          "status": "in-progress",
           "priority": "medium"
         },
         {
