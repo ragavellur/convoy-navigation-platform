@@ -58,8 +58,6 @@
 
 ### 📌 Backlog
 
-- [ ] [TASK-017] Implement place autocomplete search using Nominatim (FR-MAP-02)
-- [ ] [TASK-018] Build search UI with auto-suggest dropdown
 - [ ] [TASK-019] Implement route calculation via OSRM API (FR-MAP-03)
 - [ ] [TASK-020] Build route polyline renderer on MapLibre (FR-MAP-04)
 - [ ] [TASK-021] Add traffic condition visual overlay to route segments (FR-MAP-07)
@@ -70,6 +68,9 @@
 - [ ] [TASK-026] Build desktop sidebar layout (map + roster side-by-side) (FR-WEB-09)
 
 ### 🔄 In Progress
+
+- [ ] [TASK-017] Implement place autocomplete search using Nominatim (FR-MAP-02)
+- [ ] [TASK-018] Build search UI with auto-suggest dropdown
 
 ### ✅ Done
 

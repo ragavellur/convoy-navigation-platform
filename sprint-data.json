@@ -206,13 +206,13 @@
         {
           "id": "TASK-017",
           "title": "Implement place autocomplete search using Nominatim (FR-MAP-02)",
-          "status": "backlog",
+          "status": "in-progress",
           "priority": "high"
         },
         {
           "id": "TASK-018",
           "title": "Build search UI with auto-suggest dropdown",
-          "status": "backlog",
+          "status": "in-progress",
           "priority": "high"
         },
         {
