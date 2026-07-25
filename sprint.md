@@ -58,11 +58,11 @@
 
 ### 📌 Backlog
 
+### 🔄 In Progress
+
 - [ ] [TASK-024] Implement route alternatives selection
 - [ ] [TASK-025] Cache frequently used routes in PocketBase
 - [ ] [TASK-026] Build desktop sidebar layout (map + roster side-by-side) (FR-WEB-09)
-
-### 🔄 In Progress
 
 ### ✅ Done
 
