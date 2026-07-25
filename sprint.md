@@ -64,16 +64,15 @@
 
 ### 🔄 In Progress
 
-- [ ] [TASK-021] Add traffic condition visual overlay to route segments (FR-MAP-07)
-- [ ] [TASK-022] Build off-route detection and recalculation logic (FR-MAP-06)
-- [ ] [TASK-023] Add route summary panel (distance, ETA, time)
-
 ### ✅ Done
 
 - [x] [TASK-017] Implement place autocomplete search using Nominatim (FR-MAP-02)
 - [x] [TASK-018] Build search UI with auto-suggest dropdown
 - [x] [TASK-019] Implement route calculation via OSRM API (FR-MAP-03)
 - [x] [TASK-020] Build route polyline renderer on MapLibre (FR-MAP-04)
+- [x] [TASK-021] Add traffic condition visual overlay to route segments (FR-MAP-07)
+- [x] [TASK-022] Build off-route detection and recalculation logic (FR-MAP-06)
+- [x] [TASK-023] Add route summary panel (distance, ETA, time)
 
 ---
 

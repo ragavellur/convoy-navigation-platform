@@ -230,19 +230,19 @@
         {
           "id": "TASK-021",
           "title": "Add traffic condition visual overlay to route segments (FR-MAP-07)",
-          "status": "in-progress",
+          "status": "done",
           "priority": "medium"
         },
         {
           "id": "TASK-022",
           "title": "Build off-route detection and recalculation logic (FR-MAP-06)",
-          "status": "in-progress",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-023",
           "title": "Add route summary panel (distance, ETA, time)",
-          "status": "in-progress",
+          "status": "done",
           "priority": "medium"
         },
         {
