@@ -69,10 +69,10 @@
 
 ### 🔄 In Progress
 
-- [ ] [TASK-017] Implement place autocomplete search using Nominatim (FR-MAP-02)
-- [ ] [TASK-018] Build search UI with auto-suggest dropdown
-
 ### ✅ Done
+
+- [x] [TASK-017] Implement place autocomplete search using Nominatim (FR-MAP-02)
+- [x] [TASK-018] Build search UI with auto-suggest dropdown
 
 ---
 
