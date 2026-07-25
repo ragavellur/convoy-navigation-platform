@@ -29,7 +29,7 @@ services:
       - '${OSRM_PORT:-5001}:5000'
     volumes:
       - osrm_data:/data
-    command: osrm-routed --algorithm mld /data/planet-latest.osrm
+    command: osrm-routed --algorithm mld /data/monaco-latest.osrm
     healthcheck:
       test: ['CMD', 'curl', '-f', 'http://localhost:5000/health']
       interval: 30s

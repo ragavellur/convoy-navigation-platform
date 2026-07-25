@@ -158,8 +158,13 @@ export interface RouteLeg {
   duration: number
 }
 
+export interface RouteGeometry {
+  type: 'LineString'
+  coordinates: Array<[number, number]>
+}
+
 export interface Route {
-  geometry: string
+  geometry: RouteGeometry | string
   legs: RouteLeg[]
   distance: number
   duration: number
