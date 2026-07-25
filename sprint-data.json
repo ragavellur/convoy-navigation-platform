@@ -323,7 +323,7 @@
         {
           "id": "TASK-035",
           "title": "Build session state management (active/inactive/cleanup)",
-          "status": "in-progress",
+          "status": "done",
           "priority": "high"
         },
         {
@@ -335,13 +335,13 @@
         {
           "id": "TASK-037",
           "title": "Add deep link sharing via WhatsApp/SMS/Email",
-          "status": "in-progress",
+          "status": "done",
           "priority": "low"
         },
         {
           "id": "TASK-038",
           "title": "Build convoy invite notification system",
-          "status": "in-progress",
+          "status": "done",
           "priority": "low"
         }
       ]

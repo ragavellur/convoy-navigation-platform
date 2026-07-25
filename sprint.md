@@ -92,10 +92,6 @@
 
 ### 🔄 In Progress
 
-- [ ] [TASK-035] Build session state management (active/inactive/cleanup)
-- [ ] [TASK-037] Add deep link sharing via WhatsApp/SMS/Email
-- [ ] [TASK-038] Build convoy invite notification system
-
 ### ✅ Done
 
 - [x] [TASK-027] Implement "Create Convoy" API (PocketBase collection) (FR-CNV-01)
@@ -106,7 +102,10 @@
 - [x] [TASK-032] Implement vehicle type selection UI (FR-CNV-04)
 - [x] [TASK-033] Build convoy host dashboard (FR-CNV-05)
 - [x] [TASK-034] Implement host controls (remove member, end session)
+- [x] [TASK-035] Build session state management (active/inactive/cleanup)
 - [x] [TASK-036] Implement convoy roster data model
+- [x] [TASK-037] Add deep link sharing via WhatsApp/SMS/Email
+- [x] [TASK-038] Build convoy invite notification system
 
 ---
 
