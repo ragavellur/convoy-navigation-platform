@@ -1,0 +1,311 @@
+import { useState, useEffect } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
+import pb from '../services/pocketbase'
+import { generateDeepLink } from '../services/deepLink'
+import { useAuth } from '../hooks/useAuth'
+import VehicleTypeSelector from '../components/VehicleTypeSelector'
+
+interface ConvoyRecord {
+  id: string
+  name: string
+  code: string
+  description?: string
+  owner: string
+  status: 'active' | 'paused' | 'ended'
+  trip_id: string
+  security_token: string
+  created: string
+}
+
+interface MemberRecord {
+  id: string
+  convoy: string
+  user: string
+  role: 'host' | 'member' | 'viewer'
+  status: 'active' | 'inactive' | 'removed'
+  vehicle?: string
+  joined_at: string
+  expand?: {
+    user?: { id: string; name: string; email: string }
+    vehicle?: { id: string; name: string; type: string; color?: string }
+  }
+}
+
+function ConvoyDetailPage() {
+  const { id } = useParams<{ id: string }>()
+  const { user } = useAuth()
+  const navigate = useNavigate()
+  const [convoy, setConvoy] = useState<ConvoyRecord | null>(null)
+  const [members, setMembers] = useState<MemberRecord[]>([])
+  const [loading, setLoading] = useState(true)
+  const [selectedVehicle, setSelectedVehicle] = useState('car')
+  const [showVehiclePicker, setShowVehiclePicker] = useState(false)
+  const [vehicleName, setVehicleName] = useState('')
+  const [error, setError] = useState('')
+
+  const isHost = convoy?.owner === user?.id
+
+  useEffect(() => {
+    const fetch = async () => {
+      if (!id) return
+      setLoading(true)
+      try {
+        const c = await pb.collection('convoys').getOne<ConvoyRecord>(id)
+        setConvoy(c)
+        const m = await pb.collection('convoy_members').getFullList<MemberRecord>({
+          filter: `convoy = "${id}" && status = "active"`,
+          expand: 'user,vehicle',
+        })
+        setMembers(m)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load convoy')
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetch()
+  }, [id])
+
+  const refreshData = async () => {
+    if (!id) return
+    try {
+      const c = await pb.collection('convoys').getOne<ConvoyRecord>(id)
+      setConvoy(c)
+      const m = await pb.collection('convoy_members').getFullList<MemberRecord>({
+        filter: `convoy = "${id}" && status = "active"`,
+        expand: 'user,vehicle',
+      })
+      setMembers(m)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load convoy')
+    }
+  }
+
+  const handleAddVehicle = async () => {
+    if (!vehicleName.trim() || !id) return
+    try {
+      const vehicle = await pb.collection('vehicles').create({
+        name: vehicleName.trim(),
+        type: selectedVehicle,
+        convoy: id,
+        owner: user?.id,
+        status: 'active',
+      })
+      const memberRecord = members.find((m) => m.user === user?.id)
+      if (memberRecord) {
+        await pb.collection('convoy_members').update(memberRecord.id, { vehicle: vehicle.id })
+      }
+      setVehicleName('')
+      setShowVehiclePicker(false)
+      await refreshData()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to add vehicle')
+    }
+  }
+
+  const handleRemoveMember = async (memberId: string) => {
+    try {
+      await pb.collection('convoy_members').update(memberId, { status: 'removed' })
+      await refreshData()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to remove member')
+    }
+  }
+
+  const handleEndSession = async () => {
+    if (!id) return
+    try {
+      await pb.collection('convoys').update(id, { status: 'ended' })
+      navigate('/convoy')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to end session')
+    }
+  }
+
+  const handleCopyLink = async () => {
+    if (!convoy) return
+    const link = generateDeepLink(convoy.code, convoy.trip_id)
+    await navigator.clipboard.writeText(link)
+  }
+
+  const handleGoToMap = () => {
+    navigate(`/map?convoy=${id}`)
+  }
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <p className="text-gray-500">Loading convoy...</p>
+      </div>
+    )
+  }
+
+  if (!convoy) {
+    return (
+      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <p className="text-red-600">Convoy not found.</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+      <div className="mb-6">
+        <button
+          onClick={() => navigate('/convoy')}
+          className="text-sm text-indigo-600 hover:text-indigo-500 mb-2"
+        >
+          ← Back to Convoys
+        </button>
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">{convoy.name}</h1>
+            <p className="text-sm text-gray-500 mt-1">Code: {convoy.code}</p>
+            {convoy.description && (
+              <p className="text-sm text-gray-600 mt-1">{convoy.description}</p>
+            )}
+          </div>
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+            {convoy.status}
+          </span>
+        </div>
+      </div>
+
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
+          {error}
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          <div className="bg-white shadow rounded-lg p-4">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-medium text-gray-900">Members ({members.length})</h2>
+              <div className="flex space-x-2">
+                <button
+                  onClick={handleCopyLink}
+                  className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                >
+                  Copy Invite Link
+                </button>
+                <button
+                  onClick={handleGoToMap}
+                  className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+                >
+                  Open Map
+                </button>
+              </div>
+            </div>
+            <div className="space-y-3">
+              {members.map((member) => (
+                <div
+                  key={member.id}
+                  className="flex items-center justify-between p-3 border border-gray-200 rounded-lg"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center">
+                      <span className="text-sm font-medium text-indigo-600">
+                        {member.expand?.user?.name?.charAt(0) || '?'}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">
+                        {member.expand?.user?.name || 'Unknown'}
+                        {member.user === user?.id && (
+                          <span className="text-gray-400 ml-1">(you)</span>
+                        )}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {member.role === 'host' ? '👑 Host' : 'Member'}
+                        {member.expand?.vehicle && ` · ${member.expand.vehicle.type}`}
+                      </p>
+                    </div>
+                  </div>
+                  {isHost && member.user !== user?.id && (
+                    <button
+                      onClick={() => handleRemoveMember(member.id)}
+                      className="text-xs text-red-600 hover:text-red-500"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {isHost && (
+            <div className="bg-white shadow rounded-lg p-4">
+              <h2 className="text-lg font-medium text-gray-900 mb-4">Host Controls</h2>
+              <div className="flex space-x-3">
+                <button
+                  onClick={handleEndSession}
+                  className="inline-flex items-center px-4 py-2 border border-red-300 text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50"
+                >
+                  End Session
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-6">
+          <div className="bg-white shadow rounded-lg p-4">
+            <h2 className="text-lg font-medium text-gray-900 mb-4">Your Vehicle</h2>
+            {showVehiclePicker ? (
+              <div className="space-y-3">
+                <input
+                  type="text"
+                  placeholder="Vehicle name"
+                  value={vehicleName}
+                  onChange={(e) => setVehicleName(e.target.value)}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                />
+                <VehicleTypeSelector selected={selectedVehicle} onSelect={setSelectedVehicle} />
+                <div className="flex space-x-2">
+                  <button
+                    onClick={handleAddVehicle}
+                    disabled={!vehicleName.trim()}
+                    className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={() => setShowVehiclePicker(false)}
+                    className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowVehiclePicker(true)}
+                className="w-full p-3 border border-dashed border-gray-300 rounded-lg text-sm text-gray-600 hover:bg-gray-50"
+              >
+                + Add Vehicle
+              </button>
+            )}
+          </div>
+
+          <div className="bg-white shadow rounded-lg p-4">
+            <h2 className="text-lg font-medium text-gray-900 mb-4">Convoy Info</h2>
+            <dl className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <dt className="text-gray-500">Trip ID</dt>
+                <dd className="text-gray-900 font-mono text-xs">{convoy.trip_id}</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-gray-500">Created</dt>
+                <dd className="text-gray-900">{new Date(convoy.created).toLocaleDateString()}</dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default ConvoyDetailPage

@@ -6,6 +6,7 @@ import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import MapPage from './pages/MapPage'
 import ConvoyPage from './pages/ConvoyPage'
+import ConvoyDetailPage from './pages/ConvoyDetailPage'
 import JoinPage from './pages/JoinPage'
 import ProfilePage from './pages/ProfilePage'
 import NotFoundPage from './pages/NotFoundPage'
@@ -34,6 +35,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <ConvoyPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="convoy/:id"
+              element={
+                <ProtectedRoute>
+                  <ConvoyDetailPage />
                 </ProtectedRoute>
               }
             />

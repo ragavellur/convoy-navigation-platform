@@ -144,7 +144,7 @@ function ConvoyPage() {
   }
 
   const handleOpenConvoy = (convoyId: string) => {
-    navigate(`/map?convoy=${convoyId}`)
+    navigate(`/convoy/${convoyId}`)
   }
 
   const handleCopyDeepLink = async (code: string, tripId: string) => {
