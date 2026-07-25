@@ -92,9 +92,9 @@
 
 ### 🔄 In Progress
 
-- [ ] [TASK-032] Implement vehicle type selection UI (FR-CNV-04)
-- [ ] [TASK-033] Build convoy host dashboard (FR-CNV-05)
-- [ ] [TASK-034] Implement host controls (remove member, end session)
+- [ ] [TASK-035] Build session state management (active/inactive/cleanup)
+- [ ] [TASK-037] Add deep link sharing via WhatsApp/SMS/Email
+- [ ] [TASK-038] Build convoy invite notification system
 
 ### ✅ Done
 
@@ -103,6 +103,9 @@
 - [x] [TASK-029] Build deep link generation system (FR-CNV-02)
 - [x] [TASK-030] Implement deep link parsing & validation (FR-CNV-03)
 - [x] [TASK-031] Build convoy join flow - web redirect (open web app directly)
+- [x] [TASK-032] Implement vehicle type selection UI (FR-CNV-04)
+- [x] [TASK-033] Build convoy host dashboard (FR-CNV-05)
+- [x] [TASK-034] Implement host controls (remove member, end session)
 - [x] [TASK-036] Implement convoy roster data model
 
 ---

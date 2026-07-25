@@ -305,25 +305,25 @@
         {
           "id": "TASK-032",
           "title": "Implement vehicle type selection UI (FR-CNV-04)",
-          "status": "in-progress",
+          "status": "done",
           "priority": "medium"
         },
         {
           "id": "TASK-033",
           "title": "Build convoy host dashboard (FR-CNV-05)",
-          "status": "in-progress",
+          "status": "done",
           "priority": "medium"
         },
         {
           "id": "TASK-034",
           "title": "Implement host controls (remove member, end session)",
-          "status": "in-progress",
+          "status": "done",
           "priority": "medium"
         },
         {
           "id": "TASK-035",
           "title": "Build session state management (active/inactive/cleanup)",
-          "status": "backlog",
+          "status": "in-progress",
           "priority": "high"
         },
         {
@@ -335,13 +335,13 @@
         {
           "id": "TASK-037",
           "title": "Add deep link sharing via WhatsApp/SMS/Email",
-          "status": "backlog",
+          "status": "in-progress",
           "priority": "low"
         },
         {
           "id": "TASK-038",
           "title": "Build convoy invite notification system",
-          "status": "backlog",
+          "status": "in-progress",
           "priority": "low"
         }
       ]
