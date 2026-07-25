@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import pb from '../services/pocketbase'
 import { generateDeepLink } from '../services/deepLink'
+import { shareViaWhatsApp, shareViaSMS, shareViaEmail } from '../services/share'
+import { subscribeToConvoyNotifications, type ConvoyNotification } from '../services/notifications'
 import { useAuth } from '../hooks/useAuth'
 import VehicleTypeSelector from '../components/VehicleTypeSelector'
 
@@ -43,11 +45,14 @@ function ConvoyDetailPage() {
   const [vehicleName, setVehicleName] = useState('')
   const [error, setError] = useState('')
 
+  const [notifications, setNotifications] = useState<ConvoyNotification[]>([])
+  const [showNotifications, setShowNotifications] = useState(false)
+
   const isHost = convoy?.owner === user?.id
 
   useEffect(() => {
+    if (!id) return
     const fetch = async () => {
-      if (!id) return
       setLoading(true)
       try {
         const c = await pb.collection('convoys').getOne<ConvoyRecord>(id)
@@ -64,6 +69,22 @@ function ConvoyDetailPage() {
       }
     }
     fetch()
+
+    const setup = async () => {
+      const unsub = await subscribeToConvoyNotifications(id, (notification) => {
+        setNotifications((prev) => [notification, ...prev].slice(0, 20))
+        setShowNotifications(true)
+      })
+      return unsub
+    }
+
+    let unsubFn: (() => void) | null = null
+    setup().then((fn) => {
+      unsubFn = fn
+    })
+    return () => {
+      unsubFn?.()
+    }
   }, [id])
 
   const refreshData = async () => {
@@ -177,6 +198,18 @@ function ConvoyDetailPage() {
         </div>
       )}
 
+      {showNotifications && notifications.length > 0 && (
+        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md text-blue-700 text-sm flex justify-between items-center">
+          <span>{notifications[0].message}</span>
+          <button
+            onClick={() => setShowNotifications(false)}
+            className="text-blue-500 hover:text-blue-700 ml-2"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-white shadow rounded-lg p-4">
@@ -187,7 +220,25 @@ function ConvoyDetailPage() {
                   onClick={handleCopyLink}
                   className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
                 >
-                  Copy Invite Link
+                  Copy Link
+                </button>
+                <button
+                  onClick={() => shareViaWhatsApp(convoy!.code, convoy!.trip_id, convoy!.name)}
+                  className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                >
+                  WhatsApp
+                </button>
+                <button
+                  onClick={() => shareViaSMS(convoy!.code, convoy!.trip_id, convoy!.name)}
+                  className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                >
+                  SMS
+                </button>
+                <button
+                  onClick={() => shareViaEmail(convoy!.code, convoy!.trip_id, convoy!.name)}
+                  className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                >
+                  Email
                 </button>
                 <button
                   onClick={handleGoToMap}
