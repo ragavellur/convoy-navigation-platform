@@ -356,13 +356,13 @@
         {
           "id": "TASK-039",
           "title": "Set up PocketBase Realtime subscriptions",
-          "status": "backlog",
+          "status": "in-progress",
           "priority": "high"
         },
         {
           "id": "TASK-040",
           "title": "Implement browser Geolocation API streaming (FR-GPS-01)",
-          "status": "backlog",
+          "status": "in-progress",
           "priority": "high"
         },
         {
@@ -410,7 +410,7 @@
         {
           "id": "TASK-048",
           "title": "Build location permission handling flow (browser prompt)",
-          "status": "backlog",
+          "status": "in-progress",
           "priority": "medium"
         }
       ]

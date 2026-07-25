@@ -113,8 +113,6 @@
 
 ### 📌 Backlog
 
-- [ ] [TASK-039] Set up PocketBase Realtime subscriptions
-- [ ] [TASK-040] Implement browser Geolocation API streaming (FR-GPS-01)
 - [ ] [TASK-041] Build adaptive polling logic (FR-GPS-02):
   - [ ] [TASK-041a] Stationary state: 30s heartbeat
   - [ ] [TASK-041b] Urban state (<40km/h): 5s / 15m delta
@@ -125,9 +123,12 @@
 - [ ] [TASK-045] Build heading & velocity vector display (FR-GPS-05)
 - [ ] [TASK-046] Implement PocketBase Realtime for position broadcast (FR-GPS-06)
 - [ ] [TASK-047] Add position update throttling & debouncing
-- [ ] [TASK-048] Build location permission handling flow (browser prompt)
 
 ### 🔄 In Progress
+
+- [ ] [TASK-039] Set up PocketBase Realtime subscriptions
+- [ ] [TASK-040] Implement browser Geolocation API streaming (FR-GPS-01)
+- [ ] [TASK-048] Build location permission handling flow (browser prompt)
 
 ### ✅ Done
 
