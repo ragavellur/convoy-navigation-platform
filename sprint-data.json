@@ -248,19 +248,19 @@
         {
           "id": "TASK-024",
           "title": "Implement route alternatives selection",
-          "status": "in-progress",
+          "status": "done",
           "priority": "low"
         },
         {
           "id": "TASK-025",
           "title": "Cache frequently used routes in PocketBase",
-          "status": "in-progress",
+          "status": "done",
           "priority": "low"
         },
         {
           "id": "TASK-026",
           "title": "Build desktop sidebar layout (map + roster side-by-side) (FR-WEB-09)",
-          "status": "in-progress",
+          "status": "done",
           "priority": "medium"
         }
       ]

@@ -60,10 +60,6 @@
 
 ### 🔄 In Progress
 
-- [ ] [TASK-024] Implement route alternatives selection
-- [ ] [TASK-025] Cache frequently used routes in PocketBase
-- [ ] [TASK-026] Build desktop sidebar layout (map + roster side-by-side) (FR-WEB-09)
-
 ### ✅ Done
 
 - [x] [TASK-017] Implement place autocomplete search using Nominatim (FR-MAP-02)
@@ -73,6 +69,9 @@
 - [x] [TASK-021] Add traffic condition visual overlay to route segments (FR-MAP-07)
 - [x] [TASK-022] Build off-route detection and recalculation logic (FR-MAP-06)
 - [x] [TASK-023] Add route summary panel (distance, ETA, time)
+- [x] [TASK-024] Implement route alternatives selection
+- [x] [TASK-025] Cache frequently used routes in PocketBase
+- [x] [TASK-026] Build desktop sidebar layout (map + roster side-by-side) (FR-WEB-09)
 
 ---
 
