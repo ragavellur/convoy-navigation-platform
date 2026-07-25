@@ -6,6 +6,7 @@ import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import MapPage from './pages/MapPage'
 import ConvoyPage from './pages/ConvoyPage'
+import JoinPage from './pages/JoinPage'
 import ProfilePage from './pages/ProfilePage'
 import NotFoundPage from './pages/NotFoundPage'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -19,6 +20,7 @@ function App() {
             <Route index element={<HomePage />} />
             <Route path="login" element={<LoginPage />} />
             <Route path="register" element={<RegisterPage />} />
+            <Route path="join" element={<JoinPage />} />
             <Route
               path="map"
               element={

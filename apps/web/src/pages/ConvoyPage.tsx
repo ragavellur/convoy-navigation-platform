@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import pb from '../services/pocketbase'
+import { generateDeepLink } from '../services/deepLink'
 import { useNavigate } from 'react-router-dom'
 
 interface ConvoyRecord {
@@ -146,6 +147,11 @@ function ConvoyPage() {
     navigate(`/map?convoy=${convoyId}`)
   }
 
+  const handleCopyDeepLink = async (code: string, tripId: string) => {
+    const link = generateDeepLink(code, tripId)
+    await navigator.clipboard.writeText(link)
+  }
+
   return (
     <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
       <div className="flex justify-between items-center mb-6">
@@ -208,20 +214,29 @@ function ConvoyPage() {
               {convoys.map((convoy) => (
                 <div
                   key={convoy.id}
-                  onClick={() => handleOpenConvoy(convoy.id)}
-                  className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer"
+                  className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50"
                 >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="text-lg font-medium text-gray-900">{convoy.name}</h3>
-                      <p className="text-sm text-gray-500">Code: {convoy.code}</p>
-                      {convoy.description && (
-                        <p className="text-sm text-gray-600 mt-1">{convoy.description}</p>
-                      )}
+                  <div onClick={() => handleOpenConvoy(convoy.id)} className="cursor-pointer">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="text-lg font-medium text-gray-900">{convoy.name}</h3>
+                        <p className="text-sm text-gray-500">Code: {convoy.code}</p>
+                        {convoy.description && (
+                          <p className="text-sm text-gray-600 mt-1">{convoy.description}</p>
+                        )}
+                      </div>
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        {convoy.status}
+                      </span>
                     </div>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                      {convoy.status}
-                    </span>
+                  </div>
+                  <div className="mt-3 flex space-x-2">
+                    <button
+                      onClick={() => handleCopyDeepLink(convoy.code, convoy.trip_id)}
+                      className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                    >
+                      Copy Invite Link
+                    </button>
                   </div>
                 </div>
               ))}
