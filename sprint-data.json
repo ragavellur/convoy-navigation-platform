@@ -218,13 +218,13 @@
         {
           "id": "TASK-019",
           "title": "Implement route calculation via OSRM API (FR-MAP-03)",
-          "status": "backlog",
+          "status": "in-progress",
           "priority": "high"
         },
         {
           "id": "TASK-020",
           "title": "Build route polyline renderer on MapLibre (FR-MAP-04)",
-          "status": "backlog",
+          "status": "in-progress",
           "priority": "high"
         },
         {
