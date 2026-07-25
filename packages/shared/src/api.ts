@@ -27,6 +27,31 @@ export interface ConvoyJoinParams {
   code: string
 }
 
+export interface ConvoyRecord {
+  id: string
+  name: string
+  code: string
+  description?: string
+  owner: string
+  status: 'active' | 'paused' | 'ended'
+  max_members?: number
+  trip_id: string
+  security_token: string
+  settings?: Record<string, unknown>
+  created: string
+  updated: string
+}
+
+export interface ConvoyMemberRecord {
+  id: string
+  convoy: string
+  user: string
+  role: 'host' | 'member' | 'viewer'
+  status: 'active' | 'inactive' | 'removed'
+  vehicle?: string
+  joined_at: string
+}
+
 export interface VehicleCreateParams {
   name: string
   type: 'car' | 'truck' | 'motorcycle' | 'other'
@@ -79,8 +104,10 @@ export function createAuthApi(pb: PocketBase) {
 
 export function createConvoyApi(pb: PocketBase) {
   return {
-    async create(params: ConvoyCreateParams): Promise<RecordModel> {
+    async create(params: ConvoyCreateParams): Promise<ConvoyRecord> {
       const code = generateConvoyCode()
+      const tripId = generateTripId()
+      const securityToken = generateSecurityToken()
       return pb.collection('convoys').create({
         name: params.name,
         code,
@@ -88,10 +115,12 @@ export function createConvoyApi(pb: PocketBase) {
         max_members: params.max_members,
         owner: pb.authStore.record?.id,
         status: 'active',
+        trip_id: tripId,
+        security_token: securityToken,
       })
     },
 
-    async join(params: ConvoyJoinParams): Promise<RecordModel> {
+    async join(params: ConvoyJoinParams): Promise<ConvoyMemberRecord> {
       const results = await pb.collection('convoys').getFullList({
         filter: `code = "${params.code}" && status = "active"`,
       })
@@ -104,21 +133,53 @@ export function createConvoyApi(pb: PocketBase) {
         user: pb.authStore.record?.id,
         role: 'member',
         status: 'active',
+        joined_at: new Date().toISOString(),
       })
     },
 
-    async list(): Promise<RecordModel[]> {
+    async list(): Promise<ConvoyRecord[]> {
       return pb.collection('convoys').getFullList({
         filter: `status = "active"`,
         sort: '-created',
       })
     },
 
-    async getMembers(convoyId: string): Promise<RecordModel[]> {
+    async get(convoyId: string): Promise<ConvoyRecord> {
+      return pb.collection('convoys').getOne(convoyId)
+    },
+
+    async getByCode(code: string): Promise<ConvoyRecord | null> {
+      const results = await pb.collection('convoys').getFullList({
+        filter: `code = "${code}"`,
+      })
+      return results.length > 0 ? results[0] : null
+    },
+
+    async getMembers(convoyId: string): Promise<ConvoyMemberRecord[]> {
       return pb.collection('convoy_members').getFullList({
         filter: `convoy = "${convoyId}" && status = "active"`,
         expand: 'user,vehicle',
       })
+    },
+
+    async updateStatus(
+      convoyId: string,
+      status: 'active' | 'paused' | 'ended',
+    ): Promise<ConvoyRecord> {
+      return pb.collection('convoys').update(convoyId, { status })
+    },
+
+    async removeMember(memberId: string): Promise<void> {
+      await pb.collection('convoy_members').update(memberId, { status: 'removed' })
+    },
+
+    async leave(convoyId: string, userId: string): Promise<void> {
+      const members = await pb.collection('convoy_members').getFullList({
+        filter: `convoy = "${convoyId}" && user = "${userId}"`,
+      })
+      if (members.length > 0) {
+        await pb.collection('convoy_members').update(members[0].id, { status: 'inactive' })
+      }
     },
   }
 }
@@ -169,4 +230,22 @@ function generateConvoyCode(): string {
     code += chars.charAt(Math.floor(Math.random() * chars.length))
   }
   return code
+}
+
+function generateTripId(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  let tripId = ''
+  for (let i = 0; i < 12; i++) {
+    tripId += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return tripId
+}
+
+function generateSecurityToken(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  let token = ''
+  for (let i = 0; i < 32; i++) {
+    token += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return token
 }

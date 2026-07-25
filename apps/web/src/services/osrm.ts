@@ -11,7 +11,7 @@ interface OSRMRouteParams {
 }
 
 export async function getRoute(params: OSRMRouteParams): Promise<RouteResponse> {
-  const { origin, destination, alternatives = false, steps = true, geometries = 'geojson' } = params
+  const { origin, destination, alternatives = true, steps = true, geometries = 'geojson' } = params
 
   const coordinates = `${origin[0]},${origin[1]};${destination[0]},${destination[1]}`
   const searchParams = new URLSearchParams({
