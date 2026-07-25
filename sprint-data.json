@@ -275,13 +275,13 @@
         {
           "id": "TASK-027",
           "title": "Implement Create Convoy API (PocketBase collection) (FR-CNV-01)",
-          "status": "backlog",
+          "status": "in-progress",
           "priority": "high"
         },
         {
           "id": "TASK-028",
           "title": "Generate unique trip_id with security tokens",
-          "status": "backlog",
+          "status": "in-progress",
           "priority": "high"
         },
         {
