@@ -92,10 +92,15 @@
 
 ### 🔄 In Progress
 
-- [ ] [TASK-027] Implement "Create Convoy" API (PocketBase collection) (FR-CNV-01)
-- [ ] [TASK-028] Generate unique trip_id with security tokens
+- [ ] [TASK-029] Build deep link generation system (FR-CNV-02)
+- [ ] [TASK-030] Implement deep link parsing & validation (FR-CNV-03)
+- [ ] [TASK-031] Build convoy join flow - web redirect (open web app directly)
 
 ### ✅ Done
+
+- [x] [TASK-027] Implement "Create Convoy" API (PocketBase collection) (FR-CNV-01)
+- [x] [TASK-028] Generate unique trip_id with security tokens
+- [x] [TASK-036] Implement convoy roster data model
 
 ---
 

@@ -275,31 +275,31 @@
         {
           "id": "TASK-027",
           "title": "Implement Create Convoy API (PocketBase collection) (FR-CNV-01)",
-          "status": "in-progress",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-028",
           "title": "Generate unique trip_id with security tokens",
-          "status": "in-progress",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-029",
           "title": "Build deep link generation system (FR-CNV-02)",
-          "status": "backlog",
+          "status": "in-progress",
           "priority": "high"
         },
         {
           "id": "TASK-030",
           "title": "Implement deep link parsing & validation (FR-CNV-03)",
-          "status": "backlog",
+          "status": "in-progress",
           "priority": "high"
         },
         {
           "id": "TASK-031",
           "title": "Build convoy join flow - web redirect",
-          "status": "backlog",
+          "status": "in-progress",
           "priority": "high"
         },
         {
@@ -329,7 +329,7 @@
         {
           "id": "TASK-036",
           "title": "Implement convoy roster data model",
-          "status": "backlog",
+          "status": "done",
           "priority": "medium"
         },
         {
