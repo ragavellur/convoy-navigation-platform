@@ -58,14 +58,15 @@
 
 ### 📌 Backlog
 
-- [ ] [TASK-021] Add traffic condition visual overlay to route segments (FR-MAP-07)
-- [ ] [TASK-022] Build off-route detection and recalculation logic (FR-MAP-06)
-- [ ] [TASK-023] Add route summary panel (distance, ETA, time)
 - [ ] [TASK-024] Implement route alternatives selection
 - [ ] [TASK-025] Cache frequently used routes in PocketBase
 - [ ] [TASK-026] Build desktop sidebar layout (map + roster side-by-side) (FR-WEB-09)
 
 ### 🔄 In Progress
+
+- [ ] [TASK-021] Add traffic condition visual overlay to route segments (FR-MAP-07)
+- [ ] [TASK-022] Build off-route detection and recalculation logic (FR-MAP-06)
+- [ ] [TASK-023] Add route summary panel (distance, ETA, time)
 
 ### ✅ Done
 
