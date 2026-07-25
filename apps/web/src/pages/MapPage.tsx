@@ -8,11 +8,14 @@ import {
   calculateTrafficSegments,
   POSITION_CHECK_INTERVAL_MS,
 } from '../services/routing'
+import { getCachedRoute, cacheRoute } from '../services/routeCache'
 import { useGeolocation } from '../hooks/useGeolocation'
 import type { SearchResult, RouteResponse, RouteGeometry } from '../types'
 
 const ROUTE_SOURCE_ID = 'route'
 const ROUTE_LAYER_ID = 'route-line'
+const ALT_SOURCE_PREFIX = 'alt-route-'
+const ALT_LAYER_PREFIX = 'alt-route-line-'
 const TRAFFIC_SOURCE_ID = 'traffic'
 const TRAFFIC_LAYER_PREFIX = 'traffic-segment-'
 
@@ -29,102 +32,77 @@ function MapPage() {
   const [routeError, setRouteError] = useState<string | null>(null)
   const [isOffRoute, setIsOffRoute] = useState(false)
   const [selectedStepIndex, setSelectedStepIndex] = useState<number | null>(null)
+  const [selectedAltIndex, setSelectedAltIndex] = useState(0)
   const { position } = useGeolocation()
 
-  function addRouteLayer(route: RouteResponse['routes'][0]) {
-    if (!map.current) return
-
-    if (map.current.getSource(ROUTE_SOURCE_ID)) {
-      for (let i = 0; i < 20; i++) {
-        const layerId = `${TRAFFIC_LAYER_PREFIX}${i}`
-        if (map.current.getLayer(layerId)) {
-          map.current.removeLayer(layerId)
-        }
-      }
-      if (map.current.getSource(TRAFFIC_SOURCE_ID)) {
-        map.current.removeSource(TRAFFIC_SOURCE_ID)
-      }
-      map.current.removeLayer(ROUTE_LAYER_ID)
-      map.current.removeSource(ROUTE_SOURCE_ID)
-    }
-
-    const geometry = route.geometry as RouteGeometry
-
-    map.current.addSource(ROUTE_SOURCE_ID, {
-      type: 'geojson',
-      data: {
-        type: 'Feature',
-        properties: {},
-        geometry,
-      },
-    })
-
-    map.current.addLayer({
-      id: ROUTE_LAYER_ID,
-      type: 'line',
-      source: ROUTE_SOURCE_ID,
-      layout: {
-        'line-join': 'round',
-        'line-cap': 'round',
-      },
-      paint: {
-        'line-color': '#6366f1',
-        'line-width': 4,
-        'line-opacity': 0.4,
-      },
-    })
-
-    const trafficSegments = calculateTrafficSegments(geometry, route.duration, route.distance)
-    const trafficFeatures = trafficSegments.map((seg) => ({
-      type: 'Feature' as const,
-      properties: { congestion: seg.congestion },
-      geometry: {
-        type: 'LineString' as const,
-        coordinates: seg.coordinates,
-      },
-    }))
-
-    map.current.addSource(TRAFFIC_SOURCE_ID, {
-      type: 'geojson',
-      data: {
-        type: 'FeatureCollection',
-        features: trafficFeatures,
-      },
-    })
-
-    trafficSegments.forEach((seg, i) => {
-      map.current?.addLayer({
-        id: `${TRAFFIC_LAYER_PREFIX}${i}`,
-        type: 'line',
-        source: TRAFFIC_SOURCE_ID,
-        filter: ['==', 'congestion', seg.congestion],
-        layout: {
-          'line-join': 'round',
-          'line-cap': 'round',
-        },
-        paint: {
-          'line-color': seg.color,
-          'line-width': 5,
-          'line-opacity': 0.9,
-        },
-      })
-    })
-  }
-
-  function clearRouteLayers() {
+  function clearAllRouteLayers() {
     if (!map.current) return
     for (let i = 0; i < 20; i++) {
-      const layerId = `${TRAFFIC_LAYER_PREFIX}${i}`
-      if (map.current.getLayer(layerId)) {
-        map.current.removeLayer(layerId)
-      }
+      const trafficId = `${TRAFFIC_LAYER_PREFIX}${i}`
+      if (map.current.getLayer(trafficId)) map.current.removeLayer(trafficId)
     }
-    if (map.current.getSource(TRAFFIC_SOURCE_ID)) {
-      map.current.removeSource(TRAFFIC_SOURCE_ID)
+    if (map.current.getSource(TRAFFIC_SOURCE_ID)) map.current.removeSource(TRAFFIC_SOURCE_ID)
+    for (let i = 0; i < 5; i++) {
+      const altLayerId = `${ALT_LAYER_PREFIX}${i}`
+      const altSourceId = `${ALT_SOURCE_PREFIX}${i}`
+      if (map.current.getLayer(altLayerId)) map.current.removeLayer(altLayerId)
+      if (map.current.getSource(altSourceId)) map.current.removeSource(altSourceId)
     }
-    if (map.current.getSource(ROUTE_SOURCE_ID)) {
-      map.current.removeLayer(ROUTE_LAYER_ID)
-      map.current.removeSource(ROUTE_SOURCE_ID)
+    if (map.current.getLayer(ROUTE_LAYER_ID)) map.current.removeLayer(ROUTE_LAYER_ID)
+    if (map.current.getSource(ROUTE_SOURCE_ID)) map.current.removeSource(ROUTE_SOURCE_ID)
+  }
+
+  function renderRouteOnMap(route: RouteResponse['routes'][0], index: number) {
+    if (!map.current) return
+    const sourceId = index === 0 ? ROUTE_SOURCE_ID : `${ALT_SOURCE_PREFIX}${index}`
+    const layerId = index === 0 ? ROUTE_LAYER_ID : `${ALT_LAYER_PREFIX}${index}`
+    const geometry = route.geometry as RouteGeometry
+    const isActive = index === selectedAltIndex
+
+    map.current.addSource(sourceId, {
+      type: 'geojson',
+      data: { type: 'Feature', properties: {}, geometry },
+    })
+
+    if (isActive) {
+      const trafficSegments = calculateTrafficSegments(geometry, route.duration, route.distance)
+      const trafficFeatures = trafficSegments.map((seg) => ({
+        type: 'Feature' as const,
+        properties: { congestion: seg.congestion },
+        geometry: { type: 'LineString' as const, coordinates: seg.coordinates },
+      }))
+
+      map.current.addSource(TRAFFIC_SOURCE_ID, {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: trafficFeatures },
+      })
+
+      map.current.addLayer({
+        id: layerId,
+        type: 'line',
+        source: sourceId,
+        layout: { 'line-join': 'round', 'line-cap': 'round' },
+        paint: { 'line-color': '#6366f1', 'line-width': 4, 'line-opacity': 0.4 },
+      })
+
+      trafficSegments.forEach((seg, i) => {
+        map.current?.addLayer({
+          id: `${TRAFFIC_LAYER_PREFIX}${i}`,
+          type: 'line',
+          source: TRAFFIC_SOURCE_ID,
+          filter: ['==', 'congestion', seg.congestion],
+          layout: { 'line-join': 'round', 'line-cap': 'round' },
+          paint: { 'line-color': seg.color, 'line-width': 5, 'line-opacity': 0.9 },
+        })
+      })
+    } else {
+      map.current.addLayer({
+        id: layerId,
+        type: 'line',
+        source: sourceId,
+        layout: { 'line-join': 'round', 'line-cap': 'round' },
+        paint: { 'line-color': '#94a3b8', 'line-width': 3, 'line-opacity': 0.5 },
+      })
     }
   }
 
@@ -134,43 +112,73 @@ function MapPage() {
     setMapBounds([bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()])
   }
 
+  const displayRoutes = useCallback(
+    (response: RouteResponse, selectedIndex: number) => {
+      clearAllRouteLayers()
+      response.routes.forEach((route, i) => {
+        renderRouteOnMap(route, i)
+      })
+      const selected = response.routes[selectedIndex]
+      if (selected && map.current) {
+        const geometry = selected.geometry as RouteGeometry
+        const bounds = new maplibregl.LngLatBounds()
+        geometry.coordinates.forEach((coord) => bounds.extend(coord))
+        map.current.fitBounds(bounds, { padding: 80, duration: 1000 })
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [selectedAltIndex],
+  )
+
   const recalculateRoute = useCallback(
     async (destination: [number, number]) => {
       if (!map.current || !position) return
-
       const origin: [number, number] = [position.lng, position.lat]
-      clearRouteLayers()
+      clearAllRouteLayers()
 
       try {
-        const response = await getRoute({
-          origin,
-          destination,
-          steps: true,
-          geometries: 'geojson',
-        })
+        const cached = await getCachedRoute(origin, destination)
+        let response: RouteResponse
+
+        if (cached) {
+          response = {
+            code: 'Ok',
+            routes: [
+              {
+                geometry: JSON.parse(cached.geometry) as RouteGeometry,
+                legs: routeRef.current?.legs || [],
+                distance: cached.distance,
+                duration: cached.duration,
+                weight: cached.duration,
+              },
+            ],
+            waypoints: [],
+          }
+        } else {
+          response = await getRoute({ origin, destination, steps: true, geometries: 'geojson' })
+          cacheRoute(
+            origin,
+            destination,
+            response.routes[0].distance,
+            response.routes[0].duration,
+            JSON.stringify(response.routes[0].geometry),
+            JSON.stringify(response.routes),
+          )
+        }
+
         const route = response.routes[0]
         setRouteData(route)
         setRouteResponse(response)
         routeRef.current = route
         setIsOffRoute(false)
+        setSelectedAltIndex(0)
 
-        if (map.current.loaded()) {
-          addRouteLayer(route)
-        }
-
-        const bounds = new maplibregl.LngLatBounds()
-        bounds.extend(origin)
-        bounds.extend(destination)
-        const geometry = route.geometry as RouteGeometry
-        geometry.coordinates.forEach((coord) => {
-          bounds.extend(coord)
-        })
-        map.current.fitBounds(bounds, { padding: 80, duration: 1000 })
+        displayRoutes(response, 0)
       } catch {
         setRouteError('Could not recalculate route.')
       }
     },
-    [position],
+    [position, displayRoutes],
   )
 
   const clearRoute = useCallback(() => {
@@ -178,7 +186,7 @@ function MapPage() {
       clearInterval(offRouteTimerRef.current)
       offRouteTimerRef.current = null
     }
-    clearRouteLayers()
+    clearAllRouteLayers()
     markersRef.current.forEach((m) => m.remove())
     markersRef.current = []
     setRouteData(null)
@@ -186,13 +194,13 @@ function MapPage() {
     setRouteError(null)
     setIsOffRoute(false)
     setSelectedStepIndex(null)
+    setSelectedAltIndex(0)
     routeRef.current = null
   }, [])
 
   const handleSearchResult = useCallback(
     async (result: SearchResult) => {
       if (!map.current) return
-
       clearRoute()
 
       const origin: [number, number] = position ? [position.lng, position.lat] : [2.3522, 48.8566]
@@ -219,92 +227,103 @@ function MapPage() {
       markersRef.current.push(destMarker)
 
       try {
-        const response = await getRoute({
-          origin,
-          destination,
-          steps: true,
-          geometries: 'geojson',
-        })
+        const cached = await getCachedRoute(origin, destination)
+        let response: RouteResponse
+
+        if (cached) {
+          response = {
+            code: 'Ok',
+            routes: [
+              {
+                geometry: JSON.parse(cached.geometry) as RouteGeometry,
+                legs: [],
+                distance: cached.distance,
+                duration: cached.duration,
+                weight: cached.duration,
+              },
+            ],
+            waypoints: [],
+          }
+        } else {
+          response = await getRoute({ origin, destination, steps: true, geometries: 'geojson' })
+          cacheRoute(
+            origin,
+            destination,
+            response.routes[0].distance,
+            response.routes[0].duration,
+            JSON.stringify(response.routes[0].geometry),
+            JSON.stringify(response.routes),
+          )
+        }
+
         const route = response.routes[0]
         setRouteData(route)
         setRouteResponse(response)
         routeRef.current = route
+        setSelectedAltIndex(0)
 
-        map.current.on('load', () => addRouteLayer(route))
+        map.current.on('load', () => displayRoutes(response, 0))
         if (map.current.loaded()) {
-          addRouteLayer(route)
+          displayRoutes(response, 0)
         }
-
-        const bounds = new maplibregl.LngLatBounds()
-        bounds.extend(origin)
-        bounds.extend(destination)
-        const geometry = route.geometry as RouteGeometry
-        geometry.coordinates.forEach((coord) => {
-          bounds.extend(coord)
-        })
-        map.current.fitBounds(bounds, { padding: 80, duration: 1500 })
       } catch {
         setRouteError('Could not calculate route. Please try again.')
         map.current.flyTo({ center: destination, zoom: 15, duration: 1500 })
       }
     },
-    [position, clearRoute],
+    [position, clearRoute, displayRoutes],
+  )
+
+  const selectAlternative = useCallback(
+    (index: number) => {
+      if (!routeResponse) return
+      setSelectedAltIndex(index)
+      const route = routeResponse.routes[index]
+      setRouteData(route)
+      routeRef.current = route
+      clearAllRouteLayers()
+      routeResponse.routes.forEach((r, i) => {
+        renderRouteOnMap(r, i)
+      })
+    },
+    [routeResponse],
   )
 
   useEffect(() => {
     if (!position || !routeRef.current) return
-
     const geometry = routeRef.current.geometry as RouteGeometry
-    const off = checkOffRoute(position.lat, position.lng, geometry)
-    setIsOffRoute(off)
-
-    return () => {}
+    setIsOffRoute(checkOffRoute(position.lat, position.lng, geometry))
   }, [position])
 
   useEffect(() => {
     if (!routeData || !position) return
-
-    if (offRouteTimerRef.current) {
-      clearInterval(offRouteTimerRef.current)
-    }
-
+    if (offRouteTimerRef.current) clearInterval(offRouteTimerRef.current)
     offRouteTimerRef.current = setInterval(() => {
       if (!routeRef.current || !position) return
       const geometry = routeRef.current.geometry as RouteGeometry
-      const off = checkOffRoute(position.lat, position.lng, geometry)
-      setIsOffRoute(off)
+      setIsOffRoute(checkOffRoute(position.lat, position.lng, geometry))
     }, POSITION_CHECK_INTERVAL_MS)
-
     return () => {
-      if (offRouteTimerRef.current) {
-        clearInterval(offRouteTimerRef.current)
-      }
+      if (offRouteTimerRef.current) clearInterval(offRouteTimerRef.current)
     }
   }, [routeData, position])
 
   useEffect(() => {
     if (!mapContainer.current || map.current) return
-
     map.current = new maplibregl.Map({
       container: mapContainer.current,
       style: 'https://tiles.openfreemap.org/styles/liberty',
       center: [7.4266, 43.7403],
       zoom: 14,
     })
-
     map.current.addControl(new maplibregl.NavigationControl(), 'top-right')
     map.current.addControl(new maplibregl.ScaleControl(), 'bottom-left')
     map.current.addControl(new maplibregl.FullscreenControl(), 'top-right')
-
     map.current.on('load', () => {
       setMapLoaded(true)
       updateBounds()
     })
-
-    map.current.on('moveend', () => {
-      updateBounds()
-    })
-
+    map.current.on('moveend', () => updateBounds())
     return () => {
       map.current?.remove()
       map.current = null
@@ -312,6 +331,7 @@ function MapPage() {
   }, [])
 
   const firstStep = routeData?.legs[0]?.steps[0]
+  const alternatives = routeResponse?.routes || []
 
   return (
     <div className="relative w-full h-[calc(100vh-64px)]">
@@ -392,7 +412,38 @@ function MapPage() {
               <div className="text-xs text-indigo-500 mt-0.5">Duration</div>
             </div>
           </div>
-          <div className="mb-3">
+          {alternatives.length > 1 && (
+            <div className="mb-3 border-t border-gray-100 pt-3">
+              <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                {alternatives.length} Routes Found
+              </h4>
+              <div className="space-y-2">
+                {alternatives.map((alt, i) => (
+                  <button
+                    key={i}
+                    onClick={() => selectAlternative(i)}
+                    className={`w-full text-left p-2 rounded-lg text-sm border transition-colors ${
+                      selectedAltIndex === i
+                        ? 'border-indigo-300 bg-indigo-50 ring-1 ring-indigo-200'
+                        : 'border-gray-200 hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-gray-900">Route {i + 1}</span>
+                      {selectedAltIndex === i && (
+                        <span className="text-xs text-indigo-600 font-medium">Selected</span>
+                      )}
+                    </div>
+                    <div className="flex gap-3 text-xs text-gray-500 mt-0.5">
+                      <span>{formatDistance(alt.distance)}</span>
+                      <span>{formatDuration(alt.duration)}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          <div className="mb-3 border-t border-gray-100 pt-3">
             <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
               Traffic
             </h4>

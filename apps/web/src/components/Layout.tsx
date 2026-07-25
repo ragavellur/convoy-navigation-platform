@@ -22,6 +22,8 @@ function Layout() {
       ]
     : []
 
+  const isMapPage = location.pathname === '/map'
+
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
       <nav className="bg-white shadow-sm sticky top-0 z-50">
@@ -169,9 +171,46 @@ function Layout() {
         )}
       </nav>
 
-      <main className="flex-1 pb-16 md:pb-0">
-        <Outlet />
-      </main>
+      {isMapPage && isAuthenticated ? (
+        <div className="flex-1 flex">
+          <aside className="hidden lg:flex lg:flex-col lg:w-80 bg-white border-r border-gray-200 overflow-y-auto">
+            <div className="p-4 border-b border-gray-200">
+              <h2 className="text-sm font-semibold text-gray-900">Convoy Panel</h2>
+              <p className="text-xs text-gray-500 mt-1">Route details and convoy info</p>
+            </div>
+            <div className="flex-1 p-4">
+              <div className="text-sm text-gray-500">
+                <p className="mb-3">Select a destination on the map to see route details here.</p>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-xs">
+                    <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                    <span>Online convoy members</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    <span className="w-2 h-2 rounded-full bg-gray-400"></span>
+                    <span>Offline convoy members</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="p-4 border-t border-gray-200">
+              <Link
+                to="/convoy"
+                className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700"
+              >
+                Manage Convoy
+              </Link>
+            </div>
+          </aside>
+          <main className="flex-1 min-h-0">
+            <Outlet />
+          </main>
+        </div>
+      ) : (
+        <main className="flex-1 pb-16 md:pb-0">
+          <Outlet />
+        </main>
+      )}
 
       {isAuthenticated && (
         <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 md:hidden z-50">
