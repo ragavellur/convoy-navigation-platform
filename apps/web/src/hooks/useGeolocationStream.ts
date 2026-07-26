@@ -13,7 +13,6 @@ export interface GeoPosition {
 }
 
 interface GeolocationStreamState {
-  position: GeoPosition | null
   permissionState: PermissionState
   error: string | null
 }
@@ -22,11 +21,19 @@ const isGeolocationSupported = typeof navigator !== 'undefined' && 'geolocation'
 
 export function useGeolocationStream(enableHighAccuracy = true) {
   const [state, setState] = useState<GeolocationStreamState>({
-    position: null,
     permissionState: isGeolocationSupported ? 'idle' : 'unavailable',
     error: isGeolocationSupported ? null : 'Geolocation not supported',
   })
   const watchIdRef = useRef<number | null>(null)
+  const positionRef = useRef<GeoPosition | null>(null)
+  const listenersRef = useRef<((pos: GeoPosition) => void)[]>([])
+
+  const onPosition = useCallback((callback: (pos: GeoPosition) => void) => {
+    listenersRef.current.push(callback)
+    return () => {
+      listenersRef.current = listenersRef.current.filter((l) => l !== callback)
+    }
+  }, [])
 
   const startWatching = useCallback(() => {
     if (!isGeolocationSupported) return
@@ -35,18 +42,17 @@ export function useGeolocationStream(enableHighAccuracy = true) {
 
     watchIdRef.current = navigator.geolocation.watchPosition(
       (pos) => {
-        setState({
-          position: {
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude,
-            heading: pos.coords.heading ?? null,
-            speed: pos.coords.speed ?? null,
-            accuracy: pos.coords.accuracy,
-            timestamp: pos.timestamp,
-          },
-          permissionState: 'granted',
-          error: null,
-        })
+        const newPos: GeoPosition = {
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+          heading: pos.coords.heading ?? null,
+          speed: pos.coords.speed ?? null,
+          accuracy: pos.coords.accuracy,
+          timestamp: pos.timestamp,
+        }
+        positionRef.current = newPos
+        setState((prev) => ({ ...prev, permissionState: 'granted', error: null }))
+        listenersRef.current.forEach((l) => l(newPos))
       },
       (err) => {
         let permissionState: PermissionState = 'denied'
@@ -83,6 +89,8 @@ export function useGeolocationStream(enableHighAccuracy = true) {
 
   return {
     ...state,
+    positionRef,
+    onPosition,
     startWatching,
     stopWatching,
     requestPermission,

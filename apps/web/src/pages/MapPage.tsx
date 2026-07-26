@@ -37,7 +37,6 @@ function MapPage() {
   const convoyMarkersRef = useRef<Map<string, maplibregl.Marker>>(new Map())
   const offRouteTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const routeRef = useRef<RouteResponse['routes'][0] | null>(null)
-  const publishTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const [mapLoaded, setMapLoaded] = useState(false)
   const [mapBounds, setMapBounds] = useState<[number, number, number, number] | undefined>()
   const [routeData, setRouteData] = useState<RouteResponse['routes'][0] | null>(null)
@@ -326,38 +325,36 @@ function MapPage() {
   }, [routeData, position])
 
   useEffect(() => {
-    if (!convoyId || !geoStream.position) return
-
+    if (!convoyId) return
     const vehicleId = pb.authStore.record?.id
     if (!vehicleId) return
 
     publishPosition({
       vehicleId,
       convoyId,
-      lat: geoStream.position.lat,
-      lng: geoStream.position.lng,
-      speed: geoStream.position.speed,
-      heading: geoStream.position.heading,
-      accuracy: geoStream.position.accuracy,
+      lat: geoStream.positionRef.current?.lat ?? 43.7403,
+      lng: geoStream.positionRef.current?.lng ?? 7.4266,
+      speed: geoStream.positionRef.current?.speed,
+      heading: geoStream.positionRef.current?.heading,
+      accuracy: geoStream.positionRef.current?.accuracy,
     }).catch(() => {})
 
-    publishTimerRef.current = setInterval(() => {
-      if (!geoStream.position) return
+    const unsub = geoStream.onPosition((pos) => {
       publishPosition({
         vehicleId,
         convoyId,
-        lat: geoStream.position.lat,
-        lng: geoStream.position.lng,
-        speed: geoStream.position.speed,
-        heading: geoStream.position.heading,
-        accuracy: geoStream.position.accuracy,
+        lat: pos.lat,
+        lng: pos.lng,
+        speed: pos.speed,
+        heading: pos.heading,
+        accuracy: pos.accuracy,
       }).catch(() => {})
-    }, 5000)
+    })
 
     return () => {
-      if (publishTimerRef.current) clearInterval(publishTimerRef.current)
+      unsub()
     }
-  }, [convoyId, geoStream.position])
+  }, [convoyId])
 
   useEffect(() => {
     if (!convoyId) return

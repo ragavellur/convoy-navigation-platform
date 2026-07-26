@@ -23,15 +23,16 @@ export async function publishPosition(params: {
   heading?: number | null
   accuracy?: number | null
 }): Promise<Position> {
-  return pb.collection('positions').create({
+  const data: Record<string, unknown> = {
     vehicle: params.vehicleId,
     convoy: params.convoyId,
     lat: params.lat,
     lng: params.lng,
-    speed: params.speed ?? null,
-    heading: params.heading ?? null,
-    accuracy: params.accuracy ?? null,
-  })
+  }
+  if (params.speed != null) data.speed = params.speed
+  if (params.heading != null) data.heading = params.heading
+  if (params.accuracy != null) data.accuracy = params.accuracy
+  return pb.collection('positions').create(data)
 }
 
 export async function subscribeToConvoyPositions(
