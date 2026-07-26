@@ -113,9 +113,6 @@
 
 ### 📌 Backlog
 
-- [ ] [TASK-042] Create custom map markers for vehicle types (FR-GPS-03)
-- [ ] [TASK-043] Implement marker LERP interpolation (FR-GPS-04)
-- [ ] [TASK-044] Add dead-reckoning for smooth transitions
 - [ ] [TASK-045] Build heading & velocity vector display (FR-GPS-05)
 - [ ] [TASK-046] Implement PocketBase Realtime for position broadcast (FR-GPS-06)
 
@@ -129,6 +126,9 @@
   - [x] [TASK-041a] Stationary state: 30s heartbeat
   - [x] [TASK-041b] Urban state (<40km/h): 5s / 15m delta
   - [x] [TASK-041c] Highway state (>40km/h): 3s / 40m delta
+- [x] [TASK-042] Create custom map markers for vehicle types (FR-GPS-03)
+- [x] [TASK-043] Implement marker LERP interpolation (FR-GPS-04)
+- [x] [TASK-044] Add dead-reckoning for smooth transitions
 - [x] [TASK-047] Add position update throttling & debouncing
 - [x] [TASK-048] Build location permission handling flow (browser prompt)
 

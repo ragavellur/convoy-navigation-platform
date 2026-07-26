@@ -374,19 +374,19 @@
         {
           "id": "TASK-042",
           "title": "Create custom map markers for vehicle types (FR-GPS-03)",
-          "status": "backlog",
+          "status": "done",
           "priority": "medium"
         },
         {
           "id": "TASK-043",
           "title": "Implement marker LERP interpolation (FR-GPS-04)",
-          "status": "backlog",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-044",
           "title": "Add dead-reckoning for smooth transitions",
-          "status": "backlog",
+          "status": "done",
           "priority": "medium"
         },
         {
