@@ -113,24 +113,25 @@
 
 ### 📌 Backlog
 
-- [ ] [TASK-041] Build adaptive polling logic (FR-GPS-02):
-  - [ ] [TASK-041a] Stationary state: 30s heartbeat
-  - [ ] [TASK-041b] Urban state (<40km/h): 5s / 15m delta
-  - [ ] [TASK-041c] Highway state (>40km/h): 3s / 40m delta
 - [ ] [TASK-042] Create custom map markers for vehicle types (FR-GPS-03)
 - [ ] [TASK-043] Implement marker LERP interpolation (FR-GPS-04)
 - [ ] [TASK-044] Add dead-reckoning for smooth transitions
 - [ ] [TASK-045] Build heading & velocity vector display (FR-GPS-05)
 - [ ] [TASK-046] Implement PocketBase Realtime for position broadcast (FR-GPS-06)
-- [ ] [TASK-047] Add position update throttling & debouncing
 
 ### 🔄 In Progress
 
-- [ ] [TASK-039] Set up PocketBase Realtime subscriptions
-- [ ] [TASK-040] Implement browser Geolocation API streaming (FR-GPS-01)
-- [ ] [TASK-048] Build location permission handling flow (browser prompt)
+- [ ] [TASK-041] Build adaptive polling logic (FR-GPS-02):
+  - [ ] [TASK-041a] Stationary state: 30s heartbeat
+  - [ ] [TASK-041b] Urban state (<40km/h): 5s / 15m delta
+  - [ ] [TASK-041c] Highway state (>40km/h): 3s / 40m delta
+- [ ] [TASK-047] Add position update throttling & debouncing
 
 ### ✅ Done
+
+- [x] [TASK-039] Set up PocketBase Realtime subscriptions
+- [x] [TASK-040] Implement browser Geolocation API streaming (FR-GPS-01)
+- [x] [TASK-048] Build location permission handling flow (browser prompt)
 
 ---
 

@@ -356,19 +356,19 @@
         {
           "id": "TASK-039",
           "title": "Set up PocketBase Realtime subscriptions",
-          "status": "in-progress",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-040",
           "title": "Implement browser Geolocation API streaming (FR-GPS-01)",
-          "status": "in-progress",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-041",
           "title": "Build adaptive polling logic (FR-GPS-02)",
-          "status": "backlog",
+          "status": "in-progress",
           "priority": "high"
         },
         {
@@ -404,13 +404,13 @@
         {
           "id": "TASK-047",
           "title": "Add position update throttling & debouncing",
-          "status": "backlog",
+          "status": "in-progress",
           "priority": "medium"
         },
         {
           "id": "TASK-048",
           "title": "Build location permission handling flow (browser prompt)",
-          "status": "in-progress",
+          "status": "done",
           "priority": "medium"
         }
       ]
