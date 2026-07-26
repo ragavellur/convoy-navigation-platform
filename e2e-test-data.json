@@ -1,0 +1,596 @@
+{
+  "projectName": "Real-Time Convoy Navigation & Communication Platform",
+  "testSuite": "E2E Verification — Post-Sprint 4",
+  "created": "2026-07-26",
+  "baseUrl": "http://localhost:5173",
+  "categories": [
+    {
+      "id": "infrastructure",
+      "name": "Infrastructure Smoke Tests",
+      "tests": [
+        {
+          "id": "I-1",
+          "title": "All Docker containers running",
+          "steps": "Run `docker-compose ps`",
+          "expected": "All 4 services healthy",
+          "status": "pending",
+          "sprint": "Sprint 1",
+          "taskId": "TASK-005",
+          "priority": "high"
+        },
+        {
+          "id": "I-2",
+          "title": "PocketBase admin accessible",
+          "steps": "GET http://localhost:8090/_/",
+          "expected": "HTTP 200 response",
+          "status": "pending",
+          "sprint": "Sprint 1",
+          "taskId": "TASK-004",
+          "priority": "high"
+        },
+        {
+          "id": "I-3",
+          "title": "OSRM responds",
+          "steps": "GET http://localhost:5001/health",
+          "expected": "HTTP 200 response",
+          "status": "pending",
+          "sprint": "Sprint 1",
+          "taskId": "TASK-012",
+          "priority": "high"
+        },
+        {
+          "id": "I-4",
+          "title": "Nominatim responds",
+          "steps": "GET http://localhost:8080/status",
+          "expected": "Status: ready",
+          "status": "pending",
+          "sprint": "Sprint 1",
+          "taskId": "TASK-011",
+          "priority": "high"
+        },
+        {
+          "id": "I-5",
+          "title": "Redis responds",
+          "steps": "docker exec convoy-redis redis-cli ping",
+          "expected": "PONG response",
+          "status": "pending",
+          "sprint": "Sprint 1",
+          "taskId": "TASK-005D",
+          "priority": "medium"
+        },
+        {
+          "id": "I-6",
+          "title": "All PocketBase collections exist",
+          "steps": "GET /api/collections via Admin API",
+          "expected": "7+ collections present",
+          "status": "pending",
+          "sprint": "Sprint 1",
+          "taskId": "TASK-006",
+          "priority": "high"
+        }
+      ]
+    },
+    {
+      "id": "authentication",
+      "name": "Authentication Flow",
+      "tests": [
+        {
+          "id": "A-1",
+          "title": "Register new user",
+          "steps": "Fill name/email/password form → Submit",
+          "expected": "Redirects to /map, user appears in nav",
+          "status": "pending",
+          "sprint": "Sprint 1",
+          "taskId": "TASK-007",
+          "priority": "high"
+        },
+        {
+          "id": "A-2",
+          "title": "Login existing user",
+          "steps": "Enter credentials → Submit",
+          "expected": "Redirects to /map, session created",
+          "status": "pending",
+          "sprint": "Sprint 1",
+          "taskId": "TASK-008",
+          "priority": "high"
+        },
+        {
+          "id": "A-3",
+          "title": "Logout",
+          "steps": "Click Logout button",
+          "expected": "Returns to /, nav shows Login/Register",
+          "status": "pending",
+          "sprint": "Sprint 1",
+          "taskId": "TASK-008",
+          "priority": "high"
+        },
+        {
+          "id": "A-4",
+          "title": "Protected route redirect",
+          "steps": "Visit /map unauthenticated",
+          "expected": "Redirects to /login?redirect=/map",
+          "status": "pending",
+          "sprint": "Sprint 1",
+          "taskId": "TASK-003",
+          "priority": "high"
+        },
+        {
+          "id": "A-5",
+          "title": "Session persistence",
+          "steps": "Login → Refresh page",
+          "expected": "Still authenticated (JWT in localStorage)",
+          "status": "pending",
+          "sprint": "Sprint 1",
+          "taskId": "TASK-009",
+          "priority": "medium"
+        },
+        {
+          "id": "A-6",
+          "title": "Duplicate registration",
+          "steps": "Register with existing email",
+          "expected": "Error message displayed",
+          "status": "pending",
+          "sprint": "Sprint 1",
+          "taskId": "TASK-007",
+          "priority": "medium"
+        }
+      ]
+    },
+    {
+      "id": "map-search",
+      "name": "Map & Search",
+      "tests": [
+        {
+          "id": "M-1",
+          "title": "Map renders",
+          "steps": "Navigate to /map",
+          "expected": "MapLibre GL canvas visible, zoom controls present",
+          "status": "pending",
+          "sprint": "Sprint 1",
+          "taskId": "TASK-013",
+          "priority": "high"
+        },
+        {
+          "id": "M-2",
+          "title": "GPS centering",
+          "steps": "Grant location permission",
+          "expected": "Map flies to user's current location",
+          "status": "pending",
+          "sprint": "Sprint 4",
+          "taskId": "TASK-040",
+          "priority": "high"
+        },
+        {
+          "id": "M-3",
+          "title": "Place search",
+          "steps": "Type in search box",
+          "expected": "Dropdown shows Nominatim autocomplete results",
+          "status": "pending",
+          "sprint": "Sprint 2",
+          "taskId": "TASK-027",
+          "priority": "high"
+        },
+        {
+          "id": "M-4",
+          "title": "Route calculation",
+          "steps": "Click a search result",
+          "expected": "Route line drawn, panel shows distance/duration",
+          "status": "pending",
+          "sprint": "Sprint 2",
+          "taskId": "TASK-028",
+          "priority": "high"
+        },
+        {
+          "id": "M-5",
+          "title": "Route caching",
+          "steps": "Search same route twice",
+          "expected": "Second load served from PocketBase cache",
+          "status": "pending",
+          "sprint": "Sprint 2",
+          "taskId": "TASK-030",
+          "priority": "medium"
+        },
+        {
+          "id": "M-6",
+          "title": "Alternative routes",
+          "steps": "Calculate route with alternatives enabled",
+          "expected": "Route selector shows multiple options",
+          "status": "pending",
+          "sprint": "Sprint 2",
+          "taskId": "TASK-029",
+          "priority": "medium"
+        },
+        {
+          "id": "M-7",
+          "title": "Traffic segments",
+          "steps": "Calculate any route",
+          "expected": "Color-coded traffic overlay (green→red)",
+          "status": "pending",
+          "sprint": "Sprint 2",
+          "taskId": "TASK-029",
+          "priority": "medium"
+        },
+        {
+          "id": "M-8",
+          "title": "Off-route detection",
+          "steps": "Move position 50m+ from route",
+          "expected": "Warning banner appears, route recalculates",
+          "status": "pending",
+          "sprint": "Sprint 2",
+          "taskId": "TASK-029",
+          "priority": "high"
+        },
+        {
+          "id": "M-9",
+          "title": "Location permission denied",
+          "steps": "Deny location access",
+          "expected": "Permission prompt shown with retry button",
+          "status": "pending",
+          "sprint": "Sprint 4",
+          "taskId": "TASK-048",
+          "priority": "medium"
+        },
+        {
+          "id": "M-10",
+          "title": "Console clean",
+          "steps": "Open browser console on /map",
+          "expected": "Zero errors or warnings",
+          "status": "pending",
+          "sprint": "Sprint 4",
+          "taskId": "TASK-042",
+          "priority": "medium"
+        }
+      ]
+    },
+    {
+      "id": "convoy",
+      "name": "Convoy Lifecycle",
+      "tests": [
+        {
+          "id": "C-1",
+          "title": "Create convoy",
+          "steps": "Go to /convoy → Create",
+          "expected": "Convoy listed with 6-char code",
+          "status": "pending",
+          "sprint": "Sprint 3",
+          "taskId": "TASK-031",
+          "priority": "high"
+        },
+        {
+          "id": "C-2",
+          "title": "Join by code",
+          "steps": "Enter code in Join field → Submit",
+          "expected": "Navigated to convoy detail, member listed",
+          "status": "pending",
+          "sprint": "Sprint 3",
+          "taskId": "TASK-031",
+          "priority": "high"
+        },
+        {
+          "id": "C-3",
+          "title": "Deep link generation",
+          "steps": "Open convoy detail → Copy Link",
+          "expected": "URL contains code and trip_id params",
+          "status": "pending",
+          "sprint": "Sprint 3",
+          "taskId": "TASK-029",
+          "priority": "high"
+        },
+        {
+          "id": "C-4",
+          "title": "Deep link join (authenticated)",
+          "steps": "Open deep link in new tab while logged in",
+          "expected": "Auto-joins convoy, redirects to map",
+          "status": "pending",
+          "sprint": "Sprint 3",
+          "taskId": "TASK-031",
+          "priority": "high"
+        },
+        {
+          "id": "C-5",
+          "title": "Deep link join (unauthenticated)",
+          "steps": "Open deep link while logged out",
+          "expected": "Redirects to /login?redirect=/join?code=...",
+          "status": "pending",
+          "sprint": "Sprint 3",
+          "taskId": "TASK-031",
+          "priority": "high"
+        },
+        {
+          "id": "C-6",
+          "title": "Vehicle registration",
+          "steps": "Open convoy detail → Add Vehicle → Select type → Submit",
+          "expected": "Vehicle shown on member record",
+          "status": "pending",
+          "sprint": "Sprint 3",
+          "taskId": "TASK-032",
+          "priority": "medium"
+        },
+        {
+          "id": "C-7",
+          "title": "Host remove member",
+          "steps": "Host clicks remove on a member",
+          "expected": "Member status changes to kicked",
+          "status": "pending",
+          "sprint": "Sprint 3",
+          "taskId": "TASK-034",
+          "priority": "medium"
+        },
+        {
+          "id": "C-8",
+          "title": "End session",
+          "steps": "Host clicks End Session",
+          "expected": "Convoy status → ended, all members inactive",
+          "status": "pending",
+          "sprint": "Sprint 3",
+          "taskId": "TASK-035",
+          "priority": "high"
+        },
+        {
+          "id": "C-9",
+          "title": "Share via WhatsApp",
+          "steps": "Click WhatsApp share button",
+          "expected": "Opens WhatsApp with pre-filled invite link",
+          "status": "pending",
+          "sprint": "Sprint 3",
+          "taskId": "TASK-037",
+          "priority": "low"
+        },
+        {
+          "id": "C-10",
+          "title": "Share via email",
+          "steps": "Click Email share button",
+          "expected": "Opens email client with convoy details",
+          "status": "pending",
+          "sprint": "Sprint 3",
+          "taskId": "TASK-037",
+          "priority": "low"
+        }
+      ]
+    },
+    {
+      "id": "position",
+      "name": "Real-Time Position Tracking",
+      "tests": [
+        {
+          "id": "P-1",
+          "title": "Position publish",
+          "steps": "Join convoy → Open map → Grant GPS",
+          "expected": "Position record created in PocketBase positions collection",
+          "status": "pending",
+          "sprint": "Sprint 4",
+          "taskId": "TASK-039",
+          "priority": "high"
+        },
+        {
+          "id": "P-2",
+          "title": "Position subscribe",
+          "steps": "Second browser joins same convoy",
+          "expected": "First browser sees second member marker appear",
+          "status": "pending",
+          "sprint": "Sprint 4",
+          "taskId": "TASK-039",
+          "priority": "high"
+        },
+        {
+          "id": "P-3",
+          "title": "Marker animation",
+          "steps": "Member moves position",
+          "expected": "Marker smoothly transitions (LERP) to new position",
+          "status": "pending",
+          "sprint": "Sprint 4",
+          "taskId": "TASK-043",
+          "priority": "high"
+        },
+        {
+          "id": "P-4",
+          "title": "Marker rotation",
+          "steps": "Member has heading data",
+          "expected": "Marker icon rotates to match heading",
+          "status": "pending",
+          "sprint": "Sprint 4",
+          "taskId": "TASK-045",
+          "priority": "medium"
+        },
+        {
+          "id": "P-5",
+          "title": "Velocity vector",
+          "steps": "Member moving > 0.5 m/s with heading",
+          "expected": "Directional line extends from marker",
+          "status": "pending",
+          "sprint": "Sprint 4",
+          "taskId": "TASK-045",
+          "priority": "medium"
+        },
+        {
+          "id": "P-6",
+          "title": "Heartbeat broadcast",
+          "steps": "Stay idle for 10s in convoy mode",
+          "expected": "New position records every 5 seconds",
+          "status": "pending",
+          "sprint": "Sprint 4",
+          "taskId": "TASK-046",
+          "priority": "medium"
+        },
+        {
+          "id": "P-7",
+          "title": "Position fetch on join",
+          "steps": "Join convoy with existing members",
+          "expected": "All member markers appear immediately",
+          "status": "pending",
+          "sprint": "Sprint 4",
+          "taskId": "TASK-046",
+          "priority": "high"
+        },
+        {
+          "id": "P-8",
+          "title": "Multiple convoy members",
+          "steps": "3 browsers join same convoy",
+          "expected": "All 3 markers visible, animate independently",
+          "status": "pending",
+          "sprint": "Sprint 4",
+          "taskId": "TASK-044",
+          "priority": "high"
+        }
+      ]
+    },
+    {
+      "id": "concurrent",
+      "name": "Multi-Browser Concurrent Test",
+      "tests": [
+        {
+          "id": "X-1",
+          "title": "Two users create convoys",
+          "steps": "User A creates convoy, User B creates convoy",
+          "expected": "Both see only their own convoy members",
+          "status": "pending",
+          "sprint": "Sprint 3",
+          "taskId": "TASK-031",
+          "priority": "high"
+        },
+        {
+          "id": "X-2",
+          "title": "Cross-convoy isolation",
+          "steps": "User A and B in different convoys",
+          "expected": "Neither sees the other's markers",
+          "status": "pending",
+          "sprint": "Sprint 4",
+          "taskId": "TASK-039",
+          "priority": "high"
+        },
+        {
+          "id": "X-3",
+          "title": "Real-time sync",
+          "steps": "User A searches route, User B searches different route",
+          "expected": "Both routes render independently",
+          "status": "pending",
+          "sprint": "Sprint 4",
+          "taskId": "TASK-040",
+          "priority": "medium"
+        }
+      ]
+    },
+    {
+      "id": "edge",
+      "name": "Edge Cases",
+      "tests": [
+        {
+          "id": "E-1",
+          "title": "GPS unavailable",
+          "steps": "Desktop without GPS sensor",
+          "expected": "Permission prompt → Map stays at world view",
+          "status": "pending",
+          "sprint": "Sprint 4",
+          "taskId": "TASK-048",
+          "priority": "medium"
+        },
+        {
+          "id": "E-2",
+          "title": "PocketBase offline",
+          "steps": "Stop PocketBase container",
+          "expected": "Graceful error handling, no crash",
+          "status": "pending",
+          "sprint": "Sprint 1",
+          "taskId": "TASK-004",
+          "priority": "medium"
+        },
+        {
+          "id": "E-3",
+          "title": "OSRM offline",
+          "steps": "Stop OSRM container",
+          "expected": "Route calculation shows error message",
+          "status": "pending",
+          "sprint": "Sprint 1",
+          "taskId": "TASK-012",
+          "priority": "medium"
+        },
+        {
+          "id": "E-4",
+          "title": "Stale convoy cleanup",
+          "steps": "Create convoy, wait 30+ minutes",
+          "expected": "Convoy auto-ended by session cleanup",
+          "status": "pending",
+          "sprint": "Sprint 3",
+          "taskId": "TASK-035",
+          "priority": "low"
+        },
+        {
+          "id": "E-5",
+          "title": "Rapid position updates",
+          "steps": "Simulate high-speed movement",
+          "expected": "Markers don't jump, animation smooth",
+          "status": "pending",
+          "sprint": "Sprint 4",
+          "taskId": "TASK-043",
+          "priority": "medium"
+        },
+        {
+          "id": "E-6",
+          "title": "Mobile responsive",
+          "steps": "Open on mobile viewport (375px)",
+          "expected": "Bottom nav, hamburger menu, map fills screen",
+          "status": "pending",
+          "sprint": "Sprint 1",
+          "taskId": "TASK-016",
+          "priority": "medium"
+        }
+      ]
+    },
+    {
+      "id": "browser",
+      "name": "Browser Support",
+      "tests": [
+        {
+          "id": "B-1",
+          "title": "Chrome latest (macOS)",
+          "steps": "Run full test suite on Chrome",
+          "expected": "All P0 tests pass",
+          "status": "pending",
+          "sprint": "—",
+          "taskId": "—",
+          "priority": "high"
+        },
+        {
+          "id": "B-2",
+          "title": "Safari latest (macOS)",
+          "steps": "Run full test suite on Safari",
+          "expected": "All P1 tests pass",
+          "status": "pending",
+          "sprint": "—",
+          "taskId": "—",
+          "priority": "medium"
+        },
+        {
+          "id": "B-3",
+          "title": "Firefox latest (macOS)",
+          "steps": "Run full test suite on Firefox",
+          "expected": "All P1 tests pass",
+          "status": "pending",
+          "sprint": "—",
+          "taskId": "—",
+          "priority": "medium"
+        },
+        {
+          "id": "B-4",
+          "title": "Chrome Mobile (Android)",
+          "steps": "Run full test suite on Android Chrome",
+          "expected": "All P2 tests pass",
+          "status": "pending",
+          "sprint": "—",
+          "taskId": "—",
+          "priority": "low"
+        },
+        {
+          "id": "B-5",
+          "title": "Safari Mobile (iOS)",
+          "steps": "Run full test suite on iOS Safari",
+          "expected": "All P2 tests pass",
+          "status": "pending",
+          "sprint": "—",
+          "taskId": "—",
+          "priority": "low"
+        }
+      ]
+    }
+  ]
+}
