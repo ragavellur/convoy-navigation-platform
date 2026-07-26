@@ -113,8 +113,7 @@
 
 ### 📌 Backlog
 
-- [ ] [TASK-045] Build heading & velocity vector display (FR-GPS-05)
-- [ ] [TASK-046] Implement PocketBase Realtime for position broadcast (FR-GPS-06)
+(none — Sprint 4 complete)
 
 ### 🔄 In Progress
 
@@ -129,6 +128,8 @@
 - [x] [TASK-042] Create custom map markers for vehicle types (FR-GPS-03)
 - [x] [TASK-043] Implement marker LERP interpolation (FR-GPS-04)
 - [x] [TASK-044] Add dead-reckoning for smooth transitions
+- [x] [TASK-045] Build heading & velocity vector display (FR-GPS-05)
+- [x] [TASK-046] Implement PocketBase Realtime for position broadcast (FR-GPS-06)
 - [x] [TASK-047] Add position update throttling & debouncing
 - [x] [TASK-048] Build location permission handling flow (browser prompt)
 

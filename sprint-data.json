@@ -392,13 +392,13 @@
         {
           "id": "TASK-045",
           "title": "Build heading & velocity vector display (FR-GPS-05)",
-          "status": "backlog",
+          "status": "done",
           "priority": "low"
         },
         {
           "id": "TASK-046",
           "title": "Implement PocketBase Realtime for position broadcast (FR-GPS-06)",
-          "status": "backlog",
+          "status": "done",
           "priority": "high"
         },
         {
