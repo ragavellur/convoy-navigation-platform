@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import SearchBar from '../components/SearchBar'
+import LocationPermissionPrompt from '../components/LocationPermissionPrompt'
 import { getRoute, formatDistance, formatDuration } from '../services/osrm'
 import {
   isOffRoute as checkOffRoute,
@@ -10,6 +12,13 @@ import {
 } from '../services/routing'
 import { getCachedRoute, cacheRoute } from '../services/routeCache'
 import { useGeolocation } from '../hooks/useGeolocation'
+import { useGeolocationStream } from '../hooks/useGeolocationStream'
+import {
+  publishPosition,
+  subscribeToConvoyPositions,
+  unsubscribePositions,
+} from '../services/positionTracking'
+import pb from '../services/pocketbase'
 import type { SearchResult, RouteResponse, RouteGeometry } from '../types'
 
 const ROUTE_SOURCE_ID = 'route'
@@ -20,11 +29,15 @@ const TRAFFIC_SOURCE_ID = 'traffic'
 const TRAFFIC_LAYER_PREFIX = 'traffic-segment-'
 
 function MapPage() {
+  const [searchParams] = useSearchParams()
+  const convoyId = searchParams.get('convoy')
   const mapContainer = useRef<HTMLDivElement>(null)
   const map = useRef<maplibregl.Map | null>(null)
   const markersRef = useRef<maplibregl.Marker[]>([])
+  const convoyMarkersRef = useRef<Map<string, maplibregl.Marker>>(new Map())
   const offRouteTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const routeRef = useRef<RouteResponse['routes'][0] | null>(null)
+  const publishTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const [mapLoaded, setMapLoaded] = useState(false)
   const [mapBounds, setMapBounds] = useState<[number, number, number, number] | undefined>()
   const [routeData, setRouteData] = useState<RouteResponse['routes'][0] | null>(null)
@@ -33,7 +46,11 @@ function MapPage() {
   const [isOffRoute, setIsOffRoute] = useState(false)
   const [selectedStepIndex, setSelectedStepIndex] = useState<number | null>(null)
   const [selectedAltIndex, setSelectedAltIndex] = useState(0)
+  const [convoyPositions, setConvoyPositions] = useState<
+    Map<string, { lat: number; lng: number; heading: number | null; speed: number | null }>
+  >(new Map())
   const { position } = useGeolocation()
+  const geoStream = useGeolocationStream(true)
 
   function clearAllRouteLayers() {
     if (!map.current) return
@@ -309,6 +326,98 @@ function MapPage() {
   }, [routeData, position])
 
   useEffect(() => {
+    if (!convoyId || !geoStream.position) return
+
+    const vehicleId = pb.authStore.record?.id
+    if (!vehicleId) return
+
+    publishPosition({
+      vehicleId,
+      convoyId,
+      lat: geoStream.position.lat,
+      lng: geoStream.position.lng,
+      speed: geoStream.position.speed,
+      heading: geoStream.position.heading,
+      accuracy: geoStream.position.accuracy,
+    }).catch(() => {})
+
+    publishTimerRef.current = setInterval(() => {
+      if (!geoStream.position) return
+      publishPosition({
+        vehicleId,
+        convoyId,
+        lat: geoStream.position.lat,
+        lng: geoStream.position.lng,
+        speed: geoStream.position.speed,
+        heading: geoStream.position.heading,
+        accuracy: geoStream.position.accuracy,
+      }).catch(() => {})
+    }, 5000)
+
+    return () => {
+      if (publishTimerRef.current) clearInterval(publishTimerRef.current)
+    }
+  }, [convoyId, geoStream.position])
+
+  useEffect(() => {
+    if (!convoyId) return
+
+    let unsubFn: (() => void) | null = null
+    subscribeToConvoyPositions(convoyId, (pos) => {
+      setConvoyPositions((prev) => {
+        const next = new Map(prev)
+        next.set(pos.vehicle, {
+          lat: pos.lat,
+          lng: pos.lng,
+          heading: pos.heading,
+          speed: pos.speed,
+        })
+        return next
+      })
+    }).then((fn) => {
+      unsubFn = fn
+    })
+
+    return () => {
+      unsubFn?.()
+    }
+  }, [convoyId])
+
+  useEffect(() => {
+    if (!map.current || !mapLoaded) return
+
+    convoyPositions.forEach((pos, vehicleId) => {
+      let marker = convoyMarkersRef.current.get(vehicleId)
+      const el = document.createElement('div')
+      el.className = 'convoy-marker'
+      el.style.cssText =
+        'width:28px;height:28px;background:#6366f1;border:2px solid white;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:12px;font-weight:bold;box-shadow:0 2px 4px rgba(0,0,0,0.3);'
+
+      if (marker) {
+        marker.setLngLat([pos.lng, pos.lat])
+      } else if (map.current) {
+        marker = new maplibregl.Marker({ element: el })
+          .setLngLat([pos.lng, pos.lat])
+          .setPopup(
+            new maplibregl.Popup({ offset: 25 }).setHTML(
+              `<p style="font-size:12px;padding:4px;">${vehicleId.slice(0, 6)}</p>`,
+            ),
+          )
+          .addTo(map.current)
+        convoyMarkersRef.current.set(vehicleId, marker)
+      }
+    })
+  }, [convoyPositions, mapLoaded])
+
+  useEffect(() => {
+    return () => {
+      unsubscribePositions()
+      convoyMarkersRef.current.forEach((m) => m.remove())
+      convoyMarkersRef.current.clear()
+    }
+  }, [])
+
+  useEffect(() => {
     if (!mapContainer.current || map.current) return
     map.current = new maplibregl.Map({
       container: mapContainer.current,
@@ -545,6 +654,13 @@ function MapPage() {
             Search for a destination to calculate a route.
           </p>
         </div>
+      )}
+      {convoyId && (
+        <LocationPermissionPrompt
+          permissionState={geoStream.permissionState}
+          error={geoStream.error}
+          onRequestPermission={geoStream.requestPermission}
+        />
       )}
     </div>
   )
