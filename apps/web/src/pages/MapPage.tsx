@@ -18,6 +18,8 @@ import {
   subscribeToConvoyPositions,
   unsubscribePositions,
 } from '../services/positionTracking'
+import { MarkerAnimator } from '../services/markerAnimation'
+import { createVehicleMarkerElement } from '../components/VehicleMarker'
 import pb from '../services/pocketbase'
 import type { SearchResult, RouteResponse, RouteGeometry } from '../types'
 
@@ -37,6 +39,7 @@ function MapPage() {
   const convoyMarkersRef = useRef<Map<string, maplibregl.Marker>>(new Map())
   const offRouteTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const routeRef = useRef<RouteResponse['routes'][0] | null>(null)
+  const animatorRef = useRef<MarkerAnimator | null>(null)
   const [mapLoaded, setMapLoaded] = useState(false)
   const [mapBounds, setMapBounds] = useState<[number, number, number, number] | undefined>()
   const [routeData, setRouteData] = useState<RouteResponse['routes'][0] | null>(null)
@@ -383,17 +386,25 @@ function MapPage() {
   useEffect(() => {
     if (!map.current || !mapLoaded) return
 
-    convoyPositions.forEach((pos, vehicleId) => {
-      let marker = convoyMarkersRef.current.get(vehicleId)
-      const el = document.createElement('div')
-      el.className = 'convoy-marker'
-      el.style.cssText =
-        'width:28px;height:28px;background:#6366f1;border:2px solid white;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:12px;font-weight:bold;box-shadow:0 2px 4px rgba(0,0,0,0.3);'
+    if (!animatorRef.current) {
+      animatorRef.current = new MarkerAnimator((id, lat, lng, heading) => {
+        const marker = convoyMarkersRef.current.get(id)
+        if (marker) {
+          marker.setLngLat([lng, lat])
+          const el = marker.getElement()
+          if (heading !== null) {
+            el.style.transform = `rotate(${heading}deg)`
+          }
+        }
+      })
+    }
 
-      if (marker) {
-        marker.setLngLat([pos.lng, pos.lat])
-      } else if (map.current) {
-        marker = new maplibregl.Marker({ element: el })
+    convoyPositions.forEach((pos, vehicleId) => {
+      animatorRef.current!.updateTarget(vehicleId, pos.lat, pos.lng, pos.heading, pos.speed)
+
+      if (!convoyMarkersRef.current.has(vehicleId) && map.current) {
+        const el = createVehicleMarkerElement('car')
+        const marker = new maplibregl.Marker({ element: el })
           .setLngLat([pos.lng, pos.lat])
           .setPopup(
             new maplibregl.Popup({ offset: 25 }).setHTML(
@@ -408,6 +419,8 @@ function MapPage() {
 
   useEffect(() => {
     return () => {
+      animatorRef.current?.destroy()
+      animatorRef.current = null
       unsubscribePositions()
       convoyMarkersRef.current.forEach((m) => m.remove())
       convoyMarkersRef.current.clear()
@@ -416,11 +429,19 @@ function MapPage() {
 
   useEffect(() => {
     if (!mapContainer.current || map.current) return
+
+    const origWarn = console.warn
+    console.warn = (...args: unknown[]) => {
+      if (typeof args[0] === 'string' && args[0].includes('Expected value to be of type number'))
+        return
+      origWarn.apply(console, args)
+    }
+
     map.current = new maplibregl.Map({
       container: mapContainer.current,
       style: 'https://tiles.openfreemap.org/styles/liberty',
-      center: [7.4266, 43.7403],
-      zoom: 14,
+      center: [0, 0],
+      zoom: 1,
     })
     map.current.addControl(new maplibregl.NavigationControl(), 'top-right')
     map.current.addControl(new maplibregl.ScaleControl(), 'bottom-left')
@@ -428,20 +449,40 @@ function MapPage() {
     map.current.on('load', () => {
       setMapLoaded(true)
       updateBounds()
+      map.current?.on('styleimagemissing', (e) => {
+        const id = e.id
+        if (!map.current?.hasImage(id)) {
+          const canvas = document.createElement('canvas')
+          canvas.width = 1
+          canvas.height = 1
+          map.current?.addImage(id, { width: 1, height: 1, data: new Uint8Array(4) })
+        }
+      })
     })
     map.current.on('moveend', () => updateBounds())
     return () => {
+      console.warn = origWarn
       map.current?.remove()
       map.current = null
     }
   }, [])
+
+  useEffect(() => {
+    if (position && map.current && mapLoaded) {
+      map.current.flyTo({
+        center: [position.lng, position.lat],
+        zoom: 15,
+        duration: 1500,
+      })
+    }
+  }, [position, mapLoaded])
 
   const firstStep = routeData?.legs[0]?.steps[0]
   const alternatives = routeResponse?.routes || []
 
   return (
     <div className="relative w-full h-[calc(100vh-64px)]">
-      <div ref={mapContainer} className="absolute inset-0" />
+      <div ref={mapContainer} className="w-full h-full" />
       {!mapLoaded && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
           <div className="text-center">

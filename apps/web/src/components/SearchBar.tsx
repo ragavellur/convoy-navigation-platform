@@ -87,6 +87,8 @@ export default function SearchBar({ onResultSelect, mapBounds }: SearchBarProps)
       <div className="relative">
         <input
           ref={inputRef}
+          id="search-places"
+          name="search-places"
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
