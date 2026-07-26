@@ -29,6 +29,8 @@ const ALT_SOURCE_PREFIX = 'alt-route-'
 const ALT_LAYER_PREFIX = 'alt-route-line-'
 const TRAFFIC_SOURCE_ID = 'traffic'
 const TRAFFIC_LAYER_PREFIX = 'traffic-segment-'
+const VELOCITY_SOURCE_ID = 'velocity-vectors'
+const VELOCITY_LAYER_ID = 'velocity-line'
 
 function MapPage() {
   const [searchParams] = useSearchParams()
@@ -332,17 +334,9 @@ function MapPage() {
     const vehicleId = pb.authStore.record?.id
     if (!vehicleId) return
 
-    publishPosition({
-      vehicleId,
-      convoyId,
-      lat: geoStream.positionRef.current?.lat ?? 43.7403,
-      lng: geoStream.positionRef.current?.lng ?? 7.4266,
-      speed: geoStream.positionRef.current?.speed,
-      heading: geoStream.positionRef.current?.heading,
-      accuracy: geoStream.positionRef.current?.accuracy,
-    }).catch(() => {})
-
-    const unsub = geoStream.onPosition((pos) => {
+    const publish = () => {
+      const pos = geoStream.positionRef.current
+      if (!pos) return
       publishPosition({
         vehicleId,
         convoyId,
@@ -352,15 +346,41 @@ function MapPage() {
         heading: pos.heading,
         accuracy: pos.accuracy,
       }).catch(() => {})
-    })
+    }
+
+    publish()
+
+    const unsub = geoStream.onPosition(() => publish())
+
+    const heartbeat = setInterval(publish, 5000)
 
     return () => {
       unsub()
+      clearInterval(heartbeat)
     }
   }, [convoyId])
 
   useEffect(() => {
     if (!convoyId) return
+
+    import('../services/positionTracking').then(({ getLatestPositions }) => {
+      getLatestPositions(convoyId).then((positions) => {
+        setConvoyPositions((prev) => {
+          const next = new Map(prev)
+          for (const pos of positions) {
+            if (!next.has(pos.vehicle)) {
+              next.set(pos.vehicle, {
+                lat: pos.lat,
+                lng: pos.lng,
+                heading: pos.heading,
+                speed: pos.speed,
+              })
+            }
+          }
+          return next
+        })
+      })
+    })
 
     let unsubFn: (() => void) | null = null
     subscribeToConvoyPositions(convoyId, (pos) => {
@@ -399,6 +419,8 @@ function MapPage() {
       })
     }
 
+    const vectorFeatures: GeoJSON.Feature[] = []
+
     convoyPositions.forEach((pos, vehicleId) => {
       animatorRef.current!.updateTarget(vehicleId, pos.lat, pos.lng, pos.heading, pos.speed)
 
@@ -414,7 +436,37 @@ function MapPage() {
           .addTo(map.current)
         convoyMarkersRef.current.set(vehicleId, marker)
       }
+
+      if (pos.heading !== null && pos.speed !== null && pos.speed > 0.5) {
+        const R = 6371000
+        const headingRad = (pos.heading * Math.PI) / 180
+        const vectorLenM = Math.min(pos.speed * 3, 200)
+        const dLat = (vectorLenM * Math.cos(headingRad)) / R
+        const dLng = (vectorLenM * Math.sin(headingRad)) / (R * Math.cos((pos.lat * Math.PI) / 180))
+        const endLat = pos.lat + (dLat * 180) / Math.PI
+        const endLng = pos.lng + (dLng * 180) / Math.PI
+
+        vectorFeatures.push({
+          type: 'Feature',
+          geometry: {
+            type: 'LineString',
+            coordinates: [
+              [pos.lng, pos.lat],
+              [endLng, endLat],
+            ],
+          },
+          properties: { vehicleId },
+        })
+      }
     })
+
+    const source = map.current?.getSource(VELOCITY_SOURCE_ID)
+    if (source && 'setData' in source) {
+      ;(source as maplibregl.GeoJSONSource).setData({
+        type: 'FeatureCollection',
+        features: vectorFeatures,
+      })
+    }
   }, [convoyPositions, mapLoaded])
 
   useEffect(() => {
@@ -457,6 +509,24 @@ function MapPage() {
           canvas.height = 1
           map.current?.addImage(id, { width: 1, height: 1, data: new Uint8Array(4) })
         }
+      })
+      map.current?.addSource(VELOCITY_SOURCE_ID, {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: [] },
+      })
+      map.current?.addLayer({
+        id: VELOCITY_LAYER_ID,
+        type: 'line',
+        source: VELOCITY_SOURCE_ID,
+        layout: {
+          'line-cap': 'round',
+          'line-join': 'round',
+        },
+        paint: {
+          'line-color': '#6366f1',
+          'line-width': 2,
+          'line-opacity': 0.7,
+        },
       })
     })
     map.current.on('moveend', () => updateBounds())
