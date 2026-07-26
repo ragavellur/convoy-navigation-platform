@@ -368,7 +368,7 @@
         {
           "id": "TASK-041",
           "title": "Build adaptive polling logic (FR-GPS-02)",
-          "status": "in-progress",
+          "status": "done",
           "priority": "high"
         },
         {
@@ -404,7 +404,7 @@
         {
           "id": "TASK-047",
           "title": "Add position update throttling & debouncing",
-          "status": "in-progress",
+          "status": "done",
           "priority": "medium"
         },
         {

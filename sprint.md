@@ -121,16 +121,15 @@
 
 ### 🔄 In Progress
 
-- [ ] [TASK-041] Build adaptive polling logic (FR-GPS-02):
-  - [ ] [TASK-041a] Stationary state: 30s heartbeat
-  - [ ] [TASK-041b] Urban state (<40km/h): 5s / 15m delta
-  - [ ] [TASK-041c] Highway state (>40km/h): 3s / 40m delta
-- [ ] [TASK-047] Add position update throttling & debouncing
-
 ### ✅ Done
 
 - [x] [TASK-039] Set up PocketBase Realtime subscriptions
 - [x] [TASK-040] Implement browser Geolocation API streaming (FR-GPS-01)
+- [x] [TASK-041] Build adaptive polling logic (FR-GPS-02):
+  - [x] [TASK-041a] Stationary state: 30s heartbeat
+  - [x] [TASK-041b] Urban state (<40km/h): 5s / 15m delta
+  - [x] [TASK-041c] Highway state (>40km/h): 3s / 40m delta
+- [x] [TASK-047] Add position update throttling & debouncing
 - [x] [TASK-048] Build location permission handling flow (browser prompt)
 
 ---
