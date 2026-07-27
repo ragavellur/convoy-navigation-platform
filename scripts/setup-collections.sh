@@ -344,6 +344,16 @@ patch_rules("audit_log",
     delete_rule=None,
 )
 
+# Users collection needs open list/view rules for expand=user to work
+# (convoy_members expand needs to resolve other users' names)
+patch_rules("_pb_users_auth_",
+    list_rule="",
+    view_rule="",
+    create_rule=None,
+    update_rule=None,
+    delete_rule=None,
+)
+
 # ============================================
 # Phase 3: Add role + status to users auth
 # ============================================
