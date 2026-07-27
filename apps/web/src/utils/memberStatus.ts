@@ -11,7 +11,7 @@ export function deriveMemberStatus(
 ): MemberStatus {
   if (!position) return 'offline'
 
-  const age = now - new Date(position.created).getTime()
+  const age = now - new Date(position.updated).getTime()
   if (age > OFFLINE_THRESHOLD_MS) return 'offline'
 
   const speed = position.speed ?? 0

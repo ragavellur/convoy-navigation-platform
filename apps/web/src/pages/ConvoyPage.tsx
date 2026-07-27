@@ -80,8 +80,10 @@ function ConvoyPage() {
   const [creating, setCreating] = useState(false)
   const [joining, setJoining] = useState(false)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const [vehicles, setVehicles] = useState<VehicleOption[]>([])
   const [selectedVehicleId, setSelectedVehicleId] = useState('')
+  const [enableSimulation, setEnableSimulation] = useState(false)
 
   useEffect(() => {
     const fetchConvoys = async () => {
@@ -110,13 +112,19 @@ function ConvoyPage() {
         const records = await pb.collection('vehicles').getFullList({
           filter: `owner = "${user.id}" && status = "active"`,
         })
-        const opts: VehicleOption[] = records.map((r) => ({
-          id: r.id,
-          name: r.name,
-          type: r.type,
-          license_plate: r.license_plate,
-          color: r.color,
-        }))
+        const activeMembers = await pb.collection('convoy_members').getFullList({
+          filter: `user = "${user.id}" && status = "active"`,
+        })
+        const occupiedVehicleIds = new Set(activeMembers.map((m) => m.vehicle).filter(Boolean))
+        const opts: VehicleOption[] = records
+          .filter((r) => !occupiedVehicleIds.has(r.id))
+          .map((r) => ({
+            id: r.id,
+            name: r.name,
+            type: r.type,
+            license_plate: r.license_plate,
+            color: r.color,
+          }))
         setVehicles(opts)
         if (opts.length === 1) setSelectedVehicleId(opts[0].id)
       } catch {
@@ -153,6 +161,9 @@ function ConvoyPage() {
         data.dest_lat = destLat
         data.dest_lng = destLng
       }
+      if (enableSimulation) {
+        data.settings = JSON.stringify({ simulation_active: false })
+      }
       await pb.collection('convoys').create(data)
       setNewConvoyName('')
       setNewConvoyDesc('')
@@ -162,6 +173,7 @@ function ConvoyPage() {
       setDestName('')
       setDestLat(null)
       setDestLng(null)
+      setEnableSimulation(false)
       setShowCreateForm(false)
       const records = await pb.collection('convoys').getFullList<ConvoyRecord>({
         filter: 'status = "active"',
@@ -183,6 +195,7 @@ function ConvoyPage() {
     }
     setJoining(true)
     setError('')
+    setSuccess('')
     try {
       const code = joinCode.trim().toUpperCase()
       const results = await pb.collection('convoys').getFullList({
@@ -192,6 +205,16 @@ function ConvoyPage() {
         throw new Error('Convoy not found or inactive')
       }
       const convoy = results[0]
+
+      const vehicleInConvoy = await pb.collection('convoy_members').getFullList({
+        filter: `vehicle = "${selectedVehicleId}" && status = "active"`,
+      })
+      if (vehicleInConvoy.length > 0) {
+        throw new Error(
+          'This vehicle is already in another active convoy. Leave that convoy first or use a different vehicle.',
+        )
+      }
+
       const existingActive = await pb.collection('convoy_members').getFullList({
         filter: `user = "${user?.id}" && status = "active"`,
       })
@@ -209,11 +232,10 @@ function ConvoyPage() {
         joined_at: new Date().toISOString(),
       })
       setJoinCode('')
-      const records = await pb.collection('convoys').getFullList<ConvoyRecord>({
-        filter: 'status = "active"',
-        sort: '-created',
-      })
-      setConvoys(records)
+      setSuccess(`Joined "${convoy.name}" successfully!`)
+      setTimeout(() => {
+        navigate(`/map?convoy=${convoy.id}`)
+      }, 1500)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to join convoy')
     } finally {
@@ -245,6 +267,12 @@ function ConvoyPage() {
       {error && (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
           {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md text-green-700 text-sm">
+          {success}
         </div>
       )}
 
@@ -291,6 +319,21 @@ function ConvoyPage() {
                 />
                 {destName && <p className="text-xs text-gray-500 mt-1">{destName}</p>}
               </div>
+            </div>
+            <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-md">
+              <input
+                type="checkbox"
+                id="enable-simulation"
+                checked={enableSimulation}
+                onChange={(e) => setEnableSimulation(e.target.checked)}
+                className="h-4 w-4 text-amber-600 focus:ring-amber-500 border-gray-300 rounded"
+              />
+              <label htmlFor="enable-simulation" className="text-sm text-amber-800">
+                Enable simulation mode
+                <span className="block text-xs text-amber-600 mt-0.5">
+                  Vehicle positions will be simulated along the route instead of using real GPS
+                </span>
+              </label>
             </div>
             <button
               onClick={handleCreate}

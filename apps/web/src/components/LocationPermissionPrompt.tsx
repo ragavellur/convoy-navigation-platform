@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { PermissionState } from '../hooks/useGeolocationStream'
 
 interface LocationPermissionPromptProps {
@@ -11,16 +12,34 @@ function LocationPermissionPrompt({
   error,
   onRequestPermission,
 }: LocationPermissionPromptProps) {
-  if (permissionState === 'granted') return null
+  const [dismissed, setDismissed] = useState(false)
+
+  if (permissionState === 'granted' || permissionState === 'requesting' || dismissed) return null
 
   return (
-    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 max-w-sm w-full bg-white shadow-lg rounded-lg border border-gray-200 p-4">
+    <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 max-w-sm w-full bg-white shadow-lg rounded-lg border border-gray-200 p-4">
       <div className="flex items-start space-x-3">
         <div className="flex-shrink-0">
           <span className="text-2xl">📍</span>
         </div>
         <div className="flex-1">
-          <h3 className="text-sm font-medium text-gray-900">Enable Location</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-medium text-gray-900">Enable Location</h3>
+            <button
+              onClick={() => setDismissed(true)}
+              className="text-gray-400 hover:text-gray-600"
+              aria-label="Dismiss"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
           <p className="text-xs text-gray-500 mt-1">
             Allow location access to share your position with convoy members.
           </p>

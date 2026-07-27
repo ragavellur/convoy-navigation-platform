@@ -15,11 +15,11 @@ import { useGeolocation } from '../hooks/useGeolocation'
 import { useGeolocationStream } from '../hooks/useGeolocationStream'
 import {
   publishPosition,
-  subscribeToConvoyPositions,
   unsubscribePositions,
+  resetPositionThreshold,
 } from '../services/positionTracking'
 import { MarkerAnimator } from '../services/markerAnimation'
-import { createVehicleMarkerElement } from '../components/VehicleMarker'
+import { createVehicleMarkerElement, getDistinctColor } from '../components/VehicleMarker'
 import pb from '../services/pocketbase'
 import { useConvoyRoster } from '../stores/ConvoyRosterContext'
 import { useTheme, getMapStyleUrl } from '../stores/ThemeContext'
@@ -45,6 +45,7 @@ function MapPage() {
   const offRouteTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const routeRef = useRef<RouteResponse['routes'][0] | null>(null)
   const animatorRef = useRef<MarkerAnimator | null>(null)
+  const convoyRouteLoadedRef = useRef(false)
   const [mapLoaded, setMapLoaded] = useState(false)
   const [mapBounds, setMapBounds] = useState<[number, number, number, number] | undefined>()
   const [routeData, setRouteData] = useState<RouteResponse['routes'][0] | null>(null)
@@ -53,9 +54,11 @@ function MapPage() {
   const [isOffRoute, setIsOffRoute] = useState(false)
   const [selectedStepIndex, setSelectedStepIndex] = useState<number | null>(null)
   const [selectedAltIndex, setSelectedAltIndex] = useState(0)
+  const [showRoutePanel, setShowRoutePanel] = useState(true)
   const [convoyPositions, setConvoyPositions] = useState<
     Map<string, { lat: number; lng: number; heading: number | null; speed: number | null }>
   >(new Map())
+  const [simActive, setSimActive] = useState(false)
   const { position } = useGeolocation()
   const geoStream = useGeolocationStream(true)
   const { members, focusMemberId, joinConvoy, leaveConvoy } = useConvoyRoster()
@@ -211,6 +214,10 @@ function MapPage() {
     [position, displayRoutes],
   )
 
+  const hideRoutePanel = useCallback(() => {
+    setShowRoutePanel(false)
+  }, [])
+
   const clearRoute = useCallback(() => {
     if (offRouteTimerRef.current) {
       clearInterval(offRouteTimerRef.current)
@@ -225,6 +232,7 @@ function MapPage() {
     setIsOffRoute(false)
     setSelectedStepIndex(null)
     setSelectedAltIndex(0)
+    setShowRoutePanel(true)
     routeRef.current = null
   }, [])
 
@@ -344,13 +352,13 @@ function MapPage() {
   )
 
   useEffect(() => {
-    if (!position || !routeRef.current) return
+    if (!position || !routeRef.current || convoyId) return
     const geometry = routeRef.current.geometry as RouteGeometry
     setIsOffRoute(checkOffRoute(position.lat, position.lng, geometry))
-  }, [position])
+  }, [position, convoyId])
 
   useEffect(() => {
-    if (!routeData || !position) return
+    if (!routeData || !position || convoyId) return
     if (offRouteTimerRef.current) clearInterval(offRouteTimerRef.current)
     offRouteTimerRef.current = setInterval(() => {
       if (!routeRef.current || !position) return
@@ -360,12 +368,13 @@ function MapPage() {
     return () => {
       if (offRouteTimerRef.current) clearInterval(offRouteTimerRef.current)
     }
-  }, [routeData, position])
+  }, [routeData, position, convoyId])
 
   useEffect(() => {
     if (!convoyId) return
 
     let vehicleId: string | null = null
+    let simulationActive = false
 
     const resolveVehicleId = async () => {
       try {
@@ -382,9 +391,35 @@ function MapPage() {
       }
     }
 
-    resolveVehicleId()
+    const checkSimulation = async () => {
+      try {
+        const convoy = await pb.collection('convoys').getOne(convoyId)
+        const settings =
+          typeof convoy.settings === 'string' ? JSON.parse(convoy.settings) : convoy.settings || {}
+        simulationActive = !!settings.simulation_active
+        setSimActive(simulationActive)
+      } catch {
+        simulationActive = false
+      }
+    }
+
+    const init = async () => {
+      await Promise.all([resolveVehicleId(), checkSimulation()])
+    }
+
+    init()
+
+    const unsubSim = pb.collection('convoys').subscribe(convoyId, (event) => {
+      const settings =
+        typeof event.record.settings === 'string'
+          ? JSON.parse(event.record.settings)
+          : event.record.settings || {}
+      simulationActive = !!settings.simulation_active
+      setSimActive(simulationActive)
+    })
 
     const publish = async () => {
+      if (simulationActive) return
       if (!vehicleId) {
         await resolveVehicleId()
       }
@@ -406,11 +441,9 @@ function MapPage() {
 
     const unsub = geoStream.onPosition(() => publish())
 
-    const heartbeat = setInterval(publish, 5000)
-
     return () => {
       unsub()
-      clearInterval(heartbeat)
+      unsubSim.then?.((fn: (() => void) | undefined) => fn?.())
     }
   }, [convoyId])
 
@@ -419,8 +452,12 @@ function MapPage() {
       leaveConvoy()
       return
     }
+    resetPositionThreshold()
     joinConvoy(convoyId)
-    return () => leaveConvoy()
+    return () => {
+      leaveConvoy()
+      resetPositionThreshold()
+    }
   }, [convoyId, joinConvoy, leaveConvoy])
 
   useEffect(() => {
@@ -439,54 +476,90 @@ function MapPage() {
   useEffect(() => {
     if (!focusMemberId || !map.current) return
     const member = members.find((m) => m.id === focusMemberId)
-    if (!member?.position) return
-    map.current.flyTo({
-      center: [member.position.lng, member.position.lat],
-      zoom: 16,
-      essential: true,
+    if (!member?.vehicleId) return
+
+    convoyMarkersRef.current.forEach((marker, vid) => {
+      const el = marker.getElement()
+      if (vid === member.vehicleId) {
+        el.style.boxShadow = '0 0 0 3px #fff, 0 0 0 6px #6366f1, 0 2px 8px rgba(0,0,0,0.4)'
+        el.style.zIndex = '50'
+        el.style.width = '44px'
+        el.style.height = '44px'
+        marker.addTo(map.current!)
+      } else {
+        el.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)'
+        el.style.zIndex = ''
+        el.style.width = '36px'
+        el.style.height = '36px'
+      }
     })
+
+    if (member.position) {
+      map.current.flyTo({
+        center: [member.position.lng, member.position.lat],
+        zoom: 16,
+        essential: true,
+      })
+    }
   }, [focusMemberId, members])
+
+  useEffect(() => {
+    if (focusMemberId) return
+    convoyMarkersRef.current.forEach((marker) => {
+      const el = marker.getElement()
+      el.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)'
+      el.style.zIndex = ''
+      el.style.width = '36px'
+      el.style.height = '36px'
+    })
+  }, [focusMemberId])
 
   useEffect(() => {
     if (!convoyId) return
 
-    import('../services/positionTracking').then(({ getLatestPositions }) => {
-      getLatestPositions(convoyId).then((positions) => {
-        setConvoyPositions((prev) => {
-          const next = new Map(prev)
+    convoyMarkersRef.current.forEach((m) => m.remove())
+    convoyMarkersRef.current.clear()
+    animatorRef.current?.destroy()
+    animatorRef.current = null
+    convoyRouteLoadedRef.current = false
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional reset when convoyId changes
+    setConvoyPositions(new Map())
+
+    let cancelled = false
+
+    const poll = async () => {
+      try {
+        const { getLatestPositions } = await import('../services/positionTracking')
+        if (cancelled) return
+        const positions = await getLatestPositions(convoyId)
+        if (cancelled) return
+        setConvoyPositions(() => {
+          const next = new Map<
+            string,
+            { lat: number; lng: number; heading: number | null; speed: number | null }
+          >()
           for (const pos of positions) {
-            if (!next.has(pos.vehicle)) {
-              next.set(pos.vehicle, {
-                lat: pos.lat,
-                lng: pos.lng,
-                heading: pos.heading,
-                speed: pos.speed,
-              })
-            }
+            if (!Number.isFinite(pos.lat) || !Number.isFinite(pos.lng)) continue
+            next.set(pos.vehicle, {
+              lat: pos.lat,
+              lng: pos.lng,
+              heading: pos.heading,
+              speed: pos.speed,
+            })
           }
           return next
         })
-      })
-    })
+      } catch {
+        // ignore poll errors
+      }
+    }
 
-    let unsubFn: (() => void) | null = null
-    subscribeToConvoyPositions(convoyId, (pos) => {
-      setConvoyPositions((prev) => {
-        const next = new Map(prev)
-        next.set(pos.vehicle, {
-          lat: pos.lat,
-          lng: pos.lng,
-          heading: pos.heading,
-          speed: pos.speed,
-        })
-        return next
-      })
-    }).then((fn) => {
-      unsubFn = fn
-    })
+    poll()
+    const intervalId = setInterval(poll, 4000)
 
     return () => {
-      unsubFn?.()
+      cancelled = true
+      clearInterval(intervalId)
     }
   }, [convoyId])
 
@@ -498,9 +571,8 @@ function MapPage() {
         const marker = convoyMarkersRef.current.get(id)
         if (marker) {
           marker.setLngLat([lng, lat])
-          const el = marker.getElement()
           if (heading !== null) {
-            el.style.transform = `rotate(${heading}deg)`
+            marker.setRotation(heading)
           }
         }
       })
@@ -508,15 +580,46 @@ function MapPage() {
 
     const vectorFeatures: GeoJSON.Feature[] = []
 
+    const vehicleIds = Array.from(convoyPositions.keys())
+    const positionGroups = new Map<string, string[]>()
+    for (const vid of vehicleIds) {
+      const pos = convoyPositions.get(vid)!
+      const key = `${pos.lat.toFixed(5)},${pos.lng.toFixed(5)}`
+      if (!positionGroups.has(key)) positionGroups.set(key, [])
+      positionGroups.get(key)!.push(vid)
+    }
+
     convoyPositions.forEach((pos, vehicleId) => {
-      animatorRef.current!.updateTarget(vehicleId, pos.lat, pos.lng, pos.heading, pos.speed)
+      if (!Number.isFinite(pos.lat) || !Number.isFinite(pos.lng)) return
+
+      const key = `${pos.lat.toFixed(5)},${pos.lng.toFixed(5)}`
+      const group = positionGroups.get(key)!
+      let offsetLat = pos.lat
+      let offsetLng = pos.lng
+      if (group.length > 1) {
+        const idx = group.indexOf(vehicleId)
+        const angle = (idx / group.length) * 2 * Math.PI
+        const offsetMeters = 15
+        const R = 6371000
+        offsetLat = pos.lat + ((offsetMeters * Math.cos(angle)) / R) * (180 / Math.PI)
+        offsetLng =
+          pos.lng +
+          ((offsetMeters * Math.sin(angle)) / (R * Math.cos((pos.lat * Math.PI) / 180))) *
+            (180 / Math.PI)
+      }
 
       if (!convoyMarkersRef.current.has(vehicleId) && map.current) {
         const vehicleInfo = memberVehicleMap.current.get(vehicleId)
         const vehicleType = (vehicleInfo?.type as 'car' | 'truck' | 'motorcycle' | 'other') ?? 'car'
-        const el = createVehicleMarkerElement(vehicleType, vehicleInfo?.color)
+        const color = getDistinctColor(vehicleId, vehicleInfo?.color)
+        const el = createVehicleMarkerElement(vehicleType, color)
+        el.addEventListener('click', () => {
+          if (map.current) {
+            map.current.flyTo({ center: [offsetLng, offsetLat], zoom: 16, duration: 800 })
+          }
+        })
         const marker = new maplibregl.Marker({ element: el })
-          .setLngLat([pos.lng, pos.lat])
+          .setLngLat([offsetLng, offsetLat])
           .setPopup(
             new maplibregl.Popup({ offset: 25 }).setHTML(
               `<p style="font-size:12px;padding:4px;font-weight:500;">${vehicleInfo?.name ?? vehicleId.slice(0, 6)}</p>`,
@@ -525,6 +628,8 @@ function MapPage() {
           .addTo(map.current)
         convoyMarkersRef.current.set(vehicleId, marker)
       }
+
+      animatorRef.current!.updateTarget(vehicleId, offsetLat, offsetLng, pos.heading, pos.speed)
 
       if (pos.heading !== null && pos.speed !== null && pos.speed > 0.5) {
         const R = 6371000
@@ -582,7 +687,7 @@ function MapPage() {
       container: mapContainer.current,
       style: getMapStyleUrl(theme),
       center: [0, 0],
-      zoom: 1,
+      zoom: convoyId ? 12 : 1,
     })
     map.current.addControl(new maplibregl.NavigationControl(), 'top-right')
     map.current.addControl(new maplibregl.ScaleControl(), 'bottom-left')
@@ -628,25 +733,91 @@ function MapPage() {
 
   useEffect(() => {
     if (map.current && mapLoaded) {
+      const center = map.current.getCenter()
+      const zoom = map.current.getZoom()
+      const pitch = map.current.getPitch()
+      const bearing = map.current.getBearing()
       map.current.setStyle(getMapStyleUrl(theme))
+      map.current.setCenter(center)
+      map.current.setZoom(zoom)
+      map.current.setPitch(pitch)
+      map.current.setBearing(bearing)
     }
   }, [theme, mapLoaded])
 
   useEffect(() => {
-    if (position && map.current && mapLoaded) {
-      map.current.flyTo({
-        center: [position.lng, position.lat],
-        zoom: 15,
-        duration: 1500,
-      })
+    if (!convoyId || !mapLoaded || !map.current) return
+    if (convoyRouteLoadedRef.current) return
+
+    let cancelled = false
+
+    const loadConvoyRoute = async () => {
+      try {
+        convoyRouteLoadedRef.current = true
+        const convoy = await pb.collection('convoys').getOne(convoyId)
+        if (cancelled) return
+        if (!convoy.source_lat || !convoy.source_lng || !convoy.dest_lat || !convoy.dest_lng) return
+
+        const origin: [number, number] = [convoy.source_lng, convoy.source_lat]
+        const destination: [number, number] = [convoy.dest_lng, convoy.dest_lat]
+
+        const sourceMarker = new maplibregl.Marker({ color: '#22c55e' })
+          .setLngLat(origin)
+          .setPopup(
+            new maplibregl.Popup({ offset: 25 }).setHTML(
+              `<div class="p-2 text-sm font-medium">${convoy.source_name || 'Source'}</div>`,
+            ),
+          )
+        sourceMarker.addTo(map.current!)
+        markersRef.current.push(sourceMarker)
+
+        const destMarker = new maplibregl.Marker({ color: '#ef4444' })
+          .setLngLat(destination)
+          .setPopup(
+            new maplibregl.Popup({ offset: 25 }).setHTML(
+              `<div class="p-2 text-sm font-medium">${convoy.dest_name || 'Destination'}</div>`,
+            ),
+          )
+        destMarker.addTo(map.current!)
+        markersRef.current.push(destMarker)
+
+        const response = await getRoute({ origin, destination, steps: true, geometries: 'geojson' })
+        if (cancelled) return
+        const route = response.routes[0]
+        setRouteData(route)
+        setRouteResponse(response)
+        routeRef.current = route
+        setSelectedAltIndex(0)
+
+        response.routes.forEach((r, i) => {
+          renderRouteOnMap(r, i)
+        })
+
+        const coords = (route.geometry as RouteGeometry).coordinates as [number, number][]
+        if (coords.length > 0) {
+          const bounds = coords.reduce(
+            (b, c) => b.extend(c),
+            new maplibregl.LngLatBounds(coords[0], coords[0]),
+          )
+          map.current!.fitBounds(bounds, { padding: 60, duration: 1000 })
+        }
+      } catch {
+        // Route calculation failed
+      }
     }
-  }, [position, mapLoaded])
+
+    loadConvoyRoute()
+    return () => {
+      cancelled = true
+      convoyRouteLoadedRef.current = false
+    }
+  }, [convoyId, mapLoaded])
 
   const firstStep = routeData?.legs[0]?.steps[0]
   const alternatives = routeResponse?.routes || []
 
   return (
-    <div className="relative w-full h-[calc(100vh-64px)]">
+    <div className="relative w-full h-[calc(100dvh-64px-56px)] md:h-[calc(100dvh-64px)]">
       <div ref={mapContainer} className="w-full h-full" />
       {!mapLoaded && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
@@ -656,13 +827,21 @@ function MapPage() {
           </div>
         </div>
       )}
-      <div className="absolute top-4 left-4 z-10">
-        <SearchBar
-          onResultSelect={handleSearchResult}
-          onHoverResult={handleHoverResult}
-          mapBounds={mapBounds}
-        />
-      </div>
+      {!convoyId && (
+        <div className="absolute top-4 left-4 z-10">
+          <SearchBar
+            onResultSelect={handleSearchResult}
+            onHoverResult={handleHoverResult}
+            mapBounds={mapBounds}
+          />
+        </div>
+      )}
+      {convoyId && simActive && (
+        <div className="absolute top-4 left-4 z-10 flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-300 rounded-lg shadow-lg">
+          <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+          <span className="text-xs font-medium text-amber-800">Simulation Mode</span>
+        </div>
+      )}
       {isOffRoute && routeData && (
         <div className="absolute top-20 left-4 right-4 md:left-auto md:right-4 md:w-96 z-20 bg-amber-50 border border-amber-300 rounded-lg shadow-lg p-4">
           <div className="flex items-center gap-2 mb-2">
@@ -695,14 +874,14 @@ function MapPage() {
           </button>
         </div>
       )}
-      {routeData && (
+      {routeData && showRoutePanel && (
         <div className="absolute top-20 left-4 z-10 bg-white rounded-lg shadow-lg p-4 max-w-sm max-h-[60vh] overflow-y-auto">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-semibold text-gray-900">Route Summary</h3>
             <button
-              onClick={clearRoute}
+              onClick={hideRoutePanel}
               className="text-gray-400 hover:text-gray-600"
-              aria-label="Clear route"
+              aria-label="Hide route summary"
             >
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
@@ -854,8 +1033,52 @@ function MapPage() {
           </button>
         </div>
       )}
+      {routeData && !showRoutePanel && (
+        <button
+          onClick={() => setShowRoutePanel(true)}
+          className="absolute top-20 left-4 z-10 flex items-center gap-2 px-3 py-2 bg-white rounded-lg shadow-lg text-sm font-medium text-indigo-600 hover:bg-indigo-50 border border-indigo-200"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
+            />
+          </svg>
+          Show Route
+        </button>
+      )}
+      <button
+        onClick={() => {
+          if (position && map.current) {
+            map.current.flyTo({
+              center: [position.lng, position.lat],
+              zoom: 15,
+              duration: 1000,
+            })
+          }
+        }}
+        className="absolute bottom-20 right-4 z-10 w-10 h-10 flex items-center justify-center bg-white rounded-full shadow-lg border border-gray-200 text-gray-600 hover:bg-gray-50"
+        aria-label="Center on my location"
+      >
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+          />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+          />
+        </svg>
+      </button>
       {!routeData && !routeError && (
-        <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg p-4 max-w-sm">
+        <div className="absolute bottom-20 left-4 bg-white rounded-lg shadow-lg p-4 max-w-sm">
           <h3 className="font-semibold text-gray-900">Convoy Map</h3>
           <p className="text-sm text-gray-600 mt-1">
             Search for a destination to calculate a route.

@@ -5,6 +5,14 @@ import { generateDeepLink } from '../services/deepLink'
 import { shareViaWhatsApp, shareViaSMS, shareViaEmail } from '../services/share'
 import { subscribeToConvoyNotifications, type ConvoyNotification } from '../services/notifications'
 import { useAuth } from '../hooks/useAuth'
+import {
+  getSimulationStatus,
+  startSimulation,
+  stopSimulation,
+  restartSimulation,
+  clearSimulationPositions,
+  cleanupPositions,
+} from '../services/simulation'
 
 interface ConvoyRecord {
   id: string
@@ -21,6 +29,7 @@ interface ConvoyRecord {
   dest_lat?: number
   dest_lng?: number
   dest_name?: string
+  settings?: Record<string, unknown>
   created: string
 }
 
@@ -49,8 +58,26 @@ function ConvoyDetailPage() {
 
   const [notifications, setNotifications] = useState<ConvoyNotification[]>([])
   const [showNotifications, setShowNotifications] = useState(false)
+  const [simRunning, setSimRunning] = useState(false)
+  const [simSpeed, setSimSpeed] = useState(10)
+  const [simLoading, setSimLoading] = useState(false)
+  const [simError, setSimError] = useState('')
 
   const isHost = convoy?.owner === user?.id
+
+  const isSimulationEnabled = (() => {
+    if (!convoy?.settings) return false
+    const settings =
+      typeof convoy.settings === 'string' ? JSON.parse(convoy.settings) : convoy.settings
+    return !!settings.simulation_active
+  })()
+
+  const isKeepLatestOnly = (() => {
+    if (!convoy?.settings) return false
+    const settings =
+      typeof convoy.settings === 'string' ? JSON.parse(convoy.settings) : convoy.settings
+    return !!settings.keep_latest_only
+  })()
 
   useEffect(() => {
     if (!id) return
@@ -64,6 +91,13 @@ function ConvoyDetailPage() {
           expand: 'user,vehicle',
         })
         setMembers(m)
+
+        try {
+          const simStatus = await getSimulationStatus(id)
+          setSimRunning(simStatus.running)
+        } catch {
+          setSimRunning(false)
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load convoy')
       } finally {
@@ -113,6 +147,17 @@ function ConvoyDetailPage() {
     }
   }
 
+  const handleLeaveConvoy = async () => {
+    const myMember = members.find((m) => m.user === user?.id)
+    if (!myMember) return
+    try {
+      await pb.collection('convoy_members').update(myMember.id, { status: 'inactive' })
+      navigate('/convoy')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to leave convoy')
+    }
+  }
+
   const handleEndSession = async () => {
     if (!id) return
     try {
@@ -131,6 +176,106 @@ function ConvoyDetailPage() {
 
   const handleGoToMap = () => {
     navigate(`/map?convoy=${id}`)
+  }
+
+  const handleStartSimulation = async () => {
+    if (!id) return
+    setSimLoading(true)
+    setSimError('')
+    try {
+      await startSimulation(id, simSpeed)
+      setSimRunning(true)
+    } catch (err) {
+      setSimError(err instanceof Error ? err.message : 'Failed to start simulation')
+    } finally {
+      setSimLoading(false)
+    }
+  }
+
+  const handleStopSimulation = async () => {
+    if (!id) return
+    setSimLoading(true)
+    setSimError('')
+    try {
+      await stopSimulation(id)
+      setSimRunning(false)
+    } catch (err) {
+      setSimError(err instanceof Error ? err.message : 'Failed to stop simulation')
+    } finally {
+      setSimLoading(false)
+    }
+  }
+
+  const handleRestartSimulation = async () => {
+    if (!id) return
+    setSimLoading(true)
+    setSimError('')
+    try {
+      await restartSimulation(id, simSpeed)
+      setSimRunning(true)
+    } catch (err) {
+      setSimError(err instanceof Error ? err.message : 'Failed to restart simulation')
+    } finally {
+      setSimLoading(false)
+    }
+  }
+
+  const handleClearPositions = async () => {
+    if (!id) return
+    setSimLoading(true)
+    setSimError('')
+    try {
+      const result = await clearSimulationPositions(id)
+      setSimError('')
+      alert(`Cleared ${result.deleted} simulated positions`)
+    } catch (err) {
+      setSimError(err instanceof Error ? err.message : 'Failed to clear positions')
+    } finally {
+      setSimLoading(false)
+    }
+  }
+
+  const handleToggleSimulationMode = async () => {
+    if (!id || !convoy) return
+    setSimLoading(true)
+    setSimError('')
+    try {
+      const currentSettings =
+        typeof convoy.settings === 'string' ? JSON.parse(convoy.settings) : convoy.settings || {}
+      const newSettings = { ...currentSettings, simulation_active: !isSimulationEnabled }
+      await pb.collection('convoys').update(id, {
+        settings: JSON.stringify(newSettings),
+      })
+      setConvoy({ ...convoy, settings: newSettings })
+    } catch (err) {
+      setSimError(err instanceof Error ? err.message : 'Failed to toggle simulation mode')
+    } finally {
+      setSimLoading(false)
+    }
+  }
+
+  const handleToggleKeepLatestOnly = async () => {
+    if (!id || !convoy) return
+    setSimLoading(true)
+    setSimError('')
+    try {
+      const currentSettings =
+        typeof convoy.settings === 'string' ? JSON.parse(convoy.settings) : convoy.settings || {}
+      const newSettings = { ...currentSettings, keep_latest_only: !isKeepLatestOnly }
+      await pb.collection('convoys').update(id, {
+        settings: JSON.stringify(newSettings),
+      })
+      setConvoy({ ...convoy, settings: newSettings })
+
+      if (!isKeepLatestOnly) {
+        const result = await cleanupPositions(id)
+        setSimError(`Cleaned up ${result.deleted} old positions, kept ${result.kept} latest`)
+      }
+    } catch (err) {
+      setSimError(err instanceof Error ? err.message : 'Failed to toggle keep latest only')
+    } finally {
+      setSimLoading(false)
+    }
   }
 
   if (loading) {
@@ -253,14 +398,24 @@ function ConvoyDetailPage() {
                       </p>
                     </div>
                   </div>
-                  {isHost && member.user !== user?.id && (
-                    <button
-                      onClick={() => handleRemoveMember(member.id)}
-                      className="text-xs text-red-600 hover:text-red-500"
-                    >
-                      Remove
-                    </button>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {isHost && member.user !== user?.id && (
+                      <button
+                        onClick={() => handleRemoveMember(member.id)}
+                        className="text-xs text-red-600 hover:text-red-500"
+                      >
+                        Remove
+                      </button>
+                    )}
+                    {member.user === user?.id && (
+                      <button
+                        onClick={handleLeaveConvoy}
+                        className="text-xs text-red-600 hover:text-red-500"
+                      >
+                        Leave
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -269,13 +424,122 @@ function ConvoyDetailPage() {
           {isHost && (
             <div className="bg-white shadow rounded-lg p-4">
               <h2 className="text-lg font-medium text-gray-900 mb-4">Host Controls</h2>
-              <div className="flex space-x-3">
+              <div className="flex space-x-3 mb-4">
                 <button
                   onClick={handleEndSession}
                   className="inline-flex items-center px-4 py-2 border border-red-300 text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50"
                 >
                   End Session
                 </button>
+              </div>
+
+              <div className="border-t border-gray-200 pt-4 mt-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-medium text-gray-900">Simulation Mode</h3>
+                  <button
+                    onClick={handleToggleSimulationMode}
+                    disabled={simLoading}
+                    className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 ${
+                      isSimulationEnabled ? 'bg-amber-500' : 'bg-gray-200'
+                    } ${simLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                        isSimulationEnabled ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {isSimulationEnabled && (
+                  <div className="space-y-3">
+                    <p className="text-xs text-amber-600 bg-amber-50 p-2 rounded">
+                      Simulation mode enabled. Real GPS positions are disabled for this convoy.
+                    </p>
+
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs text-gray-500">Speed:</label>
+                      <select
+                        value={simSpeed}
+                        onChange={(e) => setSimSpeed(Number(e.target.value))}
+                        className="text-xs border border-gray-300 rounded px-2 py-1"
+                      >
+                        <option value={1}>1x (Real-time)</option>
+                        <option value={5}>5x</option>
+                        <option value={10}>10x</option>
+                        <option value={30}>30x</option>
+                        <option value={60}>60x</option>
+                      </select>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-medium text-gray-700">
+                          Keep Only Latest Positions
+                        </p>
+                        <p className="text-[10px] text-gray-400">
+                          Prevents route history accumulation
+                        </p>
+                      </div>
+                      <button
+                        onClick={handleToggleKeepLatestOnly}
+                        disabled={simLoading}
+                        className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                          isKeepLatestOnly ? 'bg-blue-500' : 'bg-gray-200'
+                        } ${simLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      >
+                        <span
+                          className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                            isKeepLatestOnly ? 'translate-x-4' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      {!simRunning ? (
+                        <button
+                          onClick={handleStartSimulation}
+                          disabled={simLoading}
+                          className="inline-flex items-center px-3 py-1.5 border border-green-300 text-xs font-medium rounded-md text-green-700 bg-white hover:bg-green-50 disabled:opacity-50"
+                        >
+                          {simLoading ? 'Starting...' : 'Start Simulation'}
+                        </button>
+                      ) : (
+                        <button
+                          onClick={handleStopSimulation}
+                          disabled={simLoading}
+                          className="inline-flex items-center px-3 py-1.5 border border-red-300 text-xs font-medium rounded-md text-red-700 bg-white hover:bg-red-50 disabled:opacity-50"
+                        >
+                          {simLoading ? 'Stopping...' : 'Stop'}
+                        </button>
+                      )}
+                      <button
+                        onClick={handleRestartSimulation}
+                        disabled={simLoading}
+                        className="inline-flex items-center px-3 py-1.5 border border-amber-300 text-xs font-medium rounded-md text-amber-700 bg-white hover:bg-amber-50 disabled:opacity-50"
+                      >
+                        {simLoading ? 'Restarting...' : 'Restart (Clear + Start)'}
+                      </button>
+                      <button
+                        onClick={handleClearPositions}
+                        disabled={simLoading || simRunning}
+                        className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                      >
+                        Clear Positions
+                      </button>
+                    </div>
+
+                    {simRunning && (
+                      <div className="flex items-center gap-2 text-xs text-green-600">
+                        <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                        Running at {simSpeed}x speed
+                      </div>
+                    )}
+
+                    {simError && <p className="text-xs text-red-600">{simError}</p>}
+                  </div>
+                )}
               </div>
             </div>
           )}

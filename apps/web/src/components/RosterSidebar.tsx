@@ -1,10 +1,11 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useConvoyRoster, type RosterMember } from '../stores/ConvoyRosterContext'
 import { formatSpeedKmh } from '../utils/memberStatus'
 import { useAuth } from '../hooks/useAuth'
 import VoicePanel from './VoicePanel'
 import ChatPanel from './ChatPanel'
+import pb from '../services/pocketbase'
 
 const STATUS_COLORS: Record<string, string> = {
   'in-transit': 'bg-green-500',
@@ -35,6 +36,27 @@ export default function RosterSidebar({ isExpanded, onToggle }: RosterSidebarPro
   const { user } = useAuth()
   const [touchStart, setTouchStart] = useState<number | null>(null)
   const sidebarRef = useRef<HTMLDivElement>(null)
+  const [convoyInfo, setConvoyInfo] = useState<{
+    name: string
+    description?: string
+    source_name?: string
+    dest_name?: string
+  } | null>(null)
+
+  useEffect(() => {
+    if (!convoyId) return
+    pb.collection('convoys')
+      .getOne(convoyId)
+      .then((c) => {
+        setConvoyInfo({
+          name: c.name,
+          description: c.description,
+          source_name: c.source_name,
+          dest_name: c.dest_name,
+        })
+      })
+      .catch(() => {})
+  }, [convoyId])
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     setTouchStart(e.touches[0].clientX)
@@ -62,23 +84,41 @@ export default function RosterSidebar({ isExpanded, onToggle }: RosterSidebarPro
 
   if (!convoyId) {
     return (
-      <aside className="hidden lg:flex lg:flex-col lg:w-80 bg-white border-r border-gray-200 overflow-y-auto">
-        <div className="p-4 border-b border-gray-200">
-          <h2 className="text-sm font-semibold text-gray-900">Convoy Panel</h2>
-          <p className="text-xs text-gray-500 mt-1">No convoy active</p>
-        </div>
-        <div className="flex-1 p-4 flex items-center justify-center">
-          <div className="text-center text-sm text-gray-500">
-            <p className="mb-3">Join or create a convoy to see members here.</p>
-            <Link
-              to="/convoy"
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700"
-            >
-              Manage Convoy
-            </Link>
+      <>
+        <aside className="hidden lg:flex lg:flex-col lg:w-80 bg-white border-r border-gray-200 overflow-y-auto">
+          <div className="p-4 border-b border-gray-200">
+            <h2 className="text-sm font-semibold text-gray-900">Convoy Panel</h2>
+            <p className="text-xs text-gray-500 mt-1">No convoy active</p>
           </div>
+          <div className="flex-1 p-4 flex items-center justify-center">
+            <div className="text-center text-sm text-gray-500">
+              <p className="mb-3">Join or create a convoy to see members here.</p>
+              <Link
+                to="/convoy"
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700"
+              >
+                Manage Convoy
+              </Link>
+            </div>
+          </div>
+        </aside>
+        <div className="lg:hidden fixed top-20 left-4 z-20">
+          <Link
+            to="/convoy"
+            className="flex items-center gap-2 px-3 py-2 bg-white rounded-lg shadow-lg text-sm font-medium text-indigo-600 hover:bg-indigo-50 border border-indigo-200"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+            </svg>
+            Convoy
+          </Link>
         </div>
-      </aside>
+      </>
     )
   }
 
@@ -86,16 +126,215 @@ export default function RosterSidebar({ isExpanded, onToggle }: RosterSidebarPro
   const transitCount = members.filter((m) => m.status === 'in-transit').length
 
   return (
-    <aside
-      ref={sidebarRef}
-      className={`hidden lg:flex lg:flex-col bg-white border-r border-gray-200 overflow-hidden transition-all duration-300 ${
-        isExpanded ? 'lg:w-80' : 'lg:w-12'
-      }`}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-    >
-      {isExpanded ? (
-        <>
+    <>
+      <aside
+        ref={sidebarRef}
+        className={`hidden lg:flex lg:flex-col bg-white border-r border-gray-200 overflow-hidden transition-all duration-300 ${
+          isExpanded ? 'lg:w-80' : 'lg:w-12'
+        }`}
+      >
+        {isExpanded ? (
+          <>
+            {convoyInfo && (
+              <div className="p-4 border-b border-gray-200 bg-indigo-50/50">
+                <h2 className="text-sm font-semibold text-gray-900">{convoyInfo.name}</h2>
+                {convoyInfo.description && (
+                  <p className="text-xs text-gray-600 mt-0.5">{convoyInfo.description}</p>
+                )}
+                {(convoyInfo.source_name || convoyInfo.dest_name) && (
+                  <div className="flex items-center gap-1.5 mt-1.5 text-xs text-gray-500">
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-green-100 text-green-700">
+                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <circle cx="10" cy="10" r="4" />
+                      </svg>
+                      {convoyInfo.source_name || '?'}
+                    </span>
+                    <svg
+                      className="w-3 h-3 text-gray-400 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M14 5l7 7m0 0l-7 7m7-7H3"
+                      />
+                    </svg>
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-red-100 text-red-700">
+                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path
+                          fillRule="evenodd"
+                          d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      {convoyInfo.dest_name || '?'}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="p-4 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-sm font-semibold text-gray-900">Convoy Members</h2>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {activeCount} active · {transitCount} moving
+                  </p>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="inline-flex items-center justify-center w-6 h-6 text-xs font-medium rounded-full bg-indigo-100 text-indigo-700">
+                    {members.length}
+                  </span>
+                  <button
+                    onClick={onToggle}
+                    className="p-1 rounded text-gray-400 hover:text-gray-600"
+                    aria-label="Collapse sidebar"
+                  >
+                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto">
+              {isLoading && members.length === 0 ? (
+                <div className="p-4 text-center text-sm text-gray-500">Loading members…</div>
+              ) : members.length === 0 ? (
+                <div className="p-4 text-center text-sm text-gray-500">
+                  No members in convoy yet.
+                </div>
+              ) : (
+                <ul className="divide-y divide-gray-100">
+                  {members.map((member) => (
+                    <MemberCard
+                      key={member.id}
+                      member={member}
+                      isFocused={focusMemberId === member.id}
+                      isSelf={member.userId === user?.id}
+                      onFocus={() => handleFocusMember(member.id)}
+                    />
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div className="p-3 border-t border-gray-200 space-y-3">
+              <VoicePanel />
+              <ChatPanel />
+              <Link
+                to="/convoy"
+                className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700"
+              >
+                Manage Convoy
+              </Link>
+            </div>
+          </>
+        ) : (
+          <div className="flex flex-col items-center pt-3 gap-2">
+            <button
+              onClick={onToggle}
+              className="p-1.5 rounded text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+              aria-label="Expand sidebar"
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 5l7 7-7 7M5 5l7 7-7 7"
+                />
+              </svg>
+            </button>
+            <span className="text-xs font-medium text-gray-500">{members.length}</span>
+            {transitCount > 0 && (
+              <span
+                className="w-2 h-2 rounded-full bg-green-500"
+                title={`${transitCount} moving`}
+              />
+            )}
+          </div>
+        )}
+      </aside>
+
+      <div className="lg:hidden fixed top-20 left-0 z-20">
+        {!isExpanded && (
+          <button
+            onClick={onToggle}
+            className="absolute top-0 left-0 m-2 p-2 bg-white rounded-full shadow-lg border border-gray-200 text-gray-600 hover:bg-gray-50"
+            aria-label="Open convoy panel"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 5l7 7-7 7M5 5l7 7-7 7"
+              />
+            </svg>
+          </button>
+        )}
+        {isExpanded && <div className="fixed inset-0 bg-black/30 z-10" onClick={onToggle} />}
+        <aside
+          ref={sidebarRef}
+          className={`fixed left-0 w-80 bg-white shadow-2xl z-20 flex flex-col overflow-hidden transition-transform duration-300 top-0 bottom-14 ${
+            isExpanded ? 'translate-x-0' : '-translate-x-full'
+          }`}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
+          {convoyInfo && (
+            <div className="p-4 border-b border-gray-200 bg-indigo-50/50">
+              <h2 className="text-sm font-semibold text-gray-900">{convoyInfo.name}</h2>
+              {convoyInfo.description && (
+                <p className="text-xs text-gray-600 mt-0.5">{convoyInfo.description}</p>
+              )}
+              {(convoyInfo.source_name || convoyInfo.dest_name) && (
+                <div className="flex items-center gap-1.5 mt-1.5 text-xs text-gray-500">
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-green-100 text-green-700">
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <circle cx="10" cy="10" r="4" />
+                    </svg>
+                    {convoyInfo.source_name || '?'}
+                  </span>
+                  <svg
+                    className="w-3 h-3 text-gray-400 flex-shrink-0"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M14 5l7 7m0 0l-7 7m7-7H3"
+                    />
+                  </svg>
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-red-100 text-red-700">
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path
+                        fillRule="evenodd"
+                        d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    {convoyInfo.dest_name || '?'}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="p-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <div>
@@ -111,14 +350,14 @@ export default function RosterSidebar({ isExpanded, onToggle }: RosterSidebarPro
                 <button
                   onClick={onToggle}
                   className="p-1 rounded text-gray-400 hover:text-gray-600"
-                  aria-label="Collapse sidebar"
+                  aria-label="Close panel"
                 >
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
+                      d="M6 18L18 6M6 6l12 12"
                     />
                   </svg>
                 </button>
@@ -156,30 +395,9 @@ export default function RosterSidebar({ isExpanded, onToggle }: RosterSidebarPro
               Manage Convoy
             </Link>
           </div>
-        </>
-      ) : (
-        <div className="flex flex-col items-center pt-3 gap-2">
-          <button
-            onClick={onToggle}
-            className="p-1.5 rounded text-gray-500 hover:text-gray-700 hover:bg-gray-100"
-            aria-label="Expand sidebar"
-          >
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13 5l7 7-7 7M5 5l7 7-7 7"
-              />
-            </svg>
-          </button>
-          <span className="text-xs font-medium text-gray-500">{members.length}</span>
-          {transitCount > 0 && (
-            <span className="w-2 h-2 rounded-full bg-green-500" title={`${transitCount} moving`} />
-          )}
-        </div>
-      )}
-    </aside>
+        </aside>
+      </div>
+    </>
   )
 }
 

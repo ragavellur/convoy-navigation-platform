@@ -31,7 +31,7 @@ services:
       - osrm_data:/data
     command: osrm-routed --algorithm mld /data/monaco-latest.osrm
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost:5000/health']
+      test: ['CMD-SHELL', 'wget -q -O /dev/null http://localhost:5000/health || exit 1']
       interval: 30s
       timeout: 10s
       retries: 3
@@ -75,6 +75,30 @@ services:
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-convoyredis123}
     healthcheck:
       test: ['CMD', 'redis-cli', '-a', '${REDIS_PASSWORD:-convoyredis123}', 'ping']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - convoy-network
+
+  simulation-service:
+    build:
+      context: ./apps/simulation-service
+      dockerfile: Dockerfile
+    container_name: convoy-simulation
+    ports:
+      - '${SIMULATION_PORT:-3002}:3002'
+    environment:
+      - SIMULATION_PORT=3002
+      - POCKETBASE_URL=http://pocketbase:8090
+      - OSRM_URL=http://osrm:5000
+      - PB_ADMIN_EMAIL=${POCKETBASE_ADMIN_EMAIL:-admin@convoy.local}
+      - PB_ADMIN_PASSWORD=${POCKETBASE_ADMIN_PASSWORD:-admin123456}
+    volumes:
+      - ./scripts:/app/scripts:ro
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3002/health']
       interval: 30s
       timeout: 10s
       retries: 3

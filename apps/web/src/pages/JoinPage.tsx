@@ -62,13 +62,20 @@ function JoinPage() {
           filter: `owner = "${pb.authStore.record?.id}" && status = "active"`,
         })
 
-        const opts: VehicleOption[] = userVehicles.map((r) => ({
-          id: r.id,
-          name: r.name,
-          type: r.type,
-          license_plate: r.license_plate,
-          color: r.color,
-        }))
+        const activeMembers = await pb.collection('convoy_members').getFullList({
+          filter: `user = "${pb.authStore.record?.id}" && status = "active"`,
+        })
+        const occupiedVehicleIds = new Set(activeMembers.map((m) => m.vehicle).filter(Boolean))
+
+        const opts: VehicleOption[] = userVehicles
+          .filter((r) => !occupiedVehicleIds.has(r.id))
+          .map((r) => ({
+            id: r.id,
+            name: r.name,
+            type: r.type,
+            license_plate: r.license_plate,
+            color: r.color,
+          }))
         setVehicles(opts)
 
         if (opts.length === 1) {
@@ -89,6 +96,14 @@ function JoinPage() {
     setJoinState('joining')
     setError('')
     try {
+      const vehicleInConvoy = await pb.collection('convoy_members').getFullList({
+        filter: `vehicle = "${selectedVehicleId}" && status = "active"`,
+      })
+      if (vehicleInConvoy.length > 0) {
+        throw new Error(
+          'This vehicle is already in another active convoy. Leave that convoy first or use a different vehicle.',
+        )
+      }
       await pb.collection('convoy_members').create({
         convoy: convoyId,
         user: pb.authStore.record?.id,

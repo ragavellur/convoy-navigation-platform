@@ -1,6 +1,7 @@
 import type { RouteResponse, RouteSummary } from '../types'
 
-const OSRM_BASE_URL = 'http://localhost:5001'
+const LOCAL_OSRM_URL = 'http://localhost:5001'
+const PUBLIC_OSRM_URL = 'https://router.project-osrm.org'
 
 interface OSRMRouteParams {
   origin: [number, number]
@@ -8,6 +9,19 @@ interface OSRMRouteParams {
   alternatives?: boolean
   steps?: boolean
   geometries?: 'geojson' | 'polyline' | 'polyline6'
+}
+
+async function fetchOSRM(
+  base: string,
+  coordinates: string,
+  searchParams: URLSearchParams,
+): Promise<RouteResponse> {
+  const url = `${base}/route/v1/driving/${coordinates}?${searchParams.toString()}`
+  const response = await fetch(url)
+  if (!response.ok) throw new Error(`OSRM ${base} failed: ${response.status}`)
+  const data = await response.json()
+  if (data.code !== 'Ok') throw new Error(`OSRM error: ${data.code}`)
+  return data
 }
 
 export async function getRoute(params: OSRMRouteParams): Promise<RouteResponse> {
@@ -22,25 +36,15 @@ export async function getRoute(params: OSRMRouteParams): Promise<RouteResponse> 
   })
 
   try {
-    const response = await fetch(
-      `${OSRM_BASE_URL}/route/v1/driving/${coordinates}?${searchParams.toString()}`,
-    )
-
-    if (!response.ok) {
-      throw new Error(`OSRM route failed: ${response.status}`)
-    }
-
-    const data = await response.json()
-
-    if (data.code !== 'Ok') {
-      throw new Error(`OSRM route error: ${data.code}`)
-    }
-
-    return data
-  } catch (error) {
-    console.error('OSRM route error:', error)
-    throw error
+    const data = await fetchOSRM(LOCAL_OSRM_URL, coordinates, searchParams)
+    const route = data.routes[0]
+    if (route && route.distance > 0) return data
+    console.warn('Local OSRM returned 0 distance, trying public...')
+  } catch (e) {
+    console.warn('Local OSRM failed, trying public:', e)
   }
+
+  return fetchOSRM(PUBLIC_OSRM_URL, coordinates, searchParams)
 }
 
 export function formatDistance(meters: number): string {

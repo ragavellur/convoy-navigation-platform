@@ -69,15 +69,23 @@ export class MarkerAnimator {
     heading: number | null,
     speed: number | null,
   ): void {
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return
+
     const prev = this.lastKnownPositions.get(id)
     this.lastKnownPositions.set(id, { lat, lng, heading, speed })
 
     if (prev && prev.lat === lat && prev.lng === lng) return
 
-    const startLat = prev?.lat ?? lat
-    const startLng = prev?.lng ?? lng
+    const isFirstAppearance = !prev
+    const startLat = isFirstAppearance ? lat : (prev?.lat ?? lat)
+    const startLng = isFirstAppearance ? lng : (prev?.lng ?? lng)
     const dist = this.haversine(startLat, startLng, lat, lng)
-    const durationMs = Math.min(Math.max(dist * 10, 300), 3000)
+
+    if (isFirstAppearance || dist < 1) {
+      this.onUpdate(id, lat, lng, heading)
+      this.states.delete(id)
+      return
+    }
 
     this.states.set(id, {
       startLat,
@@ -85,7 +93,7 @@ export class MarkerAnimator {
       targetLat: lat,
       targetLng: lng,
       startTime: performance.now(),
-      durationMs,
+      durationMs: Math.min(Math.max(dist * 10, 300), 3000),
       heading,
       speed,
     })
@@ -119,7 +127,9 @@ export class MarkerAnimator {
         }
       }
 
-      this.onUpdate(id, pos.lat, pos.lng, state.heading)
+      if (Number.isFinite(pos.lat) && Number.isFinite(pos.lng)) {
+        this.onUpdate(id, pos.lat, pos.lng, state.heading)
+      }
 
       if (baseProgress < 1) {
         hasActive = true

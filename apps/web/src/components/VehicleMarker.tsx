@@ -7,6 +7,46 @@ const VEHICLE_ICONS: Record<VehicleType, string> = {
   other: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="12" rx="2" stroke="currentColor" stroke-width="2"/><circle cx="7.5" cy="18" r="1.5"/><circle cx="16.5" cy="18" r="1.5"/></svg>`,
 }
 
+const DISTINCT_COLORS = [
+  '#6366f1',
+  '#f59e0b',
+  '#10b981',
+  '#ef4444',
+  '#8b5cf6',
+  '#06b6d4',
+  '#f97316',
+  '#ec4899',
+  '#14b8a6',
+  '#3b82f6',
+  '#eab308',
+  '#84cc16',
+  '#a855f7',
+  '#22d3ee',
+  '#fb923c',
+]
+
+const colorAssignments = new Map<string, string>()
+
+export function getDistinctColor(vehicleId: string, existingColor?: string): string {
+  if (colorAssignments.has(vehicleId)) return colorAssignments.get(vehicleId)!
+  const usedColors = new Set(colorAssignments.values())
+  if (existingColor && existingColor.trim() && !usedColors.has(existingColor)) {
+    colorAssignments.set(vehicleId, existingColor)
+    return existingColor
+  }
+  let chosen = DISTINCT_COLORS.find((c) => !usedColors.has(c))
+  if (!chosen) {
+    const idx = colorAssignments.size % DISTINCT_COLORS.length
+    chosen = DISTINCT_COLORS[idx]
+  }
+  colorAssignments.set(vehicleId, chosen)
+  return chosen
+}
+
+export function resetVehicleColors(): void {
+  colorAssignments.clear()
+}
+
 export function createVehicleMarkerElement(
   type: VehicleType = 'car',
   color = '#6366f1',
@@ -23,7 +63,6 @@ export function createVehicleMarkerElement(
     justify-content: center;
     color: white;
     box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-    transition: transform 0.3s ease;
     cursor: pointer;
   `
   el.innerHTML = VEHICLE_ICONS[type] || VEHICLE_ICONS.other

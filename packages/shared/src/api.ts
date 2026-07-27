@@ -148,6 +148,13 @@ export function createConvoyApi(pb: PocketBase) {
       }
       const convoy = results[0]
 
+      const vehicleInConvoy = await pb.collection('convoy_members').getFullList({
+        filter: `vehicle = "${params.vehicleId}" && status = "active"`,
+      })
+      if (vehicleInConvoy.length > 0) {
+        throw new Error('This vehicle is already in another active convoy')
+      }
+
       const existingActive = await pb.collection('convoy_members').getFullList({
         filter: `user = "${pb.authStore.record?.id}" && status = "active"`,
         expand: 'convoy',
