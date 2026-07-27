@@ -7,13 +7,13 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'robots.txt'],
+      includeAssets: ['icons/favicon.ico', 'icons/icon-192x192.png', 'icons/icon.svg'],
       manifest: {
         name: 'Convoy Navigator',
         short_name: 'ConvoyNav',
         description: 'Real-time convoy navigation and communication platform',
-        theme_color: '#4f46e5',
-        background_color: '#ffffff',
+        theme_color: '#071320',
+        background_color: '#071320',
         display: 'standalone',
         orientation: 'portrait',
         scope: '/',
@@ -22,20 +22,21 @@ export default defineConfig({
         lang: 'en',
         icons: [
           {
-            src: '/icons/icon-192x192.svg',
+            src: '/icons/icon-192x192.png',
             sizes: '192x192',
-            type: 'image/svg+xml',
+            type: 'image/png',
             purpose: 'any maskable',
           },
           {
-            src: '/icons/icon-512x512.svg',
+            src: '/icons/icon-512x512.png',
             sizes: '512x512',
-            type: 'image/svg+xml',
+            type: 'image/png',
             purpose: 'any maskable',
           },
         ],
       },
       workbox: {
+        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         navigateFallbackDenylist: [
           /^\/api\//,

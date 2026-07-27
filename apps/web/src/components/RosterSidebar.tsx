@@ -8,9 +8,9 @@ import ChatPanel from './ChatPanel'
 import pb from '../services/pocketbase'
 
 const STATUS_COLORS: Record<string, string> = {
-  'in-transit': 'bg-green-500',
-  stopped: 'bg-yellow-500',
-  offline: 'bg-gray-400',
+  'in-transit': 'bg-emerald-500',
+  stopped: 'bg-amber-500',
+  offline: 'bg-slate-500',
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -85,17 +85,20 @@ export default function RosterSidebar({ isExpanded, onToggle }: RosterSidebarPro
   if (!convoyId) {
     return (
       <>
-        <aside className="hidden lg:flex lg:flex-col lg:w-80 bg-white border-r border-gray-200 overflow-y-auto">
-          <div className="p-4 border-b border-gray-200">
-            <h2 className="text-sm font-semibold text-gray-900">Convoy Panel</h2>
-            <p className="text-xs text-gray-500 mt-1">No convoy active</p>
+        <aside
+          className="hidden lg:flex lg:flex-col lg:w-80 overflow-y-auto"
+          style={{ background: 'rgba(7, 19, 32, 0.85)', borderRight: '1px solid var(--border)' }}
+        >
+          <div className="p-4 border-b" style={{ borderColor: 'var(--border)' }}>
+            <h2 className="text-sm font-semibold text-white">Convoy Panel</h2>
+            <p className="text-xs text-slate-400 mt-1">No convoy active</p>
           </div>
           <div className="flex-1 p-4 flex items-center justify-center">
-            <div className="text-center text-sm text-gray-500">
+            <div className="text-center text-sm text-slate-400">
               <p className="mb-3">Join or create a convoy to see members here.</p>
               <Link
                 to="/convoy"
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700"
+                className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-500 transition-colors"
               >
                 Manage Convoy
               </Link>
@@ -105,7 +108,8 @@ export default function RosterSidebar({ isExpanded, onToggle }: RosterSidebarPro
         <div className="lg:hidden fixed top-20 left-4 z-20">
           <Link
             to="/convoy"
-            className="flex items-center gap-2 px-3 py-2 bg-white rounded-lg shadow-lg text-sm font-medium text-indigo-600 hover:bg-indigo-50 border border-indigo-200"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-indigo-400 border border-indigo-500/20 transition-colors"
+            style={{ background: 'rgba(7, 19, 32, 0.85)', backdropFilter: 'blur(24px)' }}
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
@@ -129,28 +133,32 @@ export default function RosterSidebar({ isExpanded, onToggle }: RosterSidebarPro
     <>
       <aside
         ref={sidebarRef}
-        className={`hidden lg:flex lg:flex-col bg-white border-r border-gray-200 overflow-hidden transition-all duration-300 ${
+        className={`hidden lg:flex lg:flex-col overflow-hidden transition-all duration-300 ${
           isExpanded ? 'lg:w-80' : 'lg:w-12'
         }`}
+        style={{ background: 'rgba(7, 19, 32, 0.85)', borderRight: '1px solid var(--border)' }}
       >
         {isExpanded ? (
           <>
             {convoyInfo && (
-              <div className="p-4 border-b border-gray-200 bg-indigo-50/50">
-                <h2 className="text-sm font-semibold text-gray-900">{convoyInfo.name}</h2>
+              <div
+                className="p-4 border-b"
+                style={{ borderColor: 'var(--border)', background: 'rgba(99, 102, 241, 0.08)' }}
+              >
+                <h2 className="text-sm font-semibold text-white">{convoyInfo.name}</h2>
                 {convoyInfo.description && (
-                  <p className="text-xs text-gray-600 mt-0.5">{convoyInfo.description}</p>
+                  <p className="text-xs text-slate-400 mt-0.5">{convoyInfo.description}</p>
                 )}
                 {(convoyInfo.source_name || convoyInfo.dest_name) && (
-                  <div className="flex items-center gap-1.5 mt-1.5 text-xs text-gray-500">
-                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-green-100 text-green-700">
+                  <div className="flex items-center gap-1.5 mt-1.5 text-xs text-slate-400">
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400">
                       <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                         <circle cx="10" cy="10" r="4" />
                       </svg>
                       {convoyInfo.source_name || '?'}
                     </span>
                     <svg
-                      className="w-3 h-3 text-gray-400 flex-shrink-0"
+                      className="w-3 h-3 text-slate-500 flex-shrink-0"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -162,7 +170,7 @@ export default function RosterSidebar({ isExpanded, onToggle }: RosterSidebarPro
                         d="M14 5l7 7m0 0l-7 7m7-7H3"
                       />
                     </svg>
-                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-red-100 text-red-700">
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-red-500/15 text-red-400">
                       <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                         <path
                           fillRule="evenodd"
@@ -177,21 +185,21 @@ export default function RosterSidebar({ isExpanded, onToggle }: RosterSidebarPro
               </div>
             )}
 
-            <div className="p-4 border-b border-gray-200">
+            <div className="p-4 border-b" style={{ borderColor: 'var(--border)' }}>
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-sm font-semibold text-gray-900">Convoy Members</h2>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <h2 className="text-sm font-semibold text-white">Convoy Members</h2>
+                  <p className="text-xs text-slate-400 mt-1">
                     {activeCount} active · {transitCount} moving
                   </p>
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className="inline-flex items-center justify-center w-6 h-6 text-xs font-medium rounded-full bg-indigo-100 text-indigo-700">
+                  <span className="inline-flex items-center justify-center w-6 h-6 text-xs font-medium rounded-full bg-indigo-500/20 text-indigo-400">
                     {members.length}
                   </span>
                   <button
                     onClick={onToggle}
-                    className="p-1 rounded text-gray-400 hover:text-gray-600"
+                    className="p-1 rounded text-slate-500 hover:text-white hover:bg-white/10 transition-colors"
                     aria-label="Collapse sidebar"
                   >
                     <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -209,13 +217,13 @@ export default function RosterSidebar({ isExpanded, onToggle }: RosterSidebarPro
 
             <div className="flex-1 overflow-y-auto">
               {isLoading && members.length === 0 ? (
-                <div className="p-4 text-center text-sm text-gray-500">Loading members…</div>
+                <div className="p-4 text-center text-sm text-slate-400">Loading members…</div>
               ) : members.length === 0 ? (
-                <div className="p-4 text-center text-sm text-gray-500">
+                <div className="p-4 text-center text-sm text-slate-400">
                   No members in convoy yet.
                 </div>
               ) : (
-                <ul className="divide-y divide-gray-100">
+                <ul>
                   {members.map((member) => (
                     <MemberCard
                       key={member.id}
@@ -229,12 +237,12 @@ export default function RosterSidebar({ isExpanded, onToggle }: RosterSidebarPro
               )}
             </div>
 
-            <div className="p-3 border-t border-gray-200 space-y-3">
+            <div className="p-3 border-t space-y-3" style={{ borderColor: 'var(--border)' }}>
               <VoicePanel />
               <ChatPanel />
               <Link
                 to="/convoy"
-                className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700"
+                className="w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-500 transition-colors"
               >
                 Manage Convoy
               </Link>
@@ -244,7 +252,7 @@ export default function RosterSidebar({ isExpanded, onToggle }: RosterSidebarPro
           <div className="flex flex-col items-center pt-3 gap-2">
             <button
               onClick={onToggle}
-              className="p-1.5 rounded text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+              className="p-1.5 rounded text-slate-500 hover:text-white hover:bg-white/10 transition-colors"
               aria-label="Expand sidebar"
             >
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -256,10 +264,10 @@ export default function RosterSidebar({ isExpanded, onToggle }: RosterSidebarPro
                 />
               </svg>
             </button>
-            <span className="text-xs font-medium text-gray-500">{members.length}</span>
+            <span className="text-xs font-medium text-slate-500">{members.length}</span>
             {transitCount > 0 && (
               <span
-                className="w-2 h-2 rounded-full bg-green-500"
+                className="w-2 h-2 rounded-full bg-emerald-500"
                 title={`${transitCount} moving`}
               />
             )}
@@ -271,7 +279,13 @@ export default function RosterSidebar({ isExpanded, onToggle }: RosterSidebarPro
         {!isExpanded && (
           <button
             onClick={onToggle}
-            className="absolute top-0 left-0 m-2 p-2 bg-white rounded-full shadow-lg border border-gray-200 text-gray-600 hover:bg-gray-50"
+            className="absolute top-0 left-0 m-2 p-2 rounded-full border transition-colors"
+            style={{
+              background: 'rgba(7, 19, 32, 0.85)',
+              backdropFilter: 'blur(24px)',
+              borderColor: 'var(--border)',
+              color: 'var(--text2)',
+            }}
             aria-label="Open convoy panel"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -284,31 +298,35 @@ export default function RosterSidebar({ isExpanded, onToggle }: RosterSidebarPro
             </svg>
           </button>
         )}
-        {isExpanded && <div className="fixed inset-0 bg-black/30 z-10" onClick={onToggle} />}
+        {isExpanded && <div className="fixed inset-0 bg-black/60 z-10" onClick={onToggle} />}
         <aside
           ref={sidebarRef}
-          className={`fixed left-0 w-80 bg-white shadow-2xl z-20 flex flex-col overflow-hidden transition-transform duration-300 top-0 bottom-14 ${
+          className={`fixed left-0 w-80 shadow-2xl z-20 flex flex-col overflow-hidden transition-transform duration-300 top-0 bottom-14 ${
             isExpanded ? 'translate-x-0' : '-translate-x-full'
           }`}
+          style={{ background: 'rgba(7, 19, 32, 0.95)', backdropFilter: 'blur(40px)' }}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >
           {convoyInfo && (
-            <div className="p-4 border-b border-gray-200 bg-indigo-50/50">
-              <h2 className="text-sm font-semibold text-gray-900">{convoyInfo.name}</h2>
+            <div
+              className="p-4 border-b"
+              style={{ borderColor: 'var(--border)', background: 'rgba(99, 102, 241, 0.08)' }}
+            >
+              <h2 className="text-sm font-semibold text-white">{convoyInfo.name}</h2>
               {convoyInfo.description && (
-                <p className="text-xs text-gray-600 mt-0.5">{convoyInfo.description}</p>
+                <p className="text-xs text-slate-400 mt-0.5">{convoyInfo.description}</p>
               )}
               {(convoyInfo.source_name || convoyInfo.dest_name) && (
-                <div className="flex items-center gap-1.5 mt-1.5 text-xs text-gray-500">
-                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-green-100 text-green-700">
+                <div className="flex items-center gap-1.5 mt-1.5 text-xs text-slate-400">
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400">
                     <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                       <circle cx="10" cy="10" r="4" />
                     </svg>
                     {convoyInfo.source_name || '?'}
                   </span>
                   <svg
-                    className="w-3 h-3 text-gray-400 flex-shrink-0"
+                    className="w-3 h-3 text-slate-500 flex-shrink-0"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -320,7 +338,7 @@ export default function RosterSidebar({ isExpanded, onToggle }: RosterSidebarPro
                       d="M14 5l7 7m0 0l-7 7m7-7H3"
                     />
                   </svg>
-                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-red-100 text-red-700">
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-red-500/15 text-red-400">
                     <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                       <path
                         fillRule="evenodd"
@@ -335,21 +353,21 @@ export default function RosterSidebar({ isExpanded, onToggle }: RosterSidebarPro
             </div>
           )}
 
-          <div className="p-4 border-b border-gray-200">
+          <div className="p-4 border-b" style={{ borderColor: 'var(--border)' }}>
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-sm font-semibold text-gray-900">Convoy Members</h2>
-                <p className="text-xs text-gray-500 mt-1">
+                <h2 className="text-sm font-semibold text-white">Convoy Members</h2>
+                <p className="text-xs text-slate-400 mt-1">
                   {activeCount} active · {transitCount} moving
                 </p>
               </div>
               <div className="flex items-center gap-1">
-                <span className="inline-flex items-center justify-center w-6 h-6 text-xs font-medium rounded-full bg-indigo-100 text-indigo-700">
+                <span className="inline-flex items-center justify-center w-6 h-6 text-xs font-medium rounded-full bg-indigo-500/20 text-indigo-400">
                   {members.length}
                 </span>
                 <button
                   onClick={onToggle}
-                  className="p-1 rounded text-gray-400 hover:text-gray-600"
+                  className="p-1 rounded text-slate-500 hover:text-white hover:bg-white/10 transition-colors"
                   aria-label="Close panel"
                 >
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -367,11 +385,13 @@ export default function RosterSidebar({ isExpanded, onToggle }: RosterSidebarPro
 
           <div className="flex-1 overflow-y-auto">
             {isLoading && members.length === 0 ? (
-              <div className="p-4 text-center text-sm text-gray-500">Loading members…</div>
+              <div className="p-4 text-center text-sm text-slate-400">Loading members…</div>
             ) : members.length === 0 ? (
-              <div className="p-4 text-center text-sm text-gray-500">No members in convoy yet.</div>
+              <div className="p-4 text-center text-sm text-slate-400">
+                No members in convoy yet.
+              </div>
             ) : (
-              <ul className="divide-y divide-gray-100">
+              <ul>
                 {members.map((member) => (
                   <MemberCard
                     key={member.id}
@@ -385,12 +405,12 @@ export default function RosterSidebar({ isExpanded, onToggle }: RosterSidebarPro
             )}
           </div>
 
-          <div className="p-3 border-t border-gray-200 space-y-3">
+          <div className="p-3 border-t space-y-3" style={{ borderColor: 'var(--border)' }}>
             <VoicePanel />
             <ChatPanel />
             <Link
               to="/convoy"
-              className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700"
+              className="w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-500 transition-colors"
             >
               Manage Convoy
             </Link>
@@ -422,7 +442,7 @@ function MemberCard({
   return (
     <li
       className={`px-4 py-3 cursor-pointer transition-colors ${
-        isFocused ? 'bg-indigo-50' : 'hover:bg-gray-50'
+        isFocused ? 'bg-indigo-500/15' : 'hover:bg-white/5'
       }`}
       onClick={onFocus}
     >
@@ -435,33 +455,34 @@ function MemberCard({
               className="w-9 h-9 rounded-full object-cover"
             />
           ) : (
-            <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-semibold text-indigo-700">
+            <div className="w-9 h-9 rounded-full bg-indigo-500/20 flex items-center justify-center text-xs font-semibold text-indigo-400">
               {initials}
             </div>
           )}
           <span
-            className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${STATUS_COLORS[member.status]}`}
+            className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 ${STATUS_COLORS[member.status]}`}
+            style={{ borderColor: 'rgba(7, 19, 32, 0.85)' }}
             title={STATUS_LABELS[member.status]}
           />
         </div>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
-            <span className="text-sm font-medium text-gray-900 truncate">{member.userName}</span>
+            <span className="text-sm font-medium text-white truncate">{member.userName}</span>
             {isSelf && (
-              <span className="text-[10px] font-medium text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">
+              <span className="text-[10px] font-medium text-indigo-400 bg-indigo-500/15 px-1.5 py-0.5 rounded">
                 You
               </span>
             )}
             {member.role === 'host' && (
-              <span className="text-[10px] font-medium text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">
+              <span className="text-[10px] font-medium text-amber-400 bg-amber-500/15 px-1.5 py-0.5 rounded">
                 Host
               </span>
             )}
           </div>
           <div className="flex items-center gap-2 mt-0.5">
             {member.vehicleType && (
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-slate-400">
                 {VEHICLE_ICONS[member.vehicleType] ?? '🚐'}{' '}
                 {member.vehicleName || member.vehicleType}
               </span>
@@ -472,13 +493,13 @@ function MemberCard({
         <div className="text-right flex-shrink-0">
           {member.status !== 'offline' && member.position ? (
             <>
-              <div className="text-xs font-medium text-gray-900">
+              <div className="text-xs font-medium text-white">
                 {formatSpeedKmh(member.position.speed)}
               </div>
-              <div className="text-[10px] text-gray-500">{STATUS_LABELS[member.status]}</div>
+              <div className="text-[10px] text-slate-400">{STATUS_LABELS[member.status]}</div>
             </>
           ) : (
-            <div className="text-xs text-gray-400">Offline</div>
+            <div className="text-xs text-slate-500">Offline</div>
           )}
         </div>
       </div>

@@ -281,7 +281,7 @@ function ConvoyDetailPage() {
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        <p className="text-gray-500">Loading convoy...</p>
+        <p className="text-slate-400">Loading convoy...</p>
       </div>
     )
   }
@@ -289,7 +289,7 @@ function ConvoyDetailPage() {
   if (!convoy) {
     return (
       <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        <p className="text-red-600">Convoy not found.</p>
+        <p className="text-red-400">Convoy not found.</p>
       </div>
     )
   }
@@ -299,36 +299,48 @@ function ConvoyDetailPage() {
       <div className="mb-6">
         <button
           onClick={() => navigate('/convoy')}
-          className="text-sm text-indigo-600 hover:text-indigo-500 mb-2"
+          className="text-sm text-indigo-400 hover:text-indigo-300 mb-2 transition-colors"
         >
           ← Back to Convoys
         </button>
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{convoy.name}</h1>
-            <p className="text-sm text-gray-500 mt-1">Code: {convoy.code}</p>
+            <h1 className="text-2xl font-bold text-white">{convoy.name}</h1>
+            <p className="text-sm text-slate-400 mt-1">Code: {convoy.code}</p>
             {convoy.description && (
-              <p className="text-sm text-gray-600 mt-1">{convoy.description}</p>
+              <p className="text-sm text-slate-300 mt-1">{convoy.description}</p>
             )}
           </div>
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/15 text-emerald-400">
             {convoy.status}
           </span>
         </div>
       </div>
 
       {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
+        <div
+          className="mb-4 p-3 rounded-xl text-sm text-red-400"
+          style={{
+            background: 'rgba(239, 68, 68, 0.1)',
+            border: '1px solid rgba(239, 68, 68, 0.2)',
+          }}
+        >
           {error}
         </div>
       )}
 
       {showNotifications && notifications.length > 0 && (
-        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md text-blue-700 text-sm flex justify-between items-center">
+        <div
+          className="mb-4 p-3 rounded-xl text-sm text-blue-400 flex justify-between items-center"
+          style={{
+            background: 'rgba(59, 130, 246, 0.1)',
+            border: '1px solid rgba(59, 130, 246, 0.2)',
+          }}
+        >
           <span>{notifications[0].message}</span>
           <button
             onClick={() => setShowNotifications(false)}
-            className="text-blue-500 hover:text-blue-700 ml-2"
+            className="text-blue-400 hover:text-blue-300 ml-2 transition-colors"
           >
             Dismiss
           </button>
@@ -337,37 +349,44 @@ function ConvoyDetailPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white shadow rounded-lg p-4">
+          <div
+            className="rounded-xl p-4"
+            style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--border)' }}
+          >
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-medium text-gray-900">Members ({members.length})</h2>
-              <div className="flex space-x-2">
+              <h2 className="text-lg font-medium text-white">Members ({members.length})</h2>
+              <div className="flex flex-wrap gap-2">
                 <button
                   onClick={handleCopyLink}
-                  className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                  className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg text-slate-300 hover:text-white transition-colors"
+                  style={{ border: '1px solid var(--border)' }}
                 >
                   Copy Link
                 </button>
                 <button
                   onClick={() => shareViaWhatsApp(convoy!.code, convoy!.trip_id, convoy!.name)}
-                  className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                  className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg text-slate-300 hover:text-white transition-colors"
+                  style={{ border: '1px solid var(--border)' }}
                 >
                   WhatsApp
                 </button>
                 <button
                   onClick={() => shareViaSMS(convoy!.code, convoy!.trip_id, convoy!.name)}
-                  className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                  className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg text-slate-300 hover:text-white transition-colors"
+                  style={{ border: '1px solid var(--border)' }}
                 >
                   SMS
                 </button>
                 <button
                   onClick={() => shareViaEmail(convoy!.code, convoy!.trip_id, convoy!.name)}
-                  className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                  className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg text-slate-300 hover:text-white transition-colors"
+                  style={{ border: '1px solid var(--border)' }}
                 >
                   Email
                 </button>
                 <button
                   onClick={handleGoToMap}
-                  className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+                  className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-500 transition-colors"
                 >
                   Open Map
                 </button>
@@ -377,22 +396,23 @@ function ConvoyDetailPage() {
               {members.map((member) => (
                 <div
                   key={member.id}
-                  className="flex items-center justify-between p-3 border border-gray-200 rounded-lg"
+                  className="flex items-center justify-between p-3 rounded-xl"
+                  style={{ border: '1px solid var(--border)' }}
                 >
                   <div className="flex items-center space-x-3">
-                    <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center">
-                      <span className="text-sm font-medium text-indigo-600">
+                    <div className="h-8 w-8 rounded-full bg-indigo-500/20 flex items-center justify-center">
+                      <span className="text-sm font-medium text-indigo-400">
                         {member.expand?.user?.name?.charAt(0) || '?'}
                       </span>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-900">
+                      <p className="text-sm font-medium text-white">
                         {member.expand?.user?.name || 'Unknown'}
                         {member.user === user?.id && (
-                          <span className="text-gray-400 ml-1">(you)</span>
+                          <span className="text-slate-500 ml-1">(you)</span>
                         )}
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-slate-400">
                         {member.role === 'host' ? '👑 Host' : 'Member'}
                         {member.expand?.vehicle && ` · ${member.expand.vehicle.type}`}
                       </p>
@@ -402,7 +422,7 @@ function ConvoyDetailPage() {
                     {isHost && member.user !== user?.id && (
                       <button
                         onClick={() => handleRemoveMember(member.id)}
-                        className="text-xs text-red-600 hover:text-red-500"
+                        className="text-xs text-red-400 hover:text-red-300 transition-colors"
                       >
                         Remove
                       </button>
@@ -410,7 +430,7 @@ function ConvoyDetailPage() {
                     {member.user === user?.id && (
                       <button
                         onClick={handleLeaveConvoy}
-                        className="text-xs text-red-600 hover:text-red-500"
+                        className="text-xs text-red-400 hover:text-red-300 transition-colors"
                       >
                         Leave
                       </button>
@@ -422,25 +442,29 @@ function ConvoyDetailPage() {
           </div>
 
           {isHost && (
-            <div className="bg-white shadow rounded-lg p-4">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Host Controls</h2>
+            <div
+              className="rounded-xl p-4"
+              style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--border)' }}
+            >
+              <h2 className="text-lg font-medium text-white mb-4">Host Controls</h2>
               <div className="flex space-x-3 mb-4">
                 <button
                   onClick={handleEndSession}
-                  className="inline-flex items-center px-4 py-2 border border-red-300 text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50"
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg text-red-400 hover:bg-red-500/10 transition-colors"
+                  style={{ border: '1px solid rgba(239, 68, 68, 0.3)' }}
                 >
                   End Session
                 </button>
               </div>
 
-              <div className="border-t border-gray-200 pt-4 mt-4">
+              <div className="border-t pt-4 mt-4" style={{ borderColor: 'var(--border)' }}>
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-medium text-gray-900">Simulation Mode</h3>
+                  <h3 className="text-sm font-medium text-white">Simulation Mode</h3>
                   <button
                     onClick={handleToggleSimulationMode}
                     disabled={simLoading}
                     className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 ${
-                      isSimulationEnabled ? 'bg-amber-500' : 'bg-gray-200'
+                      isSimulationEnabled ? 'bg-amber-500' : 'bg-white/10'
                     } ${simLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     <span
@@ -453,16 +477,23 @@ function ConvoyDetailPage() {
 
                 {isSimulationEnabled && (
                   <div className="space-y-3">
-                    <p className="text-xs text-amber-600 bg-amber-50 p-2 rounded">
+                    <p
+                      className="text-xs text-amber-400 rounded-lg p-2"
+                      style={{ background: 'rgba(245, 158, 11, 0.1)' }}
+                    >
                       Simulation mode enabled. Real GPS positions are disabled for this convoy.
                     </p>
 
                     <div className="flex items-center gap-2">
-                      <label className="text-xs text-gray-500">Speed:</label>
+                      <label className="text-xs text-slate-400">Speed:</label>
                       <select
                         value={simSpeed}
                         onChange={(e) => setSimSpeed(Number(e.target.value))}
-                        className="text-xs border border-gray-300 rounded px-2 py-1"
+                        className="text-xs rounded-lg px-2 py-1 text-white"
+                        style={{
+                          background: 'rgba(255, 255, 255, 0.05)',
+                          border: '1px solid var(--border)',
+                        }}
                       >
                         <option value={1}>1x (Real-time)</option>
                         <option value={5}>5x</option>
@@ -474,10 +505,8 @@ function ConvoyDetailPage() {
 
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-xs font-medium text-gray-700">
-                          Keep Only Latest Positions
-                        </p>
-                        <p className="text-[10px] text-gray-400">
+                        <p className="text-xs font-medium text-white">Keep Only Latest Positions</p>
+                        <p className="text-[10px] text-slate-500">
                           Prevents route history accumulation
                         </p>
                       </div>
@@ -485,7 +514,7 @@ function ConvoyDetailPage() {
                         onClick={handleToggleKeepLatestOnly}
                         disabled={simLoading}
                         className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                          isKeepLatestOnly ? 'bg-blue-500' : 'bg-gray-200'
+                          isKeepLatestOnly ? 'bg-blue-500' : 'bg-white/10'
                         } ${simLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                       >
                         <span
@@ -501,7 +530,8 @@ function ConvoyDetailPage() {
                         <button
                           onClick={handleStartSimulation}
                           disabled={simLoading}
-                          className="inline-flex items-center px-3 py-1.5 border border-green-300 text-xs font-medium rounded-md text-green-700 bg-white hover:bg-green-50 disabled:opacity-50"
+                          className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg text-emerald-400 hover:bg-emerald-500/10 disabled:opacity-50 transition-colors"
+                          style={{ border: '1px solid rgba(16, 185, 129, 0.3)' }}
                         >
                           {simLoading ? 'Starting...' : 'Start Simulation'}
                         </button>
@@ -509,7 +539,8 @@ function ConvoyDetailPage() {
                         <button
                           onClick={handleStopSimulation}
                           disabled={simLoading}
-                          className="inline-flex items-center px-3 py-1.5 border border-red-300 text-xs font-medium rounded-md text-red-700 bg-white hover:bg-red-50 disabled:opacity-50"
+                          className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg text-red-400 hover:bg-red-500/10 disabled:opacity-50 transition-colors"
+                          style={{ border: '1px solid rgba(239, 68, 68, 0.3)' }}
                         >
                           {simLoading ? 'Stopping...' : 'Stop'}
                         </button>
@@ -517,27 +548,29 @@ function ConvoyDetailPage() {
                       <button
                         onClick={handleRestartSimulation}
                         disabled={simLoading}
-                        className="inline-flex items-center px-3 py-1.5 border border-amber-300 text-xs font-medium rounded-md text-amber-700 bg-white hover:bg-amber-50 disabled:opacity-50"
+                        className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg text-amber-400 hover:bg-amber-500/10 disabled:opacity-50 transition-colors"
+                        style={{ border: '1px solid rgba(245, 158, 11, 0.3)' }}
                       >
                         {simLoading ? 'Restarting...' : 'Restart (Clear + Start)'}
                       </button>
                       <button
                         onClick={handleClearPositions}
                         disabled={simLoading || simRunning}
-                        className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                        className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg text-slate-300 hover:text-white disabled:opacity-50 transition-colors"
+                        style={{ border: '1px solid var(--border)' }}
                       >
                         Clear Positions
                       </button>
                     </div>
 
                     {simRunning && (
-                      <div className="flex items-center gap-2 text-xs text-green-600">
-                        <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                      <div className="flex items-center gap-2 text-xs text-emerald-400">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                         Running at {simSpeed}x speed
                       </div>
                     )}
 
-                    {simError && <p className="text-xs text-red-600">{simError}</p>}
+                    {simError && <p className="text-xs text-red-400">{simError}</p>}
                   </div>
                 )}
               </div>
@@ -546,16 +579,22 @@ function ConvoyDetailPage() {
         </div>
 
         <div className="space-y-6">
-          <div className="bg-white shadow rounded-lg p-4">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">Your Vehicle</h2>
+          <div
+            className="rounded-xl p-4"
+            style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--border)' }}
+          >
+            <h2 className="text-lg font-medium text-white mb-4">Your Vehicle</h2>
             {(() => {
               const myMember = members.find((m) => m.user === user?.id)
               const vehicle = myMember?.expand?.vehicle
               if (vehicle) {
                 return (
-                  <div className="p-3 bg-gray-50 rounded-lg">
-                    <p className="text-sm font-medium text-gray-900">{vehicle.name}</p>
-                    <p className="text-xs text-gray-500">
+                  <div
+                    className="p-3 rounded-xl"
+                    style={{ background: 'rgba(255, 255, 255, 0.05)' }}
+                  >
+                    <p className="text-sm font-medium text-white">{vehicle.name}</p>
+                    <p className="text-xs text-slate-400">
                       {vehicle.type}
                       {vehicle.color ? ` · ${vehicle.color}` : ''}
                     </p>
@@ -563,11 +602,11 @@ function ConvoyDetailPage() {
                 )
               }
               return (
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-slate-400">
                   No vehicle assigned.{' '}
                   <button
                     onClick={() => navigate('/profile')}
-                    className="text-indigo-600 hover:underline"
+                    className="text-indigo-400 hover:text-indigo-300 transition-colors"
                   >
                     Add one in Profile
                   </button>
@@ -576,24 +615,27 @@ function ConvoyDetailPage() {
             })()}
           </div>
 
-          <div className="bg-white shadow rounded-lg p-4">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">Convoy Info</h2>
+          <div
+            className="rounded-xl p-4"
+            style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--border)' }}
+          >
+            <h2 className="text-lg font-medium text-white mb-4">Convoy Info</h2>
             <dl className="space-y-2 text-sm">
               {(convoy.source_name || convoy.dest_name) && (
                 <div className="flex justify-between">
-                  <dt className="text-gray-500">Route</dt>
-                  <dd className="text-gray-900 text-right max-w-[200px] truncate">
+                  <dt className="text-slate-400">Route</dt>
+                  <dd className="text-white text-right max-w-[200px] truncate">
                     {convoy.source_name || '?'} → {convoy.dest_name || '?'}
                   </dd>
                 </div>
               )}
               <div className="flex justify-between">
-                <dt className="text-gray-500">Trip ID</dt>
-                <dd className="text-gray-900 font-mono text-xs">{convoy.trip_id}</dd>
+                <dt className="text-slate-400">Trip ID</dt>
+                <dd className="text-white font-mono text-xs">{convoy.trip_id}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-gray-500">Created</dt>
-                <dd className="text-gray-900">{new Date(convoy.created).toLocaleDateString()}</dd>
+                <dt className="text-slate-400">Created</dt>
+                <dd className="text-white">{new Date(convoy.created).toLocaleDateString()}</dd>
               </div>
             </dl>
           </div>

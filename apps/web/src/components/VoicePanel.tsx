@@ -52,21 +52,24 @@ export default function VoicePanel() {
   if (!convoyId) return null
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
-      <div className="px-3 py-2 border-b border-gray-100">
+    <div
+      className="rounded-xl border"
+      style={{ background: 'rgba(255, 255, 255, 0.05)', borderColor: 'var(--border)' }}
+    >
+      <div className="px-3 py-2 border-b" style={{ borderColor: 'var(--border)' }}>
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-gray-900">Voice Channel</h3>
+          <h3 className="text-sm font-semibold text-white">Voice Channel</h3>
           <div className="flex items-center gap-1.5">
             <span
               className={`w-2 h-2 rounded-full ${
                 state === 'connected' || state === 'speaking'
-                  ? 'bg-green-500'
+                  ? 'bg-emerald-500'
                   : state === 'connecting'
-                    ? 'bg-yellow-500'
-                    : 'bg-gray-400'
+                    ? 'bg-amber-500'
+                    : 'bg-slate-500'
               }`}
             />
-            <span className="text-xs text-gray-500 capitalize">{state}</span>
+            <span className="text-xs text-slate-400 capitalize">{state}</span>
           </div>
         </div>
       </div>
@@ -75,7 +78,7 @@ export default function VoicePanel() {
         {state === 'disconnected' ? (
           <button
             onClick={handleJoin}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-500 transition-colors"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
@@ -89,31 +92,31 @@ export default function VoicePanel() {
           </button>
         ) : (
           <div className="space-y-3">
-            <div className="text-xs text-gray-500">
+            <div className="text-xs text-slate-400">
               {peers.length + 1} participant{peers.length !== 1 ? 's' : ''}
             </div>
 
             {activeSpeaker && (
-              <div className="flex items-center gap-2 px-2 py-1.5 bg-green-50 rounded-md">
-                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                <span className="text-xs text-green-700 font-medium">
+              <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-emerald-500/10">
+                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-xs text-emerald-400 font-medium">
                   {activeSpeaker.userName} is speaking
                 </span>
               </div>
             )}
 
-            <div className="relative">
+            <div className="relative flex justify-center">
               <button
                 onPointerDown={handlePttStart}
                 onPointerUp={handlePttStop}
                 onPointerLeave={handlePttStop}
-                className={`w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium rounded-lg transition-colors select-none ${
+                className={`w-16 h-16 rounded-full flex items-center justify-center text-sm font-medium transition-all select-none ${
                   isPttHeld
-                    ? 'bg-red-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'bg-red-600 text-white shadow-lg shadow-red-600/30 scale-110'
+                    : 'bg-white/10 text-slate-300 hover:bg-white/15'
                 }`}
               >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -121,13 +124,19 @@ export default function VoicePanel() {
                     d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
                   />
                 </svg>
-                {isPttHeld ? 'Speaking...' : 'Hold to Talk'}
               </button>
+            </div>
+
+            <div
+              className="text-center text-xs font-medium"
+              style={{ color: isPttHeld ? 'var(--danger)' : 'var(--text2)' }}
+            >
+              {isPttHeld ? 'Speaking...' : 'Hold to Talk'}
             </div>
 
             <button
               onClick={handleLeave}
-              className="w-full px-3 py-1.5 text-xs text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md"
+              className="w-full px-3 py-1.5 text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-md transition-colors"
             >
               Leave Voice
             </button>

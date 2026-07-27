@@ -60,16 +60,19 @@ export default function ChatPanel() {
   if (!convoyId) return null
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
+    <div
+      className="rounded-xl border"
+      style={{ background: 'rgba(255, 255, 255, 0.05)', borderColor: 'var(--border)' }}
+    >
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between px-3 py-2 hover:bg-gray-50"
+        className="w-full flex items-center justify-between px-3 py-2 hover:bg-white/5 transition-colors"
       >
-        <h3 className="text-sm font-semibold text-gray-900">Chat</h3>
+        <h3 className="text-sm font-semibold text-white">Chat</h3>
         <div className="flex items-center gap-1">
-          {messages.length > 0 && <span className="text-xs text-gray-500">{messages.length}</span>}
+          {messages.length > 0 && <span className="text-xs text-slate-400">{messages.length}</span>}
           <svg
-            className={`h-4 w-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+            className={`h-4 w-4 text-slate-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -80,10 +83,10 @@ export default function ChatPanel() {
       </button>
 
       {isOpen && (
-        <div className="border-t border-gray-100">
+        <div className="border-t" style={{ borderColor: 'var(--border)' }}>
           <div className="h-64 overflow-y-auto p-3 space-y-2">
             {messages.length === 0 ? (
-              <p className="text-xs text-gray-400 text-center mt-8">No messages yet</p>
+              <p className="text-xs text-slate-500 text-center mt-8">No messages yet</p>
             ) : (
               messages.map((msg) => (
                 <ChatBubble key={msg.id} message={msg} isSelf={msg.sender === user?.id} />
@@ -92,7 +95,7 @@ export default function ChatPanel() {
             <div ref={messagesEndRef} />
           </div>
 
-          <div className="p-2 border-t border-gray-100">
+          <div className="p-2 border-t" style={{ borderColor: 'var(--border)' }}>
             <div className="flex items-center gap-2">
               <input
                 ref={inputRef}
@@ -101,12 +104,16 @@ export default function ChatPanel() {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Type a message..."
-                className="flex-1 px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                className="flex-1 px-3 py-1.5 text-sm text-white placeholder-slate-500 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid var(--border)',
+                }}
               />
               <button
                 onClick={handleSend}
                 disabled={!input.trim()}
-                className="p-1.5 text-indigo-600 hover:text-indigo-700 disabled:text-gray-300"
+                className="p-1.5 text-indigo-400 hover:text-indigo-300 disabled:text-slate-600 transition-colors"
               >
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
@@ -134,7 +141,10 @@ function ChatBubble({ message, isSelf }: { message: ChatMessage; isSelf: boolean
   if (message.type === 'system') {
     return (
       <div className="text-center">
-        <span className="text-[10px] text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full">
+        <span
+          className="text-[10px] text-slate-500 px-2 py-0.5 rounded-full"
+          style={{ background: 'rgba(255, 255, 255, 0.05)' }}
+        >
           {message.content}
         </span>
       </div>
@@ -144,17 +154,16 @@ function ChatBubble({ message, isSelf }: { message: ChatMessage; isSelf: boolean
   return (
     <div className={`flex ${isSelf ? 'justify-end' : 'justify-start'}`}>
       <div
-        className={`max-w-[80%] px-3 py-1.5 rounded-lg ${
-          isSelf
-            ? 'bg-indigo-600 text-white rounded-br-sm'
-            : 'bg-gray-100 text-gray-900 rounded-bl-sm'
+        className={`max-w-[80%] px-3 py-1.5 rounded-xl ${
+          isSelf ? 'bg-indigo-600 text-white rounded-br-sm' : 'text-white rounded-bl-sm'
         }`}
+        style={!isSelf ? { background: 'rgba(255, 255, 255, 0.08)' } : undefined}
       >
         {!isSelf && (
-          <p className="text-[10px] font-medium text-indigo-600 mb-0.5">{message.senderName}</p>
+          <p className="text-[10px] font-medium text-indigo-400 mb-0.5">{message.senderName}</p>
         )}
         <p className="text-sm">{message.content}</p>
-        <p className={`text-[10px] mt-0.5 ${isSelf ? 'text-indigo-200' : 'text-gray-400'}`}>
+        <p className={`text-[10px] mt-0.5 ${isSelf ? 'text-indigo-200' : 'text-slate-500'}`}>
           {time}
         </p>
       </div>

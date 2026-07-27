@@ -255,48 +255,65 @@ function ConvoyPage() {
   return (
     <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">My Convoys</h1>
+        <h1 className="text-2xl font-bold text-white">My Convoys</h1>
         <button
           onClick={() => setShowCreateForm(!showCreateForm)}
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+          className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-500 transition-colors"
         >
           {showCreateForm ? 'Cancel' : 'Create Convoy'}
         </button>
       </div>
 
       {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
+        <div
+          className="mb-4 p-3 rounded-xl text-sm text-red-400"
+          style={{
+            background: 'rgba(239, 68, 68, 0.1)',
+            border: '1px solid rgba(239, 68, 68, 0.2)',
+          }}
+        >
           {error}
         </div>
       )}
 
       {success && (
-        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md text-green-700 text-sm">
+        <div
+          className="mb-4 p-3 rounded-xl text-sm text-emerald-400"
+          style={{
+            background: 'rgba(16, 185, 129, 0.1)',
+            border: '1px solid rgba(16, 185, 129, 0.2)',
+          }}
+        >
           {success}
         </div>
       )}
 
       {showCreateForm && (
-        <div className="mb-6 bg-white shadow rounded-lg p-4">
-          <h2 className="text-lg font-medium text-gray-900 mb-3">New Convoy</h2>
+        <div
+          className="mb-6 rounded-xl p-4"
+          style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--border)' }}
+        >
+          <h2 className="text-lg font-medium text-white mb-3">New Convoy</h2>
           <div className="space-y-3">
             <input
               type="text"
               placeholder="Convoy name"
               value={newConvoyName}
               onChange={(e) => setNewConvoyName(e.target.value)}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
+              style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--border)' }}
             />
             <input
               type="text"
               placeholder="Description (optional)"
               value={newConvoyDesc}
               onChange={(e) => setNewConvoyDesc(e.target.value)}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
+              style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--border)' }}
             />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">
+                <label className="block text-xs font-medium text-slate-400 mb-1">
                   Starting Point
                 </label>
                 <SearchBar
@@ -306,10 +323,10 @@ function ConvoyPage() {
                     setSourceLng(result.lng)
                   }}
                 />
-                {sourceName && <p className="text-xs text-gray-500 mt-1">{sourceName}</p>}
+                {sourceName && <p className="text-xs text-slate-400 mt-1">{sourceName}</p>}
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Destination</label>
+                <label className="block text-xs font-medium text-slate-400 mb-1">Destination</label>
                 <SearchBar
                   onResultSelect={(result: SearchResult) => {
                     setDestName(result.displayName)
@@ -317,20 +334,26 @@ function ConvoyPage() {
                     setDestLng(result.lng)
                   }}
                 />
-                {destName && <p className="text-xs text-gray-500 mt-1">{destName}</p>}
+                {destName && <p className="text-xs text-slate-400 mt-1">{destName}</p>}
               </div>
             </div>
-            <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-md">
+            <div
+              className="flex items-center gap-2 p-3 rounded-xl"
+              style={{
+                background: 'rgba(245, 158, 11, 0.08)',
+                border: '1px solid rgba(245, 158, 11, 0.2)',
+              }}
+            >
               <input
                 type="checkbox"
                 id="enable-simulation"
                 checked={enableSimulation}
                 onChange={(e) => setEnableSimulation(e.target.checked)}
-                className="h-4 w-4 text-amber-600 focus:ring-amber-500 border-gray-300 rounded"
+                className="h-4 w-4 text-amber-500 focus:ring-amber-500/50 rounded border-white/20"
               />
-              <label htmlFor="enable-simulation" className="text-sm text-amber-800">
+              <label htmlFor="enable-simulation" className="text-sm text-amber-400">
                 Enable simulation mode
-                <span className="block text-xs text-amber-600 mt-0.5">
+                <span className="block text-xs text-amber-400/70 mt-0.5">
                   Vehicle positions will be simulated along the route instead of using real GPS
                 </span>
               </label>
@@ -338,7 +361,7 @@ function ConvoyPage() {
             <button
               onClick={handleCreate}
               disabled={creating || !newConvoyName.trim()}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {creating ? 'Creating...' : 'Create'}
             </button>
@@ -346,38 +369,42 @@ function ConvoyPage() {
         </div>
       )}
 
-      <div className="bg-white shadow rounded-lg">
+      <div
+        className="rounded-xl"
+        style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--border)' }}
+      >
         <div className="px-4 py-5 sm:p-6">
           {loading ? (
             <div className="text-center py-12">
-              <p className="text-gray-500">Loading convoys...</p>
+              <p className="text-slate-400">Loading convoys...</p>
             </div>
           ) : convoys.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-500">No convoys yet. Create or join one to get started.</p>
+              <p className="text-slate-400">No convoys yet. Create or join one to get started.</p>
             </div>
           ) : (
             <div className="space-y-4">
               {convoys.map((convoy) => (
                 <div
                   key={convoy.id}
-                  className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50"
+                  className="rounded-xl p-4 hover:bg-white/5 transition-colors"
+                  style={{ border: '1px solid var(--border)' }}
                 >
                   <div onClick={() => handleOpenConvoy(convoy.id)} className="cursor-pointer">
                     <div className="flex justify-between items-start">
                       <div>
-                        <h3 className="text-lg font-medium text-gray-900">{convoy.name}</h3>
-                        <p className="text-sm text-gray-500">Code: {convoy.code}</p>
+                        <h3 className="text-lg font-medium text-white">{convoy.name}</h3>
+                        <p className="text-sm text-slate-400">Code: {convoy.code}</p>
                         {convoy.description && (
-                          <p className="text-sm text-gray-600 mt-1">{convoy.description}</p>
+                          <p className="text-sm text-slate-300 mt-1">{convoy.description}</p>
                         )}
                         {(convoy.source_name || convoy.dest_name) && (
-                          <p className="text-xs text-gray-400 mt-1">
+                          <p className="text-xs text-slate-500 mt-1">
                             {convoy.source_name || '?'} → {convoy.dest_name || '?'}
                           </p>
                         )}
                       </div>
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/15 text-emerald-400">
                         {convoy.status}
                       </span>
                     </div>
@@ -385,7 +412,8 @@ function ConvoyPage() {
                   <div className="mt-3 flex space-x-2">
                     <button
                       onClick={() => handleCopyDeepLink(convoy.code, convoy.trip_id)}
-                      className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                      className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg text-slate-300 hover:text-white transition-colors"
+                      style={{ border: '1px solid var(--border)' }}
                     >
                       Copy Invite Link
                     </button>
@@ -397,15 +425,18 @@ function ConvoyPage() {
         </div>
       </div>
 
-      <div className="mt-6 bg-white shadow rounded-lg">
+      <div
+        className="mt-6 rounded-xl"
+        style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--border)' }}
+      >
         <div className="px-4 py-5 sm:p-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">Join a Convoy</h2>
+          <h2 className="text-lg font-medium text-white mb-4">Join a Convoy</h2>
           {vehicles.length === 0 ? (
             <div className="text-center py-4">
-              <p className="text-sm text-gray-500 mb-2">You need a vehicle to join a convoy.</p>
+              <p className="text-sm text-slate-400 mb-2">You need a vehicle to join a convoy.</p>
               <button
                 onClick={() => navigate('/profile')}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+                className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-500 transition-colors"
               >
                 Add Vehicle in Profile
               </button>
@@ -413,13 +444,17 @@ function ConvoyPage() {
           ) : (
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">
+                <label className="block text-xs font-medium text-slate-400 mb-1">
                   Select Vehicle
                 </label>
                 <select
                   value={selectedVehicleId}
                   onChange={(e) => setSelectedVehicleId(e.target.value)}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid var(--border)',
+                  }}
                 >
                   <option value="">-- Choose vehicle --</option>
                   {vehicles.map((v) => (
@@ -435,12 +470,16 @@ function ConvoyPage() {
                   placeholder="Enter convoy code"
                   value={joinCode}
                   onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                  className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="flex-1 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid var(--border)',
+                  }}
                 />
                 <button
                   onClick={handleJoin}
                   disabled={joining || !joinCode.trim() || !selectedVehicleId}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {joining ? 'Joining...' : 'Join'}
                 </button>

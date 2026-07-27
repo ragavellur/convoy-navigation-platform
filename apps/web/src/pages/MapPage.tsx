@@ -282,7 +282,7 @@ function MapPage() {
         .setLngLat(destination)
         .setPopup(
           new maplibregl.Popup({ offset: 25 }).setHTML(
-            `<div class="p-2"><div class="font-medium text-gray-900">${result.name}</div><div class="text-xs text-gray-500 mt-1">${result.displayName}</div></div>`,
+            `<div class="p-2"><div class="font-medium text-white">${result.name}</div><div class="text-xs text-slate-400 mt-1">${result.displayName}</div></div>`,
           ),
         )
       destMarker.addTo(map.current)
@@ -818,13 +818,16 @@ function MapPage() {
   const alternatives = routeResponse?.routes || []
 
   return (
-    <div className="relative w-full h-[calc(100dvh-64px-56px)] md:h-[calc(100dvh-64px)]">
+    <div className="relative w-full h-[calc(100dvh-80px-56px)] md:h-[calc(100dvh-80px)]">
       <div ref={mapContainer} className="w-full h-full" />
       {!mapLoaded && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+        <div
+          className="absolute inset-0 flex items-center justify-center"
+          style={{ background: 'var(--bg)' }}
+        >
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading map...</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-400 mx-auto"></div>
+            <p className="mt-4 text-slate-400">Loading map...</p>
           </div>
         </div>
       )}
@@ -838,16 +841,29 @@ function MapPage() {
         </div>
       )}
       {convoyId && simActive && (
-        <div className="absolute top-4 left-4 z-10 flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-300 rounded-lg shadow-lg">
+        <div
+          className="absolute top-4 left-4 z-10 flex items-center gap-2 px-3 py-2 rounded-xl"
+          style={{
+            background: 'rgba(245, 158, 11, 0.15)',
+            border: '1px solid rgba(245, 158, 11, 0.3)',
+          }}
+        >
           <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-          <span className="text-xs font-medium text-amber-800">Simulation Mode</span>
+          <span className="text-xs font-medium text-amber-400">Simulation Mode</span>
         </div>
       )}
       {isOffRoute && routeData && (
-        <div className="absolute top-20 left-4 right-4 md:left-auto md:right-4 md:w-96 z-20 bg-amber-50 border border-amber-300 rounded-lg shadow-lg p-4">
+        <div
+          className="absolute top-20 left-4 right-4 md:left-auto md:right-4 md:w-96 z-20 rounded-xl p-4"
+          style={{
+            background: 'rgba(7, 19, 32, 0.85)',
+            backdropFilter: 'blur(24px)',
+            border: '1px solid rgba(245, 158, 11, 0.3)',
+          }}
+        >
           <div className="flex items-center gap-2 mb-2">
             <svg
-              className="h-5 w-5 text-amber-500"
+              className="h-5 w-5 text-amber-400"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -859,9 +875,9 @@ function MapPage() {
                 d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
               />
             </svg>
-            <h3 className="font-semibold text-amber-800">Off Route</h3>
+            <h3 className="font-semibold text-amber-400">Off Route</h3>
           </div>
-          <p className="text-sm text-amber-700 mb-3">You have deviated from the planned route.</p>
+          <p className="text-sm text-slate-300 mb-3">You have deviated from the planned route.</p>
           <button
             onClick={() => {
               if (routeResponse) {
@@ -869,19 +885,26 @@ function MapPage() {
                 if (dest) recalculateRoute(dest.location)
               }
             }}
-            className="w-full px-3 py-2 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700"
+            className="w-full px-3 py-2 bg-amber-500/20 text-amber-400 text-sm font-medium rounded-lg hover:bg-amber-500/30 transition-colors"
           >
             Recalculate Route
           </button>
         </div>
       )}
       {routeData && showRoutePanel && (
-        <div className="absolute top-20 left-4 z-10 bg-white rounded-lg shadow-lg p-4 max-w-sm max-h-[60vh] overflow-y-auto">
+        <div
+          className="absolute top-20 left-4 z-10 rounded-xl p-4 max-w-sm max-h-[60vh] overflow-y-auto"
+          style={{
+            background: 'rgba(7, 19, 32, 0.85)',
+            backdropFilter: 'blur(24px)',
+            border: '1px solid var(--border)',
+          }}
+        >
           <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-gray-900">Route Summary</h3>
+            <h3 className="font-semibold text-white">Route Summary</h3>
             <button
               onClick={hideRoutePanel}
-              className="text-gray-400 hover:text-gray-600"
+              className="text-slate-500 hover:text-white transition-colors"
               aria-label="Hide route summary"
             >
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -895,22 +918,28 @@ function MapPage() {
             </button>
           </div>
           <div className="grid grid-cols-2 gap-3 mb-4">
-            <div className="bg-indigo-50 rounded-lg p-3 text-center">
-              <div className="text-lg font-bold text-indigo-600">
+            <div
+              className="rounded-xl p-3 text-center"
+              style={{ background: 'rgba(99, 102, 241, 0.12)' }}
+            >
+              <div className="text-lg font-bold text-indigo-400">
                 {formatDistance(routeData.distance)}
               </div>
-              <div className="text-xs text-indigo-500 mt-0.5">Distance</div>
+              <div className="text-xs text-indigo-400/70 mt-0.5">Distance</div>
             </div>
-            <div className="bg-indigo-50 rounded-lg p-3 text-center">
-              <div className="text-lg font-bold text-indigo-600">
+            <div
+              className="rounded-xl p-3 text-center"
+              style={{ background: 'rgba(99, 102, 241, 0.12)' }}
+            >
+              <div className="text-lg font-bold text-indigo-400">
                 {formatDuration(routeData.duration)}
               </div>
-              <div className="text-xs text-indigo-500 mt-0.5">Duration</div>
+              <div className="text-xs text-indigo-400/70 mt-0.5">Duration</div>
             </div>
           </div>
           {alternatives.length > 1 && (
-            <div className="mb-3 border-t border-gray-100 pt-3">
-              <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+            <div className="mb-3 border-t pt-3" style={{ borderColor: 'var(--border)' }}>
+              <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">
                 {alternatives.length} Routes Found
               </h4>
               <div className="space-y-2">
@@ -918,19 +947,20 @@ function MapPage() {
                   <button
                     key={i}
                     onClick={() => selectAlternative(i)}
-                    className={`w-full text-left p-2 rounded-lg text-sm border transition-colors ${
+                    className={`w-full text-left p-2 rounded-xl text-sm border transition-colors ${
                       selectedAltIndex === i
-                        ? 'border-indigo-300 bg-indigo-50 ring-1 ring-indigo-200'
-                        : 'border-gray-200 hover:bg-gray-50'
+                        ? 'border-indigo-500/30 bg-indigo-500/10'
+                        : 'hover:bg-white/5'
                     }`}
+                    style={selectedAltIndex !== i ? { borderColor: 'var(--border)' } : undefined}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-medium text-gray-900">Route {i + 1}</span>
+                      <span className="font-medium text-white">Route {i + 1}</span>
                       {selectedAltIndex === i && (
-                        <span className="text-xs text-indigo-600 font-medium">Selected</span>
+                        <span className="text-xs text-indigo-400 font-medium">Selected</span>
                       )}
                     </div>
-                    <div className="flex gap-3 text-xs text-gray-500 mt-0.5">
+                    <div className="flex gap-3 text-xs text-slate-400 mt-0.5">
                       <span>{formatDistance(alt.distance)}</span>
                       <span>{formatDuration(alt.duration)}</span>
                     </div>
@@ -939,13 +969,13 @@ function MapPage() {
               </div>
             </div>
           )}
-          <div className="mb-3 border-t border-gray-100 pt-3">
-            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+          <div className="mb-3 border-t pt-3" style={{ borderColor: 'var(--border)' }}>
+            <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">
               Traffic
             </h4>
-            <div className="flex gap-3 text-xs">
+            <div className="flex gap-3 text-xs text-slate-300">
               <span className="flex items-center gap-1">
-                <span className="w-3 h-1 rounded bg-green-500 inline-block"></span> Free
+                <span className="w-3 h-1 rounded bg-emerald-500 inline-block"></span> Free
               </span>
               <span className="flex items-center gap-1">
                 <span className="w-3 h-1 rounded bg-lime-500 inline-block"></span> Light
@@ -959,14 +989,17 @@ function MapPage() {
             </div>
           </div>
           {firstStep && (
-            <div className="border-t border-gray-100 pt-3">
-              <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+            <div className="border-t pt-3" style={{ borderColor: 'var(--border)' }}>
+              <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">
                 Next Step
               </h4>
               <div className="flex items-start gap-2">
-                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center">
+                <div
+                  className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center"
+                  style={{ background: 'rgba(99, 102, 241, 0.15)' }}
+                >
                   <svg
-                    className="h-4 w-4 text-indigo-600"
+                    className="h-4 w-4 text-indigo-400"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -980,20 +1013,20 @@ function MapPage() {
                   </svg>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-900">
+                  <p className="text-sm font-medium text-white">
                     {firstStep.name || 'Continue'}
                     {firstStep.maneuver.modifier && (
-                      <span className="text-gray-500"> — {firstStep.maneuver.modifier}</span>
+                      <span className="text-slate-400"> — {firstStep.maneuver.modifier}</span>
                     )}
                   </p>
-                  <p className="text-xs text-gray-500">{formatDistance(firstStep.distance)}</p>
+                  <p className="text-xs text-slate-400">{formatDistance(firstStep.distance)}</p>
                 </div>
               </div>
             </div>
           )}
           {routeData.legs[0]?.steps.length > 2 && (
-            <details className="border-t border-gray-100 pt-3 mt-3">
-              <summary className="text-xs font-semibold text-gray-500 uppercase tracking-wide cursor-pointer hover:text-gray-700">
+            <details className="border-t pt-3 mt-3" style={{ borderColor: 'var(--border)' }}>
+              <summary className="text-xs font-semibold text-slate-400 uppercase tracking-wide cursor-pointer hover:text-white transition-colors">
                 {routeData.legs[0].steps.length - 1} more steps
               </summary>
               <div className="mt-2 space-y-2 max-h-48 overflow-y-auto">
@@ -1001,19 +1034,19 @@ function MapPage() {
                   <button
                     key={i}
                     onClick={() => setSelectedStepIndex(selectedStepIndex === i ? null : i)}
-                    className={`w-full text-left p-2 rounded text-sm ${
+                    className={`w-full text-left p-2 rounded-lg text-sm ${
                       selectedStepIndex === i
-                        ? 'bg-indigo-50 border border-indigo-200'
-                        : 'hover:bg-gray-50'
+                        ? 'bg-indigo-500/10 border border-indigo-500/20'
+                        : 'hover:bg-white/5'
                     }`}
                   >
-                    <div className="font-medium text-gray-900">
+                    <div className="font-medium text-white">
                       {step.name || 'Continue'}
                       {step.maneuver.modifier && (
-                        <span className="text-gray-500"> — {step.maneuver.modifier}</span>
+                        <span className="text-slate-400"> — {step.maneuver.modifier}</span>
                       )}
                     </div>
-                    <div className="text-xs text-gray-500">
+                    <div className="text-xs text-slate-400">
                       {formatDistance(step.distance)} · {formatDuration(step.duration)}
                     </div>
                   </button>
@@ -1024,11 +1057,18 @@ function MapPage() {
         </div>
       )}
       {routeError && (
-        <div className="absolute top-20 left-4 z-10 bg-red-50 border border-red-200 rounded-lg shadow-lg p-4 max-w-sm">
-          <p className="text-sm text-red-600">{routeError}</p>
+        <div
+          className="absolute top-20 left-4 z-10 rounded-xl p-4 max-w-sm"
+          style={{
+            background: 'rgba(7, 19, 32, 0.85)',
+            backdropFilter: 'blur(24px)',
+            border: '1px solid rgba(239, 68, 68, 0.3)',
+          }}
+        >
+          <p className="text-sm text-red-400">{routeError}</p>
           <button
             onClick={() => setRouteError(null)}
-            className="mt-2 text-xs text-red-500 hover:text-red-700"
+            className="mt-2 text-xs text-red-400 hover:text-red-300 transition-colors"
           >
             Dismiss
           </button>
@@ -1037,7 +1077,12 @@ function MapPage() {
       {routeData && !showRoutePanel && (
         <button
           onClick={() => setShowRoutePanel(true)}
-          className="absolute top-20 left-4 z-10 flex items-center gap-2 px-3 py-2 bg-white rounded-lg shadow-lg text-sm font-medium text-indigo-600 hover:bg-indigo-50 border border-indigo-200"
+          className="absolute top-20 left-4 z-10 flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium text-indigo-400 transition-colors"
+          style={{
+            background: 'rgba(7, 19, 32, 0.85)',
+            backdropFilter: 'blur(24px)',
+            border: '1px solid rgba(99, 102, 241, 0.2)',
+          }}
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
@@ -1060,7 +1105,13 @@ function MapPage() {
             })
           }
         }}
-        className="absolute bottom-20 right-4 z-10 w-10 h-10 flex items-center justify-center bg-white rounded-full shadow-lg border border-gray-200 text-gray-600 hover:bg-gray-50"
+        className="absolute bottom-20 right-4 z-10 w-10 h-10 flex items-center justify-center rounded-full transition-colors"
+        style={{
+          background: 'rgba(7, 19, 32, 0.85)',
+          backdropFilter: 'blur(24px)',
+          border: '1px solid var(--border)',
+          color: 'var(--text2)',
+        }}
         aria-label="Center on my location"
       >
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1079,9 +1130,16 @@ function MapPage() {
         </svg>
       </button>
       {!routeData && !routeError && (
-        <div className="absolute bottom-20 left-4 bg-white rounded-lg shadow-lg p-4 max-w-sm">
-          <h3 className="font-semibold text-gray-900">Convoy Map</h3>
-          <p className="text-sm text-gray-600 mt-1">
+        <div
+          className="absolute bottom-20 left-4 rounded-xl p-4 max-w-sm"
+          style={{
+            background: 'rgba(7, 19, 32, 0.85)',
+            backdropFilter: 'blur(24px)',
+            border: '1px solid var(--border)',
+          }}
+        >
+          <h3 className="font-semibold text-white">Convoy Map</h3>
+          <p className="text-sm text-slate-400 mt-1">
             Search for a destination to calculate a route.
           </p>
         </div>

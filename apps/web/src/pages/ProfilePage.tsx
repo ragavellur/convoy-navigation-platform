@@ -84,70 +84,86 @@ function ProfilePage() {
 
   return (
     <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Profile</h1>
+      <h1 className="text-2xl font-bold text-white mb-6">Profile</h1>
 
-      <div className="bg-white shadow rounded-lg">
+      <div
+        className="rounded-xl"
+        style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--border)' }}
+      >
         <div className="px-4 py-5 sm:p-6">
           <div className="flex items-center space-x-4 mb-6">
-            <div className="h-16 w-16 rounded-full bg-indigo-100 flex items-center justify-center">
-              <span className="text-2xl font-bold text-indigo-600">
+            <div className="h-16 w-16 rounded-full bg-indigo-500/20 flex items-center justify-center">
+              <span className="text-2xl font-bold text-indigo-400">
                 {user?.name?.charAt(0) || user?.email?.charAt(0) || '?'}
               </span>
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">{user?.name || 'User'}</h2>
-              <p className="text-gray-500">{user?.email}</p>
+              <h2 className="text-xl font-semibold text-white">{user?.name || 'User'}</h2>
+              <p className="text-slate-400">{user?.email}</p>
             </div>
           </div>
 
-          <div className="border-t border-gray-200 pt-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Account Details</h3>
+          <div className="border-t pt-6" style={{ borderColor: 'var(--border)' }}>
+            <h3 className="text-lg font-medium text-white mb-4">Account Details</h3>
             <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <dt className="text-sm font-medium text-gray-500">Name</dt>
-                <dd className="mt-1 text-sm text-gray-900">{user?.name || '-'}</dd>
+                <dt className="text-sm font-medium text-slate-400">Name</dt>
+                <dd className="mt-1 text-sm text-white">{user?.name || '-'}</dd>
               </div>
               <div>
-                <dt className="text-sm font-medium text-gray-500">Email</dt>
-                <dd className="mt-1 text-sm text-gray-900">{user?.email}</dd>
+                <dt className="text-sm font-medium text-slate-400">Email</dt>
+                <dd className="mt-1 text-sm text-white">{user?.email}</dd>
               </div>
               <div>
-                <dt className="text-sm font-medium text-gray-500">Phone</dt>
-                <dd className="mt-1 text-sm text-gray-900">{user?.phone || '-'}</dd>
+                <dt className="text-sm font-medium text-slate-400">Phone</dt>
+                <dd className="mt-1 text-sm text-white">{user?.phone || '-'}</dd>
               </div>
               <div>
-                <dt className="text-sm font-medium text-gray-500">Role</dt>
-                <dd className="mt-1 text-sm text-gray-900 capitalize">{user?.role || 'member'}</dd>
+                <dt className="text-sm font-medium text-slate-400">Role</dt>
+                <dd className="mt-1 text-sm text-white capitalize">{user?.role || 'member'}</dd>
               </div>
             </dl>
           </div>
 
-          <div className="border-t border-gray-200 pt-6 mt-6">
+          <div className="border-t pt-6 mt-6" style={{ borderColor: 'var(--border)' }}>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium text-gray-900">My Vehicles</h3>
+              <h3 className="text-lg font-medium text-white">My Vehicles</h3>
               <button
                 onClick={() => setShowAddVehicle(!showAddVehicle)}
-                className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+                className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-500 transition-colors"
               >
                 {showAddVehicle ? 'Cancel' : '+ Add Vehicle'}
               </button>
             </div>
 
             {error && (
-              <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+              <div
+                className="mb-3 p-2 rounded-xl text-sm text-red-400"
+                style={{
+                  background: 'rgba(239, 68, 68, 0.1)',
+                  border: '1px solid rgba(239, 68, 68, 0.2)',
+                }}
+              >
                 {error}
               </div>
             )}
 
             {showAddVehicle && (
-              <div className="mb-4 p-4 bg-gray-50 rounded-lg space-y-3">
+              <div
+                className="mb-4 p-4 rounded-xl space-y-3"
+                style={{ background: 'rgba(255, 255, 255, 0.03)' }}
+              >
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <input
                     type="text"
                     placeholder="Vehicle name"
                     value={newVehicle.name}
                     onChange={(e) => setNewVehicle((p) => ({ ...p, name: e.target.value }))}
-                    className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid var(--border)',
+                    }}
                   />
                   <input
                     type="text"
@@ -156,14 +172,22 @@ function ProfilePage() {
                     onChange={(e) =>
                       setNewVehicle((p) => ({ ...p, license_plate: e.target.value }))
                     }
-                    className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid var(--border)',
+                    }}
                   />
                   <select
                     value={newVehicle.type}
                     onChange={(e) =>
                       setNewVehicle((p) => ({ ...p, type: e.target.value as Vehicle['type'] }))
                     }
-                    className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid var(--border)',
+                    }}
                   >
                     {VEHICLE_TYPES.map((t) => (
                       <option key={t} value={t}>
@@ -176,7 +200,11 @@ function ProfilePage() {
                     placeholder="Color (optional)"
                     value={newVehicle.color}
                     onChange={(e) => setNewVehicle((p) => ({ ...p, color: e.target.value }))}
-                    className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid var(--border)',
+                    }}
                   />
                 </div>
                 <button
@@ -184,7 +212,7 @@ function ProfilePage() {
                   disabled={
                     savingVehicle || !newVehicle.name.trim() || !newVehicle.license_plate.trim()
                   }
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 transition-colors"
                 >
                   {savingVehicle ? 'Saving...' : 'Save Vehicle'}
                 </button>
@@ -192,15 +220,16 @@ function ProfilePage() {
             )}
 
             {loadingVehicles ? (
-              <p className="text-sm text-gray-500">Loading vehicles...</p>
+              <p className="text-sm text-slate-400">Loading vehicles...</p>
             ) : vehicles.length === 0 ? (
-              <p className="text-sm text-gray-500">No vehicles added yet.</p>
+              <p className="text-sm text-slate-400">No vehicles added yet.</p>
             ) : (
               <div className="space-y-2">
                 {vehicles.map((v) => (
                   <div
                     key={v.id}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                    className="flex items-center justify-between p-3 rounded-xl"
+                    style={{ background: 'rgba(255, 255, 255, 0.03)' }}
                   >
                     <div className="flex items-center space-x-3">
                       <span className="text-lg">
@@ -213,8 +242,8 @@ function ProfilePage() {
                               : '🚐'}
                       </span>
                       <div>
-                        <p className="text-sm font-medium text-gray-900">{v.name}</p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-sm font-medium text-white">{v.name}</p>
+                        <p className="text-xs text-slate-400">
                           {v.type} · {v.color ? `${v.color} · ` : ''}
                           {v.license_plate}
                         </p>
@@ -222,7 +251,7 @@ function ProfilePage() {
                     </div>
                     <button
                       onClick={() => handleDeleteVehicle(v.id)}
-                      className="text-xs text-red-500 hover:text-red-700"
+                      className="text-xs text-red-400 hover:text-red-300 transition-colors"
                     >
                       Remove
                     </button>
@@ -232,13 +261,13 @@ function ProfilePage() {
             )}
           </div>
 
-          <div className="border-t border-gray-200 pt-6 mt-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Settings</h3>
+          <div className="border-t pt-6 mt-6" style={{ borderColor: 'var(--border)' }}>
+            <h3 className="text-lg font-medium text-white mb-4">Settings</h3>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-900">Push Notifications</p>
-                  <p className="text-sm text-gray-500">Receive alerts for convoy updates</p>
+                  <p className="text-sm font-medium text-white">Push Notifications</p>
+                  <p className="text-sm text-slate-400">Receive alerts for convoy updates</p>
                 </div>
                 <button className="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-indigo-600 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                   <span className="translate-x-5 inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
@@ -246,8 +275,8 @@ function ProfilePage() {
               </div>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-900">Location Sharing</p>
-                  <p className="text-sm text-gray-500">Share your location with convoy members</p>
+                  <p className="text-sm font-medium text-white">Location Sharing</p>
+                  <p className="text-sm text-slate-400">Share your location with convoy members</p>
                 </div>
                 <button className="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-indigo-600 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                   <span className="translate-x-5 inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>

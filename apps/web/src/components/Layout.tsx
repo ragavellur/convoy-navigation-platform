@@ -29,18 +29,36 @@ function Layout() {
   const isMapPage = location.pathname === '/map'
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col">
-      <nav className="bg-white shadow-sm sticky top-0 z-50">
+    <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg)' }}>
+      <nav
+        className="sticky top-0 z-50 border-b overflow-visible"
+        style={{
+          borderColor: 'var(--border)',
+          background: 'rgba(7, 19, 32, 0.85)',
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
+        }}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
+          <div className="flex justify-between h-20">
             <div className="flex items-center">
-              <Link to="/" className="flex-shrink-0 flex items-center">
-                <span className="text-xl font-bold text-indigo-600">Convoy</span>
+              <Link to="/" className="flex-shrink-0 flex items-center gap-3 h-16">
+                <img
+                  src="/icons/logo.png"
+                  alt="Convoy"
+                  className="w-[60px] h-[80px] object-contain rounded-lg"
+                />
+                <div className="flex flex-col justify-center">
+                  <span className="text-2xl font-bold text-white leading-none">Convoy</span>
+                  <span className="text-[10px] font-medium text-slate-400 tracking-widest mt-1">
+                    Stay Together. Drive Smarter.
+                  </span>
+                </div>
               </Link>
               <div className="hidden md:ml-6 md:flex md:space-x-8">
                 <Link
                   to="/"
-                  className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900"
+                  className="inline-flex items-center px-1 pt-1 text-sm font-medium text-slate-400 hover:text-white"
                 >
                   Home
                 </Link>
@@ -50,8 +68,8 @@ function Layout() {
                     to={link.to}
                     className={`inline-flex items-center px-1 pt-1 text-sm font-medium ${
                       location.pathname === link.to
-                        ? 'text-indigo-600 border-b-2 border-indigo-600'
-                        : 'text-gray-500 hover:text-gray-900'
+                        ? 'text-indigo-400 border-b-2 border-indigo-400'
+                        : 'text-slate-400 hover:text-white'
                     }`}
                   >
                     {link.label}
@@ -62,7 +80,7 @@ function Layout() {
             <div className="hidden md:flex md:items-center md:space-x-4">
               <button
                 onClick={toggleTheme}
-                className="p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
                 aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
               >
                 {theme === 'light' ? (
@@ -87,10 +105,10 @@ function Layout() {
               </button>
               {isAuthenticated ? (
                 <>
-                  <span className="text-sm text-gray-700">{user?.name || user?.email}</span>
+                  <span className="text-sm text-slate-400">{user?.name || user?.email}</span>
                   <button
                     onClick={handleLogout}
-                    className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-indigo-600 hover:bg-indigo-700"
+                    className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-500 transition-colors"
                   >
                     Logout
                   </button>
@@ -99,13 +117,13 @@ function Layout() {
                 <>
                   <Link
                     to="/login"
-                    className="text-sm font-medium text-gray-700 hover:text-gray-900"
+                    className="text-sm font-medium text-slate-400 hover:text-white transition-colors"
                   >
                     Login
                   </Link>
                   <Link
                     to="/register"
-                    className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-indigo-600 hover:bg-indigo-700"
+                    className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-500 transition-colors"
                   >
                     Register
                   </Link>
@@ -115,7 +133,7 @@ function Layout() {
             <div className="flex items-center md:hidden">
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
+                className="inline-flex items-center justify-center p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
                 aria-label="Toggle menu"
               >
                 {isMobileMenuOpen ? (
@@ -142,12 +160,19 @@ function Layout() {
           </div>
         </div>
         {isMobileMenuOpen && (
-          <div className="md:hidden border-t border-gray-200">
+          <div
+            className="md:hidden border-t"
+            style={{
+              borderColor: 'var(--border)',
+              background: 'rgba(7, 19, 32, 0.95)',
+              backdropFilter: 'blur(40px)',
+            }}
+          >
             <div className="px-2 pt-2 pb-3 space-y-1">
               <Link
                 to="/"
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-md text-base font-medium text-gray-900 hover:bg-gray-50"
+                className="block px-3 py-2 rounded-lg text-base font-medium text-slate-400 hover:text-white hover:bg-white/5"
               >
                 Home
               </Link>
@@ -156,29 +181,29 @@ function Layout() {
                   key={link.to}
                   to={link.to}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className={`block px-3 py-2 rounded-md text-base font-medium ${
+                  className={`block px-3 py-2 rounded-lg text-base font-medium ${
                     location.pathname === link.to
-                      ? 'text-indigo-600 bg-indigo-50'
-                      : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
+                      ? 'text-indigo-400 bg-indigo-500/10'
+                      : 'text-slate-400 hover:text-white hover:bg-white/5'
                   }`}
                 >
                   {link.label}
                 </Link>
               ))}
             </div>
-            <div className="border-t border-gray-200 px-4 py-3">
+            <div className="border-t px-4 py-3" style={{ borderColor: 'var(--border)' }}>
               {isAuthenticated ? (
                 <div className="space-y-2">
-                  <p className="text-sm text-gray-700">{user?.name || user?.email}</p>
+                  <p className="text-sm text-slate-400">{user?.name || user?.email}</p>
                   <button
                     onClick={toggleTheme}
-                    className="w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50"
+                    className="w-full text-left px-3 py-2 rounded-lg text-base font-medium text-slate-400 hover:text-white hover:bg-white/5"
                   >
-                    {theme === 'light' ? '🌙 Dark Mode' : '☀️ Light Mode'}
+                    {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
                   </button>
                   <button
                     onClick={handleLogout}
-                    className="w-full text-left px-3 py-2 rounded-md text-base font-medium text-red-600 hover:bg-red-50"
+                    className="w-full text-left px-3 py-2 rounded-lg text-base font-medium text-red-400 hover:bg-red-500/10"
                   >
                     Logout
                   </button>
@@ -188,14 +213,14 @@ function Layout() {
                   <Link
                     to="/login"
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+                    className="block px-3 py-2 rounded-lg text-base font-medium text-slate-400 hover:text-white hover:bg-white/5"
                   >
                     Login
                   </Link>
                   <Link
                     to="/register"
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="block px-3 py-2 rounded-md text-base font-medium text-indigo-600 hover:bg-indigo-50"
+                    className="block px-3 py-2 rounded-lg text-base font-medium text-indigo-400 hover:bg-indigo-500/10"
                   >
                     Register
                   </Link>
@@ -223,7 +248,15 @@ function Layout() {
       )}
 
       {isAuthenticated && (
-        <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 md:hidden z-50">
+        <nav
+          className="fixed bottom-0 left-0 right-0 md:hidden z-50 border-t"
+          style={{
+            borderColor: 'var(--border)',
+            background: 'rgba(7, 19, 32, 0.95)',
+            backdropFilter: 'blur(40px)',
+            WebkitBackdropFilter: 'blur(40px)',
+          }}
+        >
           <div className="flex justify-around">
             {navLinks.map((link) => {
               const isActive = location.pathname === link.to
@@ -232,7 +265,7 @@ function Layout() {
                   key={link.to}
                   to={link.to}
                   className={`flex flex-col items-center py-2 px-3 ${
-                    isActive ? 'text-indigo-600' : 'text-gray-500'
+                    isActive ? 'text-indigo-400' : 'text-slate-500'
                   }`}
                 >
                   <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">

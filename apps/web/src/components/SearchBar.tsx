@@ -131,7 +131,12 @@ export default function SearchBar({ onResultSelect, onHoverResult, mapBounds }: 
           onFocus={() => results.length > 0 && setIsOpen(true)}
           onKeyDown={handleKeyDown}
           placeholder="Search for a place..."
-          className="w-full px-4 py-2 pl-10 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white shadow-sm"
+          className="w-full px-4 py-2 pl-10 text-sm text-white placeholder-slate-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-transparent transition-colors"
+          style={{
+            background: 'rgba(7, 19, 32, 0.85)',
+            backdropFilter: 'blur(24px)',
+            border: '1px solid var(--border)',
+          }}
           aria-label="Search places"
           aria-expanded={isOpen}
           aria-autocomplete="list"
@@ -140,7 +145,7 @@ export default function SearchBar({ onResultSelect, onHoverResult, mapBounds }: 
           role="combobox"
         />
         <svg
-          className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400"
+          className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -154,14 +159,21 @@ export default function SearchBar({ onResultSelect, onHoverResult, mapBounds }: 
         </svg>
         {isLoading && (
           <div className="absolute right-3 top-1/2 -translate-y-1/2">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600"></div>
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-400"></div>
           </div>
         )}
       </div>
 
       {error && (
-        <div className="absolute z-10 w-full mt-1 bg-white border border-red-200 rounded-lg shadow-lg p-3">
-          <p className="text-sm text-red-600">{error}</p>
+        <div
+          className="absolute z-10 w-full mt-1 rounded-xl p-3"
+          style={{
+            background: 'rgba(7, 19, 32, 0.85)',
+            backdropFilter: 'blur(24px)',
+            border: '1px solid rgba(239, 68, 68, 0.3)',
+          }}
+        >
+          <p className="text-sm text-red-400">{error}</p>
         </div>
       )}
 
@@ -170,7 +182,12 @@ export default function SearchBar({ onResultSelect, onHoverResult, mapBounds }: 
           ref={dropdownRef}
           id="search-results"
           role="listbox"
-          className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto"
+          className="absolute z-10 w-full mt-1 rounded-xl max-h-60 overflow-auto"
+          style={{
+            background: 'rgba(7, 19, 32, 0.95)',
+            backdropFilter: 'blur(40px)',
+            border: '1px solid var(--border)',
+          }}
         >
           {results.map((result, index) => (
             <button
@@ -181,14 +198,15 @@ export default function SearchBar({ onResultSelect, onHoverResult, mapBounds }: 
               onMouseLeave={handleItemLeave}
               role="option"
               aria-selected={activeIndex === index}
-              className={`w-full px-4 py-3 text-left border-b border-gray-100 last:border-b-0 focus:outline-none ${
-                activeIndex === index ? 'bg-indigo-50' : 'hover:bg-gray-50'
+              className={`w-full px-4 py-3 text-left border-b last:border-b-0 focus:outline-none transition-colors ${
+                activeIndex === index ? 'bg-indigo-500/15' : 'hover:bg-white/5'
               }`}
+              style={{ borderColor: 'var(--border)' }}
             >
-              <div className="text-sm font-medium text-gray-900 truncate">
+              <div className="text-sm font-medium text-white truncate">
                 {result.display_name.split(',')[0]}
               </div>
-              <div className="text-xs text-gray-500 truncate mt-0.5">{result.display_name}</div>
+              <div className="text-xs text-slate-400 truncate mt-0.5">{result.display_name}</div>
             </button>
           ))}
         </div>
