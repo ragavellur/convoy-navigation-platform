@@ -25,6 +25,8 @@
  */
 
 const POCKETBASE_URL = process.env.POCKETBASE_URL || 'http://localhost:8090'
+const PB_ADMIN_EMAIL = process.env.PB_ADMIN_EMAIL || 'admin@convoy.local'
+const PB_ADMIN_PASSWORD = process.env.PB_ADMIN_PASSWORD || 'admin123456'
 const OSRM_PUBLIC_URL = 'https://router.project-osrm.org'
 const OSRM_LOCAL_URL = process.env.OSRM_LOCAL_URL || process.env.OSRM_URL || 'http://localhost:5001'
 const WP_INTERVAL_M = 75
@@ -76,7 +78,7 @@ async function pbAuth() {
   const res = await fetch(`${POCKETBASE_URL}/api/admins/auth-with-password`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ identity: 'admin@convoy.local', password: 'admin123456' }),
+    body: JSON.stringify({ identity: PB_ADMIN_EMAIL, password: PB_ADMIN_PASSWORD }),
   })
   if (!res.ok) throw new Error(`PocketBase auth failed: ${res.status}`)
   const data = await res.json()
