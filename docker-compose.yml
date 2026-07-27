@@ -31,9 +31,9 @@ services:
       - osrm_data:/data
     command: osrm-routed --algorithm mld /data/monaco-latest.osrm
     healthcheck:
-      test: ['CMD-SHELL', 'wget -q -O /dev/null http://localhost:5000/health || exit 1']
-      interval: 30s
-      timeout: 10s
+      test: ['CMD-SHELL', 'kill -0 1 2>/dev/null || exit 1']
+      interval: 10s
+      timeout: 5s
       retries: 3
     restart: unless-stopped
     networks:
