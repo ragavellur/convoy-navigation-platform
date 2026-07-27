@@ -703,13 +703,13 @@
         {
           "id": "TASK-089",
           "title": "Set up Web Push Notifications (FR-WEB-07)",
-          "status": "backlog",
+          "status": "done",
           "priority": "medium"
         },
         {
           "id": "TASK-090",
           "title": "Implement push notification permission flow",
-          "status": "backlog",
+          "status": "done",
           "priority": "medium"
         },
         {

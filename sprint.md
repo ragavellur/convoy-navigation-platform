@@ -176,8 +176,6 @@
 
 ### 📌 Backlog
 
-- [ ] [TASK-089] Set up Web Push Notifications (FR-WEB-07)
-- [ ] [TASK-090] Implement push notification permission flow
 - [ ] [TASK-094] Test PWA on Chrome, Safari, Firefox, Edge
 
 ### ✅ Done
@@ -185,6 +183,8 @@
 - [x] [TASK-086] Implement map tile caching strategy (IndexedDB + SW) (FR-WEB-08)
 - [x] [TASK-087] Implement offline mode - view cached convoy state (FR-WEB-08)
 - [x] [TASK-088] Implement background sync for location updates (FR-WEB-03)
+- [x] [TASK-089] Set up Web Push Notifications (FR-WEB-07)
+- [x] [TASK-090] Implement push notification permission flow
 - [x] [TASK-091] Create PWA install prompt UI (beforeinstallprompt)
 - [x] [TASK-092] Add service worker update notification
 - [x] [TASK-093] Optimize PWA Lighthouse score (>90 target)
