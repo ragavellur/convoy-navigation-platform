@@ -46,7 +46,8 @@ function Layout() {
                 <img
                   src="/icons/logo.png"
                   alt="Convoy"
-                  className="w-[50px] h-[60px] object-contain rounded-lg"
+                  className="object-contain rounded-lg"
+                  style={{ width: 50, height: 60 }}
                 />
                 <div className="flex flex-col justify-center">
                   <span className="text-2xl font-bold text-white leading-none">Convoy</span>
