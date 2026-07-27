@@ -161,6 +161,8 @@
 
 ### 📌 Backlog
 
+### 🔄 In Progress
+
 - [ ] [TASK-060] Set up mediasoup SFU server
 - [ ] [TASK-061] Implement WebRTC voice channel (FR-VCE-01)
 - [ ] [TASK-062] Build voice room join/leave logic
@@ -175,8 +177,6 @@
 - [ ] [TASK-071] Build chat UI with message bubbles & timestamps
 - [ ] [TASK-072] Add typing indicators & read receipts
 - [ ] [TASK-073] Implement chat notification sounds
-
-### 🔄 In Progress
 
 ### ✅ Done
 
