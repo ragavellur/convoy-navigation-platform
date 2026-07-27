@@ -21,11 +21,11 @@
 | Map & Search             | 10     | 10     | 0      | 0       |
 | Convoy Lifecycle         | 10     | 10     | 0      | 0       |
 | Real-Time Position       | 8      | 8      | 0      | 0       |
-| Roster & UI              | 11     | 0      | 0      | 11      |
+| Roster & UI              | 11     | 11     | 0      | 0       |
 | Multi-Browser Concurrent | 3      | 3      | 0      | 0       |
 | Edge Cases               | 6      | 6      | 0      | 0       |
 | Browser Support          | 5      | 0      | 0      | 5       |
-| **Total**                | **65** | **49** | **0**  | **16**  |
+| **Total**                | **65** | **60** | **0**  | **5**   |
 
 ---
 
