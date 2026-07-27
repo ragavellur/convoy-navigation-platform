@@ -163,22 +163,22 @@
 
 ### 🔄 In Progress
 
-- [ ] [TASK-060] Set up mediasoup SFU server
-- [ ] [TASK-061] Implement WebRTC voice channel (FR-VCE-01)
-- [ ] [TASK-062] Build voice room join/leave logic
-- [ ] [TASK-063] Implement Push-to-Talk broadcast system (FR-VCE-02)
-- [ ] [TASK-064] Build PTT UI button with hold-to-talk
-- [ ] [TASK-065] Implement volume reduction (80%) for non-speakers
-- [ ] [TASK-066] Add Opus codec with adaptive bitrate (FR-VCE-03)
-- [ ] [TASK-067] Implement voice priority flag signaling (FR-VCE-04)
-- [ ] [TASK-068] Build 1-on-1 text chat (FR-CHT-01)
-- [ ] [TASK-069] Build group text chat room (FR-CHT-02)
-- [ ] [TASK-070] Add chat message persistence to PocketBase
-- [ ] [TASK-071] Build chat UI with message bubbles & timestamps
-- [ ] [TASK-072] Add typing indicators & read receipts
-- [ ] [TASK-073] Implement chat notification sounds
-
 ### ✅ Done
+
+- [x] [TASK-060] Set up mediasoup SFU server
+- [x] [TASK-061] Implement WebRTC voice channel (FR-VCE-01)
+- [x] [TASK-062] Build voice room join/leave logic
+- [x] [TASK-063] Implement Push-to-Talk broadcast system (FR-VCE-02)
+- [x] [TASK-064] Build PTT UI button with hold-to-talk
+- [x] [TASK-065] Implement volume reduction (80%) for non-speakers
+- [x] [TASK-066] Add Opus codec with adaptive bitrate (FR-VCE-03)
+- [x] [TASK-067] Implement voice priority flag signaling (FR-VCE-04)
+- [x] [TASK-068] Build 1-on-1 text chat (FR-CHT-01)
+- [x] [TASK-069] Build group text chat room (FR-CHT-02)
+- [x] [TASK-070] Add chat message persistence to PocketBase
+- [x] [TASK-071] Build chat UI with message bubbles & timestamps
+- [x] [TASK-072] Add typing indicators & read receipts
+- [x] [TASK-073] Implement chat notification sounds
 
 ---
 

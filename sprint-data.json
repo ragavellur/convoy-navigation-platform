@@ -500,85 +500,85 @@
         {
           "id": "TASK-060",
           "title": "Set up mediasoup SFU server",
-          "status": "in-progress",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-061",
           "title": "Implement WebRTC voice channel (FR-VCE-01)",
-          "status": "in-progress",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-062",
           "title": "Build voice room join/leave logic",
-          "status": "in-progress",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-063",
           "title": "Implement Push-to-Talk broadcast system (FR-VCE-02)",
-          "status": "in-progress",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-064",
           "title": "Build PTT UI button with hold-to-talk",
-          "status": "in-progress",
+          "status": "done",
           "priority": "medium"
         },
         {
           "id": "TASK-065",
           "title": "Implement volume reduction (80%) for non-speakers",
-          "status": "in-progress",
+          "status": "done",
           "priority": "medium"
         },
         {
           "id": "TASK-066",
           "title": "Add Opus codec with adaptive bitrate (FR-VCE-03)",
-          "status": "in-progress",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-067",
           "title": "Implement voice priority flag signaling (FR-VCE-04)",
-          "status": "in-progress",
+          "status": "done",
           "priority": "medium"
         },
         {
           "id": "TASK-068",
           "title": "Build 1-on-1 text chat (FR-CHT-01)",
-          "status": "in-progress",
+          "status": "done",
           "priority": "medium"
         },
         {
           "id": "TASK-069",
           "title": "Build group text chat room (FR-CHT-02)",
-          "status": "in-progress",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-070",
           "title": "Add chat message persistence to PocketBase",
-          "status": "in-progress",
+          "status": "done",
           "priority": "medium"
         },
         {
           "id": "TASK-071",
           "title": "Build chat UI with message bubbles & timestamps",
-          "status": "in-progress",
+          "status": "done",
           "priority": "medium"
         },
         {
           "id": "TASK-072",
           "title": "Add typing indicators & read receipts",
-          "status": "in-progress",
+          "status": "done",
           "priority": "low"
         },
         {
           "id": "TASK-073",
           "title": "Implement chat notification sounds",
-          "status": "in-progress",
+          "status": "done",
           "priority": "low"
         }
       ]
