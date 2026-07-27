@@ -1,9 +1,14 @@
-const BASE_URL = 'https://ragavellur.github.io/convoy-navigation-platform'
+function getBaseUrl(): string {
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    return window.location.origin
+  }
+  return import.meta.env.VITE_APP_URL || 'https://convoy.vellur.in'
+}
 
 export function getDeepLink(code: string, tripId?: string): string {
   const params = new URLSearchParams({ code })
   if (tripId) params.set('trip_id', tripId)
-  return `${BASE_URL}/join?${params.toString()}`
+  return `${getBaseUrl()}/join?${params.toString()}`
 }
 
 export function shareViaWhatsApp(code: string, tripId?: string, convoyName?: string): void {
