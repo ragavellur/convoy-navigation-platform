@@ -263,20 +263,26 @@ start_services() {
 }
 
 # ─── Setup OSRM data ────────────────────────────────────────────────────────
-# Uses a one-shot container sharing the osrm_data volume to process data,
-# because the main OSRM container crash-loops when data doesn't exist yet.
+# The osrm/osrm-backend image has no wget/curl — download PBF on the host,
+# then run OSRM processing via one-shot containers sharing the volume.
 setup_osrm_data() {
   info "Setting up OSRM routing data..."
 
   # Stop the crash-looping OSRM container
   docker stop convoy-osrm 2>/dev/null || true
 
-  info "Downloading Monaco OSM data..."
+  info "Downloading Monaco OSM data (via host curl)..."
+  curl -sL -o /tmp/monaco-latest.osm.pbf \
+    https://download.geofabrik.de/europe/monaco-latest.osm.pbf \
+    || fail "Failed to download OSM data."
+  ok "Downloaded $(du -h /tmp/monaco-latest.osm.pbf | cut -f1) PBF file."
+
+  info "Copying PBF into OSRM volume..."
   docker run --rm \
     -v osrm_data:/data \
-    osrm/osrm-backend:latest \
-    wget -q https://download.geofabrik.de/europe/monaco-latest.osm.pbf \
-      -O /data/monaco-latest.osm.pbf || fail "Failed to download OSM data."
+    -v /tmp/monaco-latest.osm.pbf:/tmp/monaco-latest.osm.pbf:ro \
+    alpine:latest \
+    cp /tmp/monaco-latest.osm.pbf /data/monaco-latest.osm.pbf
 
   info "Extracting OSRM routing data (may take a few minutes)..."
   docker run --rm \
@@ -296,7 +302,10 @@ setup_osrm_data() {
     osrm/osrm-backend:latest \
     osrm-customize /data/monaco-latest.osrm 2>&1 | tail -3
 
-  # Now start the real OSRM container — data exists, it will boot
+  # Clean up downloaded PBF
+  rm -f /tmp/monaco-latest.osm.pbf
+
+  # Start the real OSRM container — data exists, it will boot
   info "Starting OSRM container..."
   docker start convoy-osrm
 
