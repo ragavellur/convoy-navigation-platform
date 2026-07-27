@@ -593,14 +593,14 @@
         {
           "id": "TASK-074",
           "title": "Restructure vehicles collection: user-owned, remove convoy FK",
-          "status": "backlog",
+          "status": "done",
           "priority": "high",
           "issue": "#3,#5,#6"
         },
         {
           "id": "TASK-075",
           "title": "Add source/destination fields to convoys collection",
-          "status": "backlog",
+          "status": "done",
           "priority": "high",
           "issue": "#1"
         },
@@ -621,42 +621,42 @@
         {
           "id": "TASK-078",
           "title": "Update shared API types for new schema",
-          "status": "backlog",
+          "status": "done",
           "priority": "high",
           "issue": "All"
         },
         {
           "id": "TASK-079",
           "title": "Vehicle management in ProfilePage",
-          "status": "backlog",
+          "status": "done",
           "priority": "high",
           "issue": "#3"
         },
         {
           "id": "TASK-080",
           "title": "Source/destination in convoy creation UI",
-          "status": "backlog",
+          "status": "done",
           "priority": "high",
           "issue": "#1"
         },
         {
           "id": "TASK-081",
           "title": "Vehicle selection at join + one-convoy warning",
-          "status": "backlog",
+          "status": "done",
           "priority": "high",
           "issue": "#3,#5"
         },
         {
           "id": "TASK-082",
           "title": "Fix deep link param preservation + token validation",
-          "status": "backlog",
+          "status": "done",
           "priority": "high",
           "issue": "#4"
         },
         {
           "id": "TASK-083",
           "title": "Fix position publishing vehicle identity + own-vehicle marker",
-          "status": "backlog",
+          "status": "done",
           "priority": "high",
           "issue": "#6"
         },

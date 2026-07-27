@@ -5,7 +5,6 @@ import { generateDeepLink } from '../services/deepLink'
 import { shareViaWhatsApp, shareViaSMS, shareViaEmail } from '../services/share'
 import { subscribeToConvoyNotifications, type ConvoyNotification } from '../services/notifications'
 import { useAuth } from '../hooks/useAuth'
-import VehicleTypeSelector from '../components/VehicleTypeSelector'
 
 interface ConvoyRecord {
   id: string
@@ -16,6 +15,12 @@ interface ConvoyRecord {
   status: 'active' | 'paused' | 'ended'
   trip_id: string
   security_token: string
+  source_lat?: number
+  source_lng?: number
+  source_name?: string
+  dest_lat?: number
+  dest_lng?: number
+  dest_name?: string
   created: string
 }
 
@@ -40,9 +45,6 @@ function ConvoyDetailPage() {
   const [convoy, setConvoy] = useState<ConvoyRecord | null>(null)
   const [members, setMembers] = useState<MemberRecord[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedVehicle, setSelectedVehicle] = useState('car')
-  const [showVehiclePicker, setShowVehiclePicker] = useState(false)
-  const [vehicleName, setVehicleName] = useState('')
   const [error, setError] = useState('')
 
   const [notifications, setNotifications] = useState<ConvoyNotification[]>([])
@@ -99,28 +101,6 @@ function ConvoyDetailPage() {
       setMembers(m)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load convoy')
-    }
-  }
-
-  const handleAddVehicle = async () => {
-    if (!vehicleName.trim() || !id) return
-    try {
-      const vehicle = await pb.collection('vehicles').create({
-        name: vehicleName.trim(),
-        type: selectedVehicle,
-        convoy: id,
-        owner: user?.id,
-        status: 'active',
-      })
-      const memberRecord = members.find((m) => m.user === user?.id)
-      if (memberRecord) {
-        await pb.collection('convoy_members').update(memberRecord.id, { vehicle: vehicle.id })
-      }
-      setVehicleName('')
-      setShowVehiclePicker(false)
-      await refreshData()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to add vehicle')
     }
   }
 
@@ -304,45 +284,45 @@ function ConvoyDetailPage() {
         <div className="space-y-6">
           <div className="bg-white shadow rounded-lg p-4">
             <h2 className="text-lg font-medium text-gray-900 mb-4">Your Vehicle</h2>
-            {showVehiclePicker ? (
-              <div className="space-y-3">
-                <input
-                  type="text"
-                  placeholder="Vehicle name"
-                  value={vehicleName}
-                  onChange={(e) => setVehicleName(e.target.value)}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                />
-                <VehicleTypeSelector selected={selectedVehicle} onSelect={setSelectedVehicle} />
-                <div className="flex space-x-2">
+            {(() => {
+              const myMember = members.find((m) => m.user === user?.id)
+              const vehicle = myMember?.expand?.vehicle
+              if (vehicle) {
+                return (
+                  <div className="p-3 bg-gray-50 rounded-lg">
+                    <p className="text-sm font-medium text-gray-900">{vehicle.name}</p>
+                    <p className="text-xs text-gray-500">
+                      {vehicle.type}
+                      {vehicle.color ? ` · ${vehicle.color}` : ''}
+                    </p>
+                  </div>
+                )
+              }
+              return (
+                <p className="text-sm text-gray-500">
+                  No vehicle assigned.{' '}
                   <button
-                    onClick={handleAddVehicle}
-                    disabled={!vehicleName.trim()}
-                    className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
+                    onClick={() => navigate('/profile')}
+                    className="text-indigo-600 hover:underline"
                   >
-                    Save
+                    Add one in Profile
                   </button>
-                  <button
-                    onClick={() => setShowVehiclePicker(false)}
-                    className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <button
-                onClick={() => setShowVehiclePicker(true)}
-                className="w-full p-3 border border-dashed border-gray-300 rounded-lg text-sm text-gray-600 hover:bg-gray-50"
-              >
-                + Add Vehicle
-              </button>
-            )}
+                </p>
+              )
+            })()}
           </div>
 
           <div className="bg-white shadow rounded-lg p-4">
             <h2 className="text-lg font-medium text-gray-900 mb-4">Convoy Info</h2>
             <dl className="space-y-2 text-sm">
+              {(convoy.source_name || convoy.dest_name) && (
+                <div className="flex justify-between">
+                  <dt className="text-gray-500">Route</dt>
+                  <dd className="text-gray-900 text-right max-w-[200px] truncate">
+                    {convoy.source_name || '?'} → {convoy.dest_name || '?'}
+                  </dd>
+                </div>
+              )}
               <div className="flex justify-between">
                 <dt className="text-gray-500">Trip ID</dt>
                 <dd className="text-gray-900 font-mono text-xs">{convoy.trip_id}</dd>

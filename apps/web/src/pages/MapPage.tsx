@@ -339,10 +339,31 @@ function MapPage() {
 
   useEffect(() => {
     if (!convoyId) return
-    const vehicleId = pb.authStore.record?.id
-    if (!vehicleId) return
 
-    const publish = () => {
+    let vehicleId: string | null = null
+
+    const resolveVehicleId = async () => {
+      try {
+        const userId = pb.authStore.record?.id
+        if (!userId) return
+        const memberRecord = await pb
+          .collection('convoy_members')
+          .getFirstListItem(`convoy = "${convoyId}" && user = "${userId}" && status = "active"`, {
+            expand: 'vehicle',
+          })
+        vehicleId = memberRecord.vehicle || null
+      } catch {
+        vehicleId = null
+      }
+    }
+
+    resolveVehicleId()
+
+    const publish = async () => {
+      if (!vehicleId) {
+        await resolveVehicleId()
+      }
+      if (!vehicleId) return
       const pos = geoStream.positionRef.current
       if (!pos) return
       publishPosition({

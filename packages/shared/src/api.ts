@@ -21,10 +21,17 @@ export interface ConvoyCreateParams {
   name: string
   description?: string
   max_members?: number
+  source_lat?: number
+  source_lng?: number
+  source_name?: string
+  dest_lat?: number
+  dest_lng?: number
+  dest_name?: string
 }
 
 export interface ConvoyJoinParams {
   code: string
+  vehicleId: string
 }
 
 export interface ConvoyRecord {
@@ -37,6 +44,12 @@ export interface ConvoyRecord {
   max_members?: number
   trip_id: string
   security_token: string
+  source_lat?: number
+  source_lng?: number
+  source_name?: string
+  dest_lat?: number
+  dest_lng?: number
+  dest_name?: string
   settings?: Record<string, unknown>
   created: string
   updated: string
@@ -113,6 +126,12 @@ export function createConvoyApi(pb: PocketBase) {
         code,
         description: params.description,
         max_members: params.max_members,
+        source_lat: params.source_lat,
+        source_lng: params.source_lng,
+        source_name: params.source_name,
+        dest_lat: params.dest_lat,
+        dest_lng: params.dest_lng,
+        dest_name: params.dest_name,
         owner: pb.authStore.record?.id,
         status: 'active',
         trip_id: tripId,
@@ -128,9 +147,21 @@ export function createConvoyApi(pb: PocketBase) {
         throw new Error('Convoy not found or inactive')
       }
       const convoy = results[0]
+
+      const existingActive = await pb.collection('convoy_members').getFullList({
+        filter: `user = "${pb.authStore.record?.id}" && status = "active"`,
+        expand: 'convoy',
+      })
+      for (const m of existingActive) {
+        if (m.convoy !== convoy.id) {
+          await pb.collection('convoy_members').update(m.id, { status: 'inactive' })
+        }
+      }
+
       return pb.collection('convoy_members').create({
         convoy: convoy.id,
         user: pb.authStore.record?.id,
+        vehicle: params.vehicleId,
         role: 'member',
         status: 'active',
         joined_at: new Date().toISOString(),
@@ -186,21 +217,20 @@ export function createConvoyApi(pb: PocketBase) {
 
 export function createVehicleApi(pb: PocketBase) {
   return {
-    async create(params: VehicleCreateParams, convoyId: string): Promise<RecordModel> {
+    async create(params: VehicleCreateParams): Promise<RecordModel> {
       return pb.collection('vehicles').create({
         name: params.name,
         type: params.type,
         color: params.color,
         license_plate: params.license_plate,
-        convoy: convoyId,
         owner: pb.authStore.record?.id,
         status: 'active',
       })
     },
 
-    async list(convoyId: string): Promise<RecordModel[]> {
+    async listByOwner(): Promise<RecordModel[]> {
       return pb.collection('vehicles').getFullList({
-        filter: `convoy = "${convoyId}" && status = "active"`,
+        filter: `owner = "${pb.authStore.record?.id}" && status = "active"`,
       })
     },
   }

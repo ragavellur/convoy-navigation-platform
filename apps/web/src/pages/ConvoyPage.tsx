@@ -3,6 +3,8 @@ import { useAuth } from '../hooks/useAuth'
 import pb from '../services/pocketbase'
 import { generateDeepLink } from '../services/deepLink'
 import { useNavigate } from 'react-router-dom'
+import SearchBar from '../components/SearchBar'
+import type { SearchResult } from '../types'
 
 interface ConvoyRecord {
   id: string
@@ -14,6 +16,12 @@ interface ConvoyRecord {
   max_members?: number
   trip_id: string
   security_token: string
+  source_lat?: number
+  source_lng?: number
+  source_name?: string
+  dest_lat?: number
+  dest_lng?: number
+  dest_name?: string
   settings?: Record<string, unknown>
   created: string
   updated: string
@@ -46,6 +54,14 @@ function generateConvoyCode(): string {
   return code
 }
 
+interface VehicleOption {
+  id: string
+  name: string
+  type: string
+  license_plate: string
+  color?: string
+}
+
 function ConvoyPage() {
   const { user } = useAuth()
   const navigate = useNavigate()
@@ -55,9 +71,17 @@ function ConvoyPage() {
   const [joinCode, setJoinCode] = useState('')
   const [newConvoyName, setNewConvoyName] = useState('')
   const [newConvoyDesc, setNewConvoyDesc] = useState('')
+  const [sourceName, setSourceName] = useState('')
+  const [sourceLat, setSourceLat] = useState<number | null>(null)
+  const [sourceLng, setSourceLng] = useState<number | null>(null)
+  const [destName, setDestName] = useState('')
+  const [destLat, setDestLat] = useState<number | null>(null)
+  const [destLng, setDestLng] = useState<number | null>(null)
   const [creating, setCreating] = useState(false)
   const [joining, setJoining] = useState(false)
   const [error, setError] = useState('')
+  const [vehicles, setVehicles] = useState<VehicleOption[]>([])
+  const [selectedVehicleId, setSelectedVehicleId] = useState('')
 
   useEffect(() => {
     const fetchConvoys = async () => {
@@ -79,6 +103,29 @@ function ConvoyPage() {
     fetchConvoys()
   }, [user])
 
+  useEffect(() => {
+    const fetchVehicles = async () => {
+      if (!user) return
+      try {
+        const records = await pb.collection('vehicles').getFullList({
+          filter: `owner = "${user.id}" && status = "active"`,
+        })
+        const opts: VehicleOption[] = records.map((r) => ({
+          id: r.id,
+          name: r.name,
+          type: r.type,
+          license_plate: r.license_plate,
+          color: r.color,
+        }))
+        setVehicles(opts)
+        if (opts.length === 1) setSelectedVehicleId(opts[0].id)
+      } catch {
+        // Vehicles may not exist yet
+      }
+    }
+    fetchVehicles()
+  }, [user])
+
   const handleCreate = async () => {
     if (!newConvoyName.trim()) return
     setCreating(true)
@@ -87,7 +134,7 @@ function ConvoyPage() {
       const code = generateConvoyCode()
       const tripId = generateTripId()
       const securityToken = generateSecurityToken()
-      await pb.collection('convoys').create({
+      const data: Record<string, unknown> = {
         name: newConvoyName.trim(),
         code,
         description: newConvoyDesc.trim() || undefined,
@@ -95,9 +142,26 @@ function ConvoyPage() {
         status: 'active',
         trip_id: tripId,
         security_token: securityToken,
-      })
+      }
+      if (sourceName && sourceLat !== null && sourceLng !== null) {
+        data.source_name = sourceName
+        data.source_lat = sourceLat
+        data.source_lng = sourceLng
+      }
+      if (destName && destLat !== null && destLng !== null) {
+        data.dest_name = destName
+        data.dest_lat = destLat
+        data.dest_lng = destLng
+      }
+      await pb.collection('convoys').create(data)
       setNewConvoyName('')
       setNewConvoyDesc('')
+      setSourceName('')
+      setSourceLat(null)
+      setSourceLng(null)
+      setDestName('')
+      setDestLat(null)
+      setDestLng(null)
       setShowCreateForm(false)
       const records = await pb.collection('convoys').getFullList<ConvoyRecord>({
         filter: 'status = "active"',
@@ -113,6 +177,10 @@ function ConvoyPage() {
 
   const handleJoin = async () => {
     if (!joinCode.trim()) return
+    if (!selectedVehicleId) {
+      setError('Please select a vehicle before joining')
+      return
+    }
     setJoining(true)
     setError('')
     try {
@@ -124,11 +192,21 @@ function ConvoyPage() {
         throw new Error('Convoy not found or inactive')
       }
       const convoy = results[0]
+      const existingActive = await pb.collection('convoy_members').getFullList({
+        filter: `user = "${user?.id}" && status = "active"`,
+      })
+      for (const m of existingActive) {
+        if (m.convoy !== convoy.id) {
+          await pb.collection('convoy_members').update(m.id, { status: 'inactive' })
+        }
+      }
       await pb.collection('convoy_members').create({
         convoy: convoy.id,
         user: user?.id,
+        vehicle: selectedVehicleId,
         role: 'member',
         status: 'active',
+        joined_at: new Date().toISOString(),
       })
       setJoinCode('')
       const records = await pb.collection('convoys').getFullList<ConvoyRecord>({
@@ -188,6 +266,32 @@ function ConvoyPage() {
               onChange={(e) => setNewConvoyDesc(e.target.value)}
               className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
             />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">
+                  Starting Point
+                </label>
+                <SearchBar
+                  onResultSelect={(result: SearchResult) => {
+                    setSourceName(result.displayName)
+                    setSourceLat(result.lat)
+                    setSourceLng(result.lng)
+                  }}
+                />
+                {sourceName && <p className="text-xs text-gray-500 mt-1">{sourceName}</p>}
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Destination</label>
+                <SearchBar
+                  onResultSelect={(result: SearchResult) => {
+                    setDestName(result.displayName)
+                    setDestLat(result.lat)
+                    setDestLng(result.lng)
+                  }}
+                />
+                {destName && <p className="text-xs text-gray-500 mt-1">{destName}</p>}
+              </div>
+            </div>
             <button
               onClick={handleCreate}
               disabled={creating || !newConvoyName.trim()}
@@ -224,6 +328,11 @@ function ConvoyPage() {
                         {convoy.description && (
                           <p className="text-sm text-gray-600 mt-1">{convoy.description}</p>
                         )}
+                        {(convoy.source_name || convoy.dest_name) && (
+                          <p className="text-xs text-gray-400 mt-1">
+                            {convoy.source_name || '?'} → {convoy.dest_name || '?'}
+                          </p>
+                        )}
                       </div>
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                         {convoy.status}
@@ -248,22 +357,53 @@ function ConvoyPage() {
       <div className="mt-6 bg-white shadow rounded-lg">
         <div className="px-4 py-5 sm:p-6">
           <h2 className="text-lg font-medium text-gray-900 mb-4">Join a Convoy</h2>
-          <div className="flex space-x-3">
-            <input
-              type="text"
-              placeholder="Enter convoy code"
-              value={joinCode}
-              onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-              className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-            />
-            <button
-              onClick={handleJoin}
-              disabled={joining || !joinCode.trim()}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {joining ? 'Joining...' : 'Join'}
-            </button>
-          </div>
+          {vehicles.length === 0 ? (
+            <div className="text-center py-4">
+              <p className="text-sm text-gray-500 mb-2">You need a vehicle to join a convoy.</p>
+              <button
+                onClick={() => navigate('/profile')}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+              >
+                Add Vehicle in Profile
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">
+                  Select Vehicle
+                </label>
+                <select
+                  value={selectedVehicleId}
+                  onChange={(e) => setSelectedVehicleId(e.target.value)}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                >
+                  <option value="">-- Choose vehicle --</option>
+                  {vehicles.map((v) => (
+                    <option key={v.id} value={v.id}>
+                      {v.name} ({v.type}) {v.color ? `· ${v.color}` : ''} [{v.license_plate}]
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex space-x-3">
+                <input
+                  type="text"
+                  placeholder="Enter convoy code"
+                  value={joinCode}
+                  onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                  className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                />
+                <button
+                  onClick={handleJoin}
+                  disabled={joining || !joinCode.trim() || !selectedVehicleId}
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {joining ? 'Joining...' : 'Join'}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

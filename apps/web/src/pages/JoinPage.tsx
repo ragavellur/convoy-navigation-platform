@@ -3,13 +3,25 @@ import { useSearchParams, useNavigate } from 'react-router-dom'
 import pb from '../services/pocketbase'
 import { parseDeepLink, validateConvoyCode } from '../services/deepLink'
 
+interface VehicleOption {
+  id: string
+  name: string
+  type: string
+  license_plate: string
+  color?: string
+}
+
 function JoinPage() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const [error, setError] = useState('')
+  const [vehicles, setVehicles] = useState<VehicleOption[]>([])
+  const [selectedVehicleId, setSelectedVehicleId] = useState('')
+  const [joinState, setJoinState] = useState<'loading' | 'vehicle-select' | 'joining'>('loading')
+  const [convoyId, setConvoyId] = useState<string | null>(null)
 
   useEffect(() => {
-    const handleJoin = async () => {
+    const init = async () => {
       const urlParams = new URLSearchParams(searchParams.toString())
       const url = `/join?${urlParams.toString()}`
       const data = parseDeepLink(url)
@@ -20,7 +32,8 @@ function JoinPage() {
       }
 
       if (!pb.authStore.isValid) {
-        navigate(`/login?redirect=/join?code=${data.code}`)
+        const allParams = urlParams.toString()
+        navigate(`/login?redirect=/join?${allParams}`)
         return
       }
 
@@ -34,27 +47,62 @@ function JoinPage() {
         }
 
         const convoy = results[0]
+        setConvoyId(convoy.id)
+
         const existing = await pb.collection('convoy_members').getFullList({
           filter: `convoy = "${convoy.id}" && user = "${pb.authStore.record?.id}" && status = "active"`,
         })
 
-        if (existing.length === 0) {
-          await pb.collection('convoy_members').create({
-            convoy: convoy.id,
-            user: pb.authStore.record?.id,
-            role: 'member',
-            status: 'active',
-          })
+        if (existing.length > 0) {
+          navigate(`/map?convoy=${convoy.id}`)
+          return
         }
 
-        navigate(`/map?convoy=${convoy.id}`)
+        const userVehicles = await pb.collection('vehicles').getFullList({
+          filter: `owner = "${pb.authStore.record?.id}" && status = "active"`,
+        })
+
+        const opts: VehicleOption[] = userVehicles.map((r) => ({
+          id: r.id,
+          name: r.name,
+          type: r.type,
+          license_plate: r.license_plate,
+          color: r.color,
+        }))
+        setVehicles(opts)
+
+        if (opts.length === 1) {
+          setSelectedVehicleId(opts[0].id)
+        }
+
+        setJoinState('vehicle-select')
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to join convoy')
       }
     }
 
-    handleJoin()
+    init()
   }, [searchParams, navigate])
+
+  const handleJoin = async () => {
+    if (!convoyId || !selectedVehicleId) return
+    setJoinState('joining')
+    setError('')
+    try {
+      await pb.collection('convoy_members').create({
+        convoy: convoyId,
+        user: pb.authStore.record?.id,
+        vehicle: selectedVehicleId,
+        role: 'member',
+        status: 'active',
+        joined_at: new Date().toISOString(),
+      })
+      navigate(`/map?convoy=${convoyId}`)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to join convoy')
+      setJoinState('vehicle-select')
+    }
+  }
 
   if (error) {
     return (
@@ -73,11 +121,61 @@ function JoinPage() {
     )
   }
 
+  if (joinState === 'vehicle-select') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="max-w-md w-full bg-white shadow rounded-lg p-6">
+          <h1 className="text-xl font-bold text-gray-900 mb-4 text-center">Join Convoy</h1>
+          {vehicles.length === 0 ? (
+            <div className="text-center">
+              <p className="text-sm text-gray-500 mb-4">You need a vehicle to join a convoy.</p>
+              <button
+                onClick={() => navigate('/profile')}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+              >
+                Add Vehicle
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Select your vehicle
+                </label>
+                <select
+                  value={selectedVehicleId}
+                  onChange={(e) => setSelectedVehicleId(e.target.value)}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                >
+                  <option value="">-- Choose vehicle --</option>
+                  {vehicles.map((v) => (
+                    <option key={v.id} value={v.id}>
+                      {v.name} ({v.type}) {v.color ? `· ${v.color}` : ''} [{v.license_plate}]
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <button
+                onClick={handleJoin}
+                disabled={!selectedVehicleId}
+                className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Join with Selected Vehicle
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="max-w-md w-full bg-white shadow rounded-lg p-6 text-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto mb-4" />
-        <p className="text-gray-600">Joining convoy...</p>
+        <p className="text-gray-600">
+          {joinState === 'joining' ? 'Joining convoy...' : 'Loading...'}
+        </p>
       </div>
     </div>
   )
