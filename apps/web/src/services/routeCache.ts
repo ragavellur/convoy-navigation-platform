@@ -1,6 +1,6 @@
 import PocketBase from 'pocketbase'
 
-const POCKETBASE_URL = 'http://localhost:8090'
+const POCKETBASE_URL = import.meta.env.VITE_POCKETBASE_URL || 'http://localhost:8090'
 
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000
 
