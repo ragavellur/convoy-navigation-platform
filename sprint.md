@@ -141,19 +141,19 @@
 
 ### 🔄 In Progress
 
-- [ ] [TASK-049] Build vehicle roster sidebar component (FR-ROS-01)
-- [ ] [TASK-050] Implement expandable/collapsible drawer UI
-- [ ] [TASK-051] Add vehicle type classification display (FR-ROS-02)
-- [ ] [TASK-052] Build status indicators (In-Transit/Stopped/Offline) (FR-ROS-03)
-- [ ] [TASK-053] Add speed & ETA display per member (FR-ROS-04)
-- [ ] [TASK-054] Implement "Focus on Member" map interaction (FR-ROS-05)
-- [ ] [TASK-055] Build convoy member avatar & info cards
-- [ ] [TASK-056] Add member count badge on roster toggle
-- [ ] [TASK-057] Implement real-time roster updates via PocketBase Realtime
-- [ ] [TASK-058] Touch-optimized gestures for tablet/mobile web (FR-WEB-10)
-- [ ] [TASK-059] Add dark mode support for map & UI
-
 ### ✅ Done
+
+- [x] [TASK-049] Build vehicle roster sidebar component (FR-ROS-01)
+- [x] [TASK-050] Implement expandable/collapsible drawer UI
+- [x] [TASK-051] Add vehicle type classification display (FR-ROS-02)
+- [x] [TASK-052] Build status indicators (In-Transit/Stopped/Offline) (FR-ROS-03)
+- [x] [TASK-053] Add speed & ETA display per member (FR-ROS-04)
+- [x] [TASK-054] Implement "Focus on Member" map interaction (FR-ROS-05)
+- [x] [TASK-055] Build convoy member avatar & info cards
+- [x] [TASK-056] Add member count badge on roster toggle
+- [x] [TASK-057] Implement real-time roster updates via PocketBase Realtime
+- [x] [TASK-058] Touch-optimized gestures for tablet/mobile web (FR-WEB-10)
+- [x] [TASK-059] Add dark mode support for map & UI
 
 ---
 

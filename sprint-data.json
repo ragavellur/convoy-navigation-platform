@@ -425,67 +425,67 @@
         {
           "id": "TASK-049",
           "title": "Build vehicle roster sidebar component (FR-ROS-01)",
-          "status": "in-progress",
+          "status": "done",
           "priority": "medium"
         },
         {
           "id": "TASK-050",
           "title": "Implement expandable/collapsible drawer UI",
-          "status": "in-progress",
+          "status": "done",
           "priority": "medium"
         },
         {
           "id": "TASK-051",
           "title": "Add vehicle type classification display (FR-ROS-02)",
-          "status": "in-progress",
+          "status": "done",
           "priority": "low"
         },
         {
           "id": "TASK-052",
           "title": "Build status indicators (In-Transit/Stopped/Offline) (FR-ROS-03)",
-          "status": "in-progress",
+          "status": "done",
           "priority": "medium"
         },
         {
           "id": "TASK-053",
           "title": "Add speed & ETA display per member (FR-ROS-04)",
-          "status": "in-progress",
+          "status": "done",
           "priority": "low"
         },
         {
           "id": "TASK-054",
           "title": "Implement Focus on Member map interaction (FR-ROS-05)",
-          "status": "in-progress",
+          "status": "done",
           "priority": "low"
         },
         {
           "id": "TASK-055",
           "title": "Build convoy member avatar & info cards",
-          "status": "in-progress",
+          "status": "done",
           "priority": "low"
         },
         {
           "id": "TASK-056",
           "title": "Add member count badge on roster toggle",
-          "status": "in-progress",
+          "status": "done",
           "priority": "low"
         },
         {
           "id": "TASK-057",
           "title": "Implement real-time roster updates via PocketBase Realtime",
-          "status": "in-progress",
+          "status": "done",
           "priority": "medium"
         },
         {
           "id": "TASK-058",
           "title": "Touch-optimized gestures for tablet/mobile web (FR-WEB-10)",
-          "status": "in-progress",
+          "status": "done",
           "priority": "low"
         },
         {
           "id": "TASK-059",
           "title": "Add dark mode support for map & UI",
-          "status": "in-progress",
+          "status": "done",
           "priority": "low"
         }
       ]
