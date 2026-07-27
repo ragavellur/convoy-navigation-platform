@@ -685,19 +685,19 @@
         {
           "id": "TASK-086",
           "title": "Implement map tile caching strategy (IndexedDB + SW) (FR-WEB-08)",
-          "status": "backlog",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-087",
           "title": "Implement offline mode - view cached convoy state (FR-WEB-08)",
-          "status": "backlog",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-088",
           "title": "Implement background sync for location updates (FR-WEB-03)",
-          "status": "backlog",
+          "status": "done",
           "priority": "medium"
         },
         {
@@ -715,19 +715,19 @@
         {
           "id": "TASK-091",
           "title": "Create PWA install prompt UI (beforeinstallprompt)",
-          "status": "backlog",
+          "status": "done",
           "priority": "medium"
         },
         {
           "id": "TASK-092",
           "title": "Add service worker update notification",
-          "status": "in-progress",
+          "status": "done",
           "priority": "low"
         },
         {
           "id": "TASK-093",
           "title": "Optimize PWA Lighthouse score (>90 target)",
-          "status": "backlog",
+          "status": "done",
           "priority": "high"
         },
         {

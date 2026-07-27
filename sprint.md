@@ -176,15 +176,18 @@
 
 ### 📌 Backlog
 
-- [ ] [TASK-086] Implement map tile caching strategy (IndexedDB + SW) (FR-WEB-08)
-- [ ] [TASK-087] Implement offline mode - view cached convoy state (FR-WEB-08)
-- [ ] [TASK-088] Implement background sync for location updates (FR-WEB-03)
 - [ ] [TASK-089] Set up Web Push Notifications (FR-WEB-07)
 - [ ] [TASK-090] Implement push notification permission flow
-- [ ] [TASK-091] Create PWA install prompt UI (beforeinstallprompt)
-- [~] [TASK-092] Add service worker update notification
-- [ ] [TASK-093] Optimize PWA Lighthouse score (>90 target)
 - [ ] [TASK-094] Test PWA on Chrome, Safari, Firefox, Edge
+
+### ✅ Done
+
+- [x] [TASK-086] Implement map tile caching strategy (IndexedDB + SW) (FR-WEB-08)
+- [x] [TASK-087] Implement offline mode - view cached convoy state (FR-WEB-08)
+- [x] [TASK-088] Implement background sync for location updates (FR-WEB-03)
+- [x] [TASK-091] Create PWA install prompt UI (beforeinstallprompt)
+- [x] [TASK-092] Add service worker update notification
+- [x] [TASK-093] Optimize PWA Lighthouse score (>90 target)
 - [x] [TASK-095] Implement web app caching for static assets
 - [x] [TASK-096] Add PWA meta tags and Open Graph tags
 
