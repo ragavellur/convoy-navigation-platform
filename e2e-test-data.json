@@ -592,6 +592,106 @@
           "taskId": "TASK-059",
           "priority": "low",
           "notes": "Implemented and verified in Sprint 5"
+        },
+        {
+          "id": "V-1",
+          "title": "Voice server health check",
+          "steps": "GET http://localhost:3001/health",
+          "expected": "HTTP 200 with status ok",
+          "status": "pending",
+          "sprint": "Sprint 6",
+          "taskId": "TASK-060",
+          "priority": "high"
+        },
+        {
+          "id": "V-2",
+          "title": "Voice channel join/leave",
+          "steps": "Click Join Voice \u2192 Click Leave Voice",
+          "expected": "State transitions: disconnected\u2192connecting\u2192connected\u2192disconnected",
+          "status": "pending",
+          "sprint": "Sprint 6",
+          "taskId": "TASK-062",
+          "priority": "high"
+        },
+        {
+          "id": "V-3",
+          "title": "PTT hold-to-talk",
+          "steps": "Hold PTT button \u2192 Release",
+          "expected": "Speaking state while held, stops on release",
+          "status": "pending",
+          "sprint": "Sprint 6",
+          "taskId": "TASK-064",
+          "priority": "high"
+        },
+        {
+          "id": "V-4",
+          "title": "Volume reduction for non-speakers",
+          "steps": "Another user starts PTT",
+          "expected": "Non-speaker audio reduced to 80%",
+          "status": "pending",
+          "sprint": "Sprint 6",
+          "taskId": "TASK-065",
+          "priority": "medium"
+        },
+        {
+          "id": "V-5",
+          "title": "Active speaker indicator",
+          "steps": "User holds PTT button",
+          "expected": "All participants see active speaker name",
+          "status": "pending",
+          "sprint": "Sprint 6",
+          "taskId": "TASK-067",
+          "priority": "medium"
+        },
+        {
+          "id": "C-11",
+          "title": "Chat panel expand/collapse",
+          "steps": "Click Chat header",
+          "expected": "Chat panel toggles open/closed",
+          "status": "pending",
+          "sprint": "Sprint 6",
+          "taskId": "TASK-071",
+          "priority": "medium"
+        },
+        {
+          "id": "C-12",
+          "title": "Send text message",
+          "steps": "Type message \u2192 Press Enter",
+          "expected": "Message appears in chat with sender name and timestamp",
+          "status": "pending",
+          "sprint": "Sprint 6",
+          "taskId": "TASK-071",
+          "priority": "high"
+        },
+        {
+          "id": "C-13",
+          "title": "Chat message persistence",
+          "steps": "Send message \u2192 Refresh page \u2192 Open chat",
+          "expected": "Previous messages loaded from PocketBase",
+          "status": "pending",
+          "sprint": "Sprint 6",
+          "taskId": "TASK-070",
+          "priority": "high"
+        },
+        {
+          "id": "C-14",
+          "title": "Real-time chat delivery",
+          "steps": "User A sends message, User B has chat open",
+          "expected": "Message appears instantly for User B",
+          "status": "pending",
+          "sprint": "Sprint 6",
+          "taskId": "TASK-069",
+          "priority": "high"
+        },
+        {
+          "id": "C-15",
+          "title": "Chat message bubbles styling",
+          "steps": "Send messages from self and others",
+          "expected": "Self=right-aligned indigo, Others=left-aligned gray, with timestamps",
+          "status": "pending",
+          "sprint": "Sprint 6",
+          "taskId": "TASK-071",
+          "priority": "low"
         }
       ]
     },

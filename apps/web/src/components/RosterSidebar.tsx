@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import { useConvoyRoster, type RosterMember } from '../stores/ConvoyRosterContext'
 import { formatSpeedKmh } from '../utils/memberStatus'
 import { useAuth } from '../hooks/useAuth'
+import VoicePanel from './VoicePanel'
+import ChatPanel from './ChatPanel'
 
 const STATUS_COLORS: Record<string, string> = {
   'in-transit': 'bg-green-500',
@@ -144,7 +146,9 @@ export default function RosterSidebar({ isExpanded, onToggle }: RosterSidebarPro
             )}
           </div>
 
-          <div className="p-3 border-t border-gray-200">
+          <div className="p-3 border-t border-gray-200 space-y-3">
+            <VoicePanel />
+            <ChatPanel />
             <Link
               to="/convoy"
               className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700"

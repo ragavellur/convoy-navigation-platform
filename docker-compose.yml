@@ -82,6 +82,29 @@ services:
     networks:
       - convoy-network
 
+  voice-server:
+    build:
+      context: ./apps/voice-server
+      dockerfile: Dockerfile
+    container_name: convoy-voice
+    ports:
+      - '${VOICE_PORT:-3001}:3001'
+      - '${MEDIASOUP_PORT_MIN:-20000}-${MEDIASOUP_PORT_MAX:-20100}:20000-20100/udp'
+    environment:
+      - VOICE_PORT=3001
+      - MEDIASOUP_LISTEN_IP=0.0.0.0
+      - MEDIASOUP_ANNOUNCED_IP=${MEDIASOUP_ANNOUNCED_IP:-}
+      - MEDIASOUP_PORT_MIN=20000
+      - MEDIASOUP_PORT_MAX=20100
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3001/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - convoy-network
+
 volumes:
   pocketbase_data:
   osrm_data:
