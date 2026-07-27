@@ -139,6 +139,8 @@
 
 ### 📌 Backlog
 
+### 🔄 In Progress
+
 - [ ] [TASK-049] Build vehicle roster sidebar component (FR-ROS-01)
 - [ ] [TASK-050] Implement expandable/collapsible drawer UI
 - [ ] [TASK-051] Add vehicle type classification display (FR-ROS-02)
@@ -150,8 +152,6 @@
 - [ ] [TASK-057] Implement real-time roster updates via PocketBase Realtime
 - [ ] [TASK-058] Touch-optimized gestures for tablet/mobile web (FR-WEB-10)
 - [ ] [TASK-059] Add dark mode support for map & UI
-
-### 🔄 In Progress
 
 ### ✅ Done
 
