@@ -263,35 +263,43 @@ start_services() {
 }
 
 # ─── Setup OSRM data ────────────────────────────────────────────────────────
+# Uses a one-shot container sharing the osrm_data volume to process data,
+# because the main OSRM container crash-loops when data doesn't exist yet.
 setup_osrm_data() {
-  info "Downloading and processing Monaco OSM data for OSRM..."
+  info "Setting up OSRM routing data..."
 
-  # Download Monaco OSM data
-  docker exec convoy-osrm wget -q \
-    https://download.geofabrik.de/europe/monaco-latest.osm.pbf \
-    -O /data/monaco-latest.osm.pbf 2>&1 || fail "Failed to download OSM data."
+  # Stop the crash-looping OSRM container
+  docker stop convoy-osrm 2>/dev/null || true
 
-  # Extract routing data
+  info "Downloading Monaco OSM data..."
+  docker run --rm \
+    -v osrm_data:/data \
+    osrm/osrm-backend:latest \
+    wget -q https://download.geofabrik.de/europe/monaco-latest.osm.pbf \
+      -O /data/monaco-latest.osm.pbf || fail "Failed to download OSM data."
+
   info "Extracting OSRM routing data (may take a few minutes)..."
-  docker exec convoy-osrm osrm-extract \
-    -p /opt/car.lua \
-    /data/monaco-latest.osm.pbf 2>&1 | tail -5
+  docker run --rm \
+    -v osrm_data:/data \
+    osrm/osrm-backend:latest \
+    osrm-extract -p /opt/car.lua /data/monaco-latest.osm.pbf 2>&1 | tail -5
 
-  # Partition
   info "Partitioning OSRM data..."
-  docker exec convoy-osrm osrm-partition \
-    /data/monaco-latest.osrm 2>&1 | tail -3
+  docker run --rm \
+    -v osrm_data:/data \
+    osrm/osrm-backend:latest \
+    osrm-partition /data/monaco-latest.osrm 2>&1 | tail -3
 
-  # Customize
   info "Customizing OSRM data..."
-  docker exec convoy-osrm osrm-customize \
-    /data/monaco-latest.osrm 2>&1 | tail -3
+  docker run --rm \
+    -v osrm_data:/data \
+    osrm/osrm-backend:latest \
+    osrm-customize /data/monaco-latest.osrm 2>&1 | tail -3
 
-  # Restart OSRM to pick up new data
-  info "Restarting OSRM container..."
-  docker restart convoy-osrm
+  # Now start the real OSRM container — data exists, it will boot
+  info "Starting OSRM container..."
+  docker start convoy-osrm
 
-  # Wait for healthy
   info "Waiting for OSRM to become healthy..."
   local retries=30
   while [[ $retries -gt 0 ]]; do
