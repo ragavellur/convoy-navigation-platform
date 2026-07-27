@@ -105,6 +105,27 @@ install_prereqs() {
   if [[ "$USE_CLOUDFLARE" != "y" ]] && ! command -v certbot >/dev/null 2>&1; then
     apt-get install -y -qq certbot python3-certbot-nginx
   fi
+
+  # Node.js 20+ required (mediasoup uses import attributes)
+  local node_version
+  if command -v node >/dev/null 2>&1; then
+    node_version=$(node -v | sed 's/v//' | cut -d. -f1)
+  else
+    node_version=0
+  fi
+  if [[ "$node_version" -lt 20 ]]; then
+    info "Installing Node.js 22 LTS (required by mediasoup)..."
+    curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+    apt-get install -y -qq nodejs
+    ok "Node.js $(node -v) installed."
+  else
+    ok "Node.js $(node -v) found."
+  fi
+
+  # python3 and python3-requests for setup-collections.py
+  command -v python3 >/dev/null 2>&1 || apt-get install -y -qq python3
+  pip3 install requests python-dotenv 2>/dev/null || true
+
   ok "Prerequisites ready."
 }
 
@@ -278,10 +299,11 @@ setup_osrm_data() {
 # ─── Build frontend ──────────────────────────────────────────────────────────
 build_frontend() {
   info "Installing frontend dependencies..."
-  cd "$INSTALL_DIR/apps/web"
-  npm install --silent 2>&1 | tail -3
+  cd "$INSTALL_DIR"
+  npm install --legacy-peer-deps 2>&1 | tail -5
 
   info "Building frontend for production..."
+  cd "$INSTALL_DIR/apps/web"
   if [[ "$USE_CLOUDFLARE" == "y" ]]; then
     FE_API="http://$DOMAIN/api"; FE_OSRM="http://$DOMAIN/routing"; FE_GEO="http://$DOMAIN/geocode"
   else
@@ -447,11 +469,17 @@ setup_pocketbase_admin() {
 # ─── Setup collections ───────────────────────────────────────────────────────
 setup_collections() {
   info "Setting up PocketBase collections..."
-  if [[ -f scripts/setup-collections.js ]]; then
-    node scripts/setup-collections.js 2>/dev/null || warn "Collection setup may need manual intervention."
+  cd "$INSTALL_DIR"
+  if [[ -f scripts/setup-collections.sh ]]; then
+    chmod +x scripts/setup-collections.sh
+    ENV_FILE=".env" bash scripts/setup-collections.sh 2>&1 || warn "Collection setup may need manual intervention."
+    ok "Collections configured."
+  elif [[ -f scripts/setup-collections.py ]]; then
+    cd "$INSTALL_DIR"
+    ENV_FILE=".env" python3 scripts/setup-collections.py 2>&1 || warn "Collection setup may need manual intervention."
     ok "Collections configured."
   else
-    warn "No setup-collections.js found. Configure collections manually via PocketBase admin UI."
+    warn "No setup-collections script found. Configure collections manually via PocketBase admin UI."
   fi
 }
 

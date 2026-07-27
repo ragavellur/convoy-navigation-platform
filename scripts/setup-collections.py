@@ -1,33 +1,59 @@
-import requests
-import json
+#!/usr/bin/env python3
+"""
+Setup PocketBase collections for Convoy Navigation Platform.
+Reads credentials from .env file or environment variables.
+"""
+import os
 import sys
+import json
+import requests
+from dotenv import load_dotenv
 
-PB_URL = "http://localhost:8090"
-ADMIN_EMAIL = "admin@convoy.local"
-ADMIN_PASSWORD = "admin123456"
+load_dotenv()
 
-# Get admin token
+PB_URL = os.environ.get("PB_URL", "http://localhost:8090")
+ADMIN_EMAIL = os.environ.get("POCKETBASE_ADMIN_EMAIL", "")
+ADMIN_PASSWORD = os.environ.get("POCKETBASE_ADMIN_PASSWORD", "")
+
+if not ADMIN_EMAIL or not ADMIN_PASSWORD:
+    print("ERROR: POCKETBASE_ADMIN_EMAIL and POCKETBASE_ADMIN_PASSWORD must be set.")
+    sys.exit(1)
+
+print(f"Authenticating as {ADMIN_EMAIL}...")
+
 resp = requests.post(f"{PB_URL}/api/admins/auth-with-password", json={
     "identity": ADMIN_EMAIL,
     "password": ADMIN_PASSWORD
 })
+if resp.status_code != 200:
+    print(f"Auth failed: {resp.json()}")
+    sys.exit(1)
+
 token = resp.json()["token"]
 headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
-print("Admin token acquired")
+print("Admin token acquired.")
+
 
 def create_collection(data):
     name = data["name"]
+    print(f"Creating {name}... ", end="", flush=True)
     resp = requests.post(f"{PB_URL}/api/collections", headers=headers, json=data)
     result = resp.json()
     if "id" in result:
-        print(f"  Created {name}: {result['id']}")
+        print(f"OK ({result['id']})")
         return result["id"]
+    elif "already exists" in result.get("message", ""):
+        print("SKIPPED (already exists)")
+        r = requests.get(f"{PB_URL}/api/collections", headers=headers, params={"filter": f"name='{name}'"})
+        items = r.json().get("items", [])
+        return items[0]["id"] if items else None
     else:
-        print(f"  FAILED {name}: {result.get('message', result)}")
+        print(f"FAILED: {result.get('message', result)}")
         return None
 
+
 # ============================================
-# Create convoys collection
+# 1. convoys
 # ============================================
 convoys_id = create_collection({
     "name": "convoys",
@@ -44,16 +70,51 @@ convoys_id = create_collection({
         {"name": "owner", "type": "relation", "required": True, "options": {"collectionId": "_pb_users_auth_", "cascadeDelete": True, "maxSelect": 1}},
         {"name": "status", "type": "select", "required": True, "options": {"values": ["active", "archived"], "maxSelect": 1}},
         {"name": "max_members", "type": "number", "required": False, "options": {"min": 2, "max": 100}},
-        {"name": "settings", "type": "json", "required": False}
+        {"name": "settings", "type": "json", "required": False},
+        {"name": "trip_id", "type": "text", "required": False},
+        {"name": "security_token", "type": "text", "required": False},
+        {"name": "source_lat", "type": "number", "required": False},
+        {"name": "source_lng", "type": "number", "required": False},
+        {"name": "source_name", "type": "text", "required": False},
+        {"name": "dest_lat", "type": "number", "required": False},
+        {"name": "dest_lng", "type": "number", "required": False},
+        {"name": "dest_name", "type": "text", "required": False},
     ],
     "indexes": [
         "CREATE UNIQUE INDEX idx_convoys_code ON convoys (code)",
-        "CREATE INDEX idx_convoys_owner ON convoys (owner)"
+        "CREATE INDEX idx_convoys_owner ON convoys (owner)",
     ]
 })
 
 # ============================================
-# Create convoy_members collection
+# 2. vehicles
+# ============================================
+vehicles_id = create_collection({
+    "name": "vehicles",
+    "type": "base",
+    "listRule": "",
+    "viewRule": "",
+    "createRule": "",
+    "updateRule": "@request.auth.id = owner",
+    "deleteRule": "@request.auth.id = owner",
+    "schema": [
+        {"name": "owner", "type": "relation", "required": True, "options": {"collectionId": "_pb_users_auth_", "cascadeDelete": True, "maxSelect": 1}},
+        {"name": "name", "type": "text", "required": True, "options": {"min": 1, "max": 50}},
+        {"name": "type", "type": "select", "required": True, "options": {"values": ["car", "truck", "motorcycle", "other"], "maxSelect": 1}},
+        {"name": "color", "type": "text", "required": False},
+        {"name": "license_plate", "type": "text", "required": True, "options": {"unique": True}},
+        {"name": "image", "type": "file", "required": False, "options": {"maxSelect": 1, "mimeTypes": ["image/jpeg", "image/png", "image/webp"]}},
+        {"name": "telemetry_config", "type": "json", "required": False},
+        {"name": "status", "type": "select", "required": True, "options": {"values": ["active", "inactive", "maintenance"], "maxSelect": 1}},
+    ],
+    "indexes": [
+        "CREATE UNIQUE INDEX idx_vehicles_license ON vehicles (license_plate)",
+        "CREATE INDEX idx_vehicles_owner ON vehicles (owner)",
+    ]
+})
+
+# ============================================
+# 3. convoy_members
 # ============================================
 members_id = create_collection({
     "name": "convoy_members",
@@ -61,69 +122,103 @@ members_id = create_collection({
     "listRule": "",
     "viewRule": "",
     "createRule": "@request.auth.id != ''",
-    "updateRule": "@request.auth.id = user",
-    "deleteRule": "@request.auth.id = user",
+    "updateRule": "",
+    "deleteRule": "",
     "schema": [
         {"name": "convoy", "type": "relation", "required": True, "options": {"collectionId": convoys_id, "cascadeDelete": True, "maxSelect": 1}},
         {"name": "user", "type": "relation", "required": True, "options": {"collectionId": "_pb_users_auth_", "cascadeDelete": True, "maxSelect": 1}},
         {"name": "role", "type": "select", "required": True, "options": {"values": ["owner", "admin", "member"], "maxSelect": 1}},
-        {"name": "vehicle", "type": "relation", "required": False, "options": {"collectionId": convoys_id, "cascadeDelete": False, "maxSelect": 1}},
-        {"name": "status", "type": "select", "required": True, "options": {"values": ["active", "kicked", "left"], "maxSelect": 1}}
+        {"name": "vehicle", "type": "relation", "required": False, "options": {"collectionId": vehicles_id, "cascadeDelete": False, "maxSelect": 1}},
+        {"name": "status", "type": "select", "required": True, "options": {"values": ["active", "kicked", "left"], "maxSelect": 1}},
+        {"name": "joined_at", "type": "date", "required": False},
     ],
     "indexes": [
         "CREATE UNIQUE INDEX idx_convoy_members_unique ON convoy_members (convoy, user)",
         "CREATE INDEX idx_convoy_members_convoy ON convoy_members (convoy)",
-        "CREATE INDEX idx_convoy_members_user ON convoy_members (user)"
+        "CREATE INDEX idx_convoy_members_user ON convoy_members (user)",
     ]
 })
 
 # ============================================
-# Create vehicles collection
+# 4. positions
 # ============================================
-vehicles_id = create_collection({
-    "name": "vehicles",
+positions_id = create_collection({
+    "name": "positions",
+    "type": "base",
+    "listRule": "",
+    "viewRule": "",
+    "createRule": "",
+    "updateRule": "",
+    "deleteRule": "",
+    "schema": [
+        {"name": "vehicle", "type": "relation", "required": True, "options": {"collectionId": vehicles_id, "cascadeDelete": True, "maxSelect": 1}},
+        {"name": "convoy", "type": "relation", "required": True, "options": {"collectionId": convoys_id, "cascadeDelete": True, "maxSelect": 1}},
+        {"name": "lat", "type": "number", "required": True},
+        {"name": "lng", "type": "number", "required": True},
+        {"name": "speed", "type": "number", "required": False},
+        {"name": "heading", "type": "number", "required": False},
+        {"name": "accuracy", "type": "number", "required": False},
+    ],
+    "indexes": [
+        "CREATE UNIQUE INDEX idx_positions_vehicle_convoy ON positions (vehicle, convoy)",
+        "CREATE INDEX idx_positions_convoy ON positions (convoy)",
+    ]
+})
+
+# ============================================
+# 5. messages
+# ============================================
+messages_id = create_collection({
+    "name": "messages",
     "type": "base",
     "listRule": "",
     "viewRule": "",
     "createRule": "@request.auth.id != ''",
-    "updateRule": "@request.auth.id = owner",
-    "deleteRule": "@request.auth.id = owner",
+    "updateRule": "@request.auth.id = sender",
+    "deleteRule": "@request.auth.id = sender",
     "schema": [
         {"name": "convoy", "type": "relation", "required": True, "options": {"collectionId": convoys_id, "cascadeDelete": True, "maxSelect": 1}},
-        {"name": "owner", "type": "relation", "required": True, "options": {"collectionId": "_pb_users_auth_", "cascadeDelete": True, "maxSelect": 1}},
-        {"name": "name", "type": "text", "required": True, "options": {"min": 1, "max": 50}},
-        {"name": "type", "type": "select", "required": True, "options": {"values": ["car", "truck", "motorcycle", "other"], "maxSelect": 1}},
-        {"name": "color", "type": "text", "required": False},
-        {"name": "license_plate", "type": "text", "required": False},
-        {"name": "image", "type": "file", "required": False, "options": {"maxSelect": 1, "mimeTypes": ["image/jpeg", "image/png", "image/webp"]}},
-        {"name": "telemetry_config", "type": "json", "required": False},
-        {"name": "status", "type": "select", "required": True, "options": {"values": ["active", "inactive", "maintenance"], "maxSelect": 1}}
+        {"name": "sender", "type": "relation", "required": True, "options": {"collectionId": "_pb_users_auth_", "cascadeDelete": True, "maxSelect": 1}},
+        {"name": "type", "type": "select", "required": True, "options": {"values": ["text", "voice", "system"], "maxSelect": 1}},
+        {"name": "content", "type": "text", "required": True},
+        {"name": "duration", "type": "number", "required": False},
+        {"name": "location_lat", "type": "number", "required": False},
+        {"name": "location_lng", "type": "number", "required": False},
     ],
     "indexes": [
-        "CREATE INDEX idx_vehicles_convoy ON vehicles (convoy)",
-        "CREATE INDEX idx_vehicles_owner ON vehicles (owner)"
+        "CREATE INDEX idx_messages_convoy ON messages (convoy)",
+        "CREATE INDEX idx_messages_sender ON messages (sender)",
     ]
 })
 
-# Update convoy_members vehicle relation to point to vehicles
-if members_id and vehicles_id:
-    print("  Updating convoy_members vehicle relation...")
-    resp = requests.patch(f"{PB_URL}/api/collections/{members_id}", headers=headers, json={
-        "schema": [
-            {"name": "convoy", "type": "relation", "required": True, "options": {"collectionId": convoys_id, "cascadeDelete": True, "maxSelect": 1}},
-            {"name": "user", "type": "relation", "required": True, "options": {"collectionId": "_pb_users_auth_", "cascadeDelete": True, "maxSelect": 1}},
-            {"name": "role", "type": "select", "required": True, "options": {"values": ["owner", "admin", "member"], "maxSelect": 1}},
-            {"name": "vehicle", "type": "relation", "required": False, "options": {"collectionId": vehicles_id, "cascadeDelete": False, "maxSelect": 1}},
-            {"name": "status", "type": "select", "required": True, "options": {"values": ["active", "kicked", "left"], "maxSelect": 1}}
-        ]
-    })
-    if "id" in resp.json():
-        print("  Updated OK")
-    else:
-        print(f"  Update FAILED: {resp.json()}")
+# ============================================
+# 6. cached_routes
+# ============================================
+routes_id = create_collection({
+    "name": "cached_routes",
+    "type": "base",
+    "listRule": None,
+    "viewRule": None,
+    "createRule": None,
+    "updateRule": None,
+    "deleteRule": None,
+    "schema": [
+        {"name": "origin_lat", "type": "number", "required": True},
+        {"name": "origin_lng", "type": "number", "required": True},
+        {"name": "dest_lat", "type": "number", "required": True},
+        {"name": "dest_lng", "type": "number", "required": True},
+        {"name": "distance", "type": "number", "required": True},
+        {"name": "duration", "type": "number", "required": True},
+        {"name": "geometry", "type": "text", "required": True},
+        {"name": "alternatives_json", "type": "text", "required": False},
+    ],
+    "indexes": [
+        "CREATE UNIQUE INDEX idx_routes_coords ON cached_routes (origin_lat, origin_lng, dest_lat, dest_lng)",
+    ]
+})
 
 # ============================================
-# Create telemetry_aggregated collection
+# 7. telemetry_aggregated
 # ============================================
 telem_id = create_collection({
     "name": "telemetry_aggregated",
@@ -144,42 +239,16 @@ telem_id = create_collection({
         {"name": "max_speed", "type": "number", "required": False},
         {"name": "distance_traveled", "type": "number", "required": False},
         {"name": "point_count", "type": "number", "required": False},
-        {"name": "route_polyline", "type": "text", "required": False}
+        {"name": "route_polyline", "type": "text", "required": False},
     ],
     "indexes": [
         "CREATE UNIQUE INDEX idx_telemetry_vehicle_hour ON telemetry_aggregated (vehicle, hour_bucket)",
-        "CREATE INDEX idx_telemetry_hour ON telemetry_aggregated (hour_bucket)"
+        "CREATE INDEX idx_telemetry_hour ON telemetry_aggregated (hour_bucket)",
     ]
 })
 
 # ============================================
-# Create messages collection
-# ============================================
-messages_id = create_collection({
-    "name": "messages",
-    "type": "base",
-    "listRule": "",
-    "viewRule": "",
-    "createRule": "@request.auth.id != ''",
-    "updateRule": "@request.auth.id = sender",
-    "deleteRule": "@request.auth.id = sender",
-    "schema": [
-        {"name": "convoy", "type": "relation", "required": True, "options": {"collectionId": convoys_id, "cascadeDelete": True, "maxSelect": 1}},
-        {"name": "sender", "type": "relation", "required": True, "options": {"collectionId": "_pb_users_auth_", "cascadeDelete": True, "maxSelect": 1}},
-        {"name": "type", "type": "select", "required": True, "options": {"values": ["text", "voice", "system"], "maxSelect": 1}},
-        {"name": "content", "type": "text", "required": True},
-        {"name": "duration", "type": "number", "required": False},
-        {"name": "location_lat", "type": "number", "required": False},
-        {"name": "location_lng", "type": "number", "required": False}
-    ],
-    "indexes": [
-        "CREATE INDEX idx_messages_convoy ON messages (convoy)",
-        "CREATE INDEX idx_messages_sender ON messages (sender)"
-    ]
-})
-
-# ============================================
-# Create geofences collection
+# 8. geofences
 # ============================================
 geofences_id = create_collection({
     "name": "geofences",
@@ -198,15 +267,15 @@ geofences_id = create_collection({
         {"name": "radius_m", "type": "number", "required": False},
         {"name": "polygon_coords", "type": "json", "required": False},
         {"name": "alert_on", "type": "select", "required": True, "options": {"values": ["enter", "exit", "both"], "maxSelect": 1}},
-        {"name": "status", "type": "select", "required": True, "options": {"values": ["active", "inactive"], "maxSelect": 1}}
+        {"name": "status", "type": "select", "required": True, "options": {"values": ["active", "inactive"], "maxSelect": 1}},
     ],
     "indexes": [
-        "CREATE INDEX idx_geofences_convoy ON geofences (convoy)"
+        "CREATE INDEX idx_geofences_convoy ON geofences (convoy)",
     ]
 })
 
 # ============================================
-# Create audit_log collection
+# 9. audit_log
 # ============================================
 audit_id = create_collection({
     "name": "audit_log",
@@ -221,24 +290,50 @@ audit_id = create_collection({
         {"name": "action", "type": "text", "required": True},
         {"name": "resource_type", "type": "text", "required": True},
         {"name": "resource_id", "type": "text", "required": False},
-        {"name": "metadata", "type": "json", "required": False}
+        {"name": "metadata", "type": "json", "required": False},
     ],
     "indexes": [
         "CREATE INDEX idx_audit_user ON audit_log (user)",
-        "CREATE INDEX idx_audit_action ON audit_log (action)"
+        "CREATE INDEX idx_audit_action ON audit_log (action)",
     ]
 })
 
-print("\n=== Summary ===")
-print(f"convoys: {convoys_id}")
-print(f"convoy_members: {members_id}")
-print(f"vehicles: {vehicles_id}")
-print(f"telemetry_aggregated: {telem_id}")
-print(f"messages: {messages_id}")
-print(f"geofences: {geofences_id}")
-print(f"audit_log: {audit_id}")
+# ============================================
+# 10. Update users auth collection with role + status
+# ============================================
+print("\nAdding role and status fields to users collection...")
+resp = requests.patch(
+    f"{PB_URL}/api/collections/_pb_users_auth_",
+    headers=headers,
+    json={
+        "schema": [
+            {"name": "name", "type": "text", "required": False, "options": {"max": 100}},
+            {"name": "avatar", "type": "file", "required": False, "options": {"maxSelect": 1, "mimeTypes": ["image/jpeg", "image/png", "image/webp"]}},
+            {"name": "phone", "type": "text", "required": False},
+            {"name": "role", "type": "select", "required": False, "options": {"values": ["admin", "member"], "maxSelect": 1}},
+            {"name": "status", "type": "select", "required": False, "options": {"values": ["active", "inactive", "banned"], "maxSelect": 1}},
+        ]
+    }
+)
+if "id" in resp.json():
+    print("  users collection updated OK")
+else:
+    print(f"  users collection update: {resp.json()}")
 
-# Verify
-resp = requests.get(f"{PB_URL}/api/collections", headers=headers)
-total = resp.json().get("totalItems", 0)
-print(f"\nTotal collections: {total}")
+# ============================================
+# Summary
+# ============================================
+print("\n==========================================")
+print("  All collections configured!")
+print("==========================================")
+print(f"  convoys:              {convoys_id}")
+print(f"  vehicles:             {vehicles_id}")
+print(f"  convoy_members:       {members_id}")
+print(f"  positions:            {positions_id}")
+print(f"  messages:             {messages_id}")
+print(f"  cached_routes:        {routes_id}")
+print(f"  telemetry_aggregated: {telem_id}")
+print(f"  geofences:            {geofences_id}")
+print(f"  audit_log:            {audit_id}")
+print("  users:                (auth collection + role/status fields)")
+print("==========================================")
