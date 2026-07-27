@@ -124,7 +124,7 @@ install_prereqs() {
 
   # python3 and python3-requests for setup-collections.py
   command -v python3 >/dev/null 2>&1 || apt-get install -y -qq python3
-  pip3 install requests python-dotenv 2>/dev/null || true
+  pip3 install --break-system-packages requests python-dotenv 2>/dev/null || pip3 install requests python-dotenv 2>/dev/null || true
 
   ok "Prerequisites ready."
 }
@@ -300,15 +300,19 @@ setup_osrm_data() {
 build_frontend() {
   info "Installing frontend dependencies..."
   cd "$INSTALL_DIR"
+  chown -R "$(whoami)" apps/web/node_modules apps/web/dist 2>/dev/null || true
   npm install --legacy-peer-deps 2>&1 | tail -5
 
   info "Building frontend for production..."
   cd "$INSTALL_DIR/apps/web"
   FE_API="${API_SCHEME}://$DOMAIN"; FE_OSRM="${API_SCHEME}://$DOMAIN/routing"; FE_GEO="${API_SCHEME}://$DOMAIN/geocode"
   VITE_POCKETBASE_URL="$FE_API" VITE_OSRM_URL="$FE_OSRM" VITE_NOMINATIM_URL="$FE_GEO" \
+    VITE_MAP_TILES_URL="https://tile.openstreetmap.org/{z}/{x}/{y}.png" \
+    VITE_MAP_STYLE_URL="https://tiles.openfreemap.org/styles/liberty" \
     npm run build 2>&1 | tail -5
 
   mkdir -p /var/www/convoy
+  rm -rf /var/www/convoy/*
   cp -r dist/* /var/www/convoy/
   [[ -f /var/www/convoy/index.html ]] || fail "Frontend build failed — index.html not found."
   ok "Frontend built and deployed."
