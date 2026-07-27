@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-07-24T00:00:00Z",
+  "lastUpdated": "2026-07-27T00:00:00Z",
   "sprints": [
     {
       "id": 1,
@@ -585,79 +585,165 @@
     },
     {
       "id": 7,
-      "name": "Sprint 7: Web PWA Polish",
-      "platform": "Web PWA",
+      "name": "Sprint 7: Critical Convoy Flow Fixes",
+      "platform": "Web",
       "startDate": "2026-10-16",
       "endDate": "2026-10-30",
       "tasks": [
         {
           "id": "TASK-074",
-          "title": "Configure Service Worker with Workbox (FR-WEB-03)",
+          "title": "Restructure vehicles collection: user-owned, remove convoy FK",
           "status": "backlog",
-          "priority": "high"
+          "priority": "high",
+          "issue": "#3,#5,#6"
         },
         {
           "id": "TASK-075",
+          "title": "Add source/destination fields to convoys collection",
+          "status": "backlog",
+          "priority": "high",
+          "issue": "#1"
+        },
+        {
+          "id": "TASK-076",
+          "title": "Make convoy_members.vehicle required",
+          "status": "backlog",
+          "priority": "high",
+          "issue": "#3"
+        },
+        {
+          "id": "TASK-077",
+          "title": "One-active-convoy constraint (server-side check)",
+          "status": "backlog",
+          "priority": "high",
+          "issue": "#5"
+        },
+        {
+          "id": "TASK-078",
+          "title": "Update shared API types for new schema",
+          "status": "backlog",
+          "priority": "high",
+          "issue": "All"
+        },
+        {
+          "id": "TASK-079",
+          "title": "Vehicle management in ProfilePage",
+          "status": "backlog",
+          "priority": "high",
+          "issue": "#3"
+        },
+        {
+          "id": "TASK-080",
+          "title": "Source/destination in convoy creation UI",
+          "status": "backlog",
+          "priority": "high",
+          "issue": "#1"
+        },
+        {
+          "id": "TASK-081",
+          "title": "Vehicle selection at join + one-convoy warning",
+          "status": "backlog",
+          "priority": "high",
+          "issue": "#3,#5"
+        },
+        {
+          "id": "TASK-082",
+          "title": "Fix deep link param preservation + token validation",
+          "status": "backlog",
+          "priority": "high",
+          "issue": "#4"
+        },
+        {
+          "id": "TASK-083",
+          "title": "Fix position publishing vehicle identity + own-vehicle marker",
+          "status": "backlog",
+          "priority": "high",
+          "issue": "#6"
+        },
+        {
+          "id": "TASK-084",
+          "title": "Search: keyboard nav + public Nominatim fallback + pin preview",
+          "status": "backlog",
+          "priority": "high",
+          "issue": "#7"
+        },
+        {
+          "id": "TASK-085",
+          "title": "Configure Service Worker with Workbox (FR-WEB-03)",
+          "status": "backlog",
+          "priority": "high"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "name": "Sprint 8: PWA Polish",
+      "platform": "Web PWA",
+      "startDate": "2026-10-30",
+      "endDate": "2026-11-13",
+      "tasks": [
+        {
+          "id": "TASK-086",
           "title": "Implement map tile caching strategy (IndexedDB + SW) (FR-WEB-08)",
           "status": "backlog",
           "priority": "high"
         },
         {
-          "id": "TASK-076",
+          "id": "TASK-087",
           "title": "Implement offline mode - view cached convoy state (FR-WEB-08)",
           "status": "backlog",
           "priority": "high"
         },
         {
-          "id": "TASK-077",
+          "id": "TASK-088",
           "title": "Implement background sync for location updates (FR-WEB-03)",
           "status": "backlog",
           "priority": "medium"
         },
         {
-          "id": "TASK-078",
+          "id": "TASK-089",
           "title": "Set up Web Push Notifications (FR-WEB-07)",
           "status": "backlog",
           "priority": "medium"
         },
         {
-          "id": "TASK-079",
+          "id": "TASK-090",
           "title": "Implement push notification permission flow",
           "status": "backlog",
           "priority": "medium"
         },
         {
-          "id": "TASK-080",
+          "id": "TASK-091",
           "title": "Create PWA install prompt UI (beforeinstallprompt)",
           "status": "backlog",
           "priority": "medium"
         },
         {
-          "id": "TASK-081",
+          "id": "TASK-092",
           "title": "Add service worker update notification",
           "status": "backlog",
           "priority": "low"
         },
         {
-          "id": "TASK-082",
+          "id": "TASK-093",
           "title": "Optimize PWA Lighthouse score (>90 target)",
           "status": "backlog",
           "priority": "high"
         },
         {
-          "id": "TASK-083",
+          "id": "TASK-094",
           "title": "Test PWA on Chrome, Safari, Firefox, Edge",
           "status": "backlog",
           "priority": "high"
         },
         {
-          "id": "TASK-084",
+          "id": "TASK-095",
           "title": "Implement web app caching for static assets",
           "status": "backlog",
           "priority": "medium"
         },
         {
-          "id": "TASK-085",
+          "id": "TASK-096",
           "title": "Add PWA meta tags and Open Graph tags",
           "status": "backlog",
           "priority": "low"
@@ -665,86 +751,86 @@
       ]
     },
     {
-      "id": 8,
-      "name": "Sprint 8: Android Foundation",
+      "id": 9,
+      "name": "Sprint 9: Android Foundation",
       "platform": "Android",
-      "startDate": "2026-10-30",
-      "endDate": "2026-11-13",
+      "startDate": "2026-11-13",
+      "endDate": "2026-11-27",
       "tasks": [
         {
-          "id": "TASK-086",
+          "id": "TASK-097",
           "title": "Set up React Native / Expo project for Android",
           "status": "backlog",
           "priority": "high"
         },
         {
-          "id": "TASK-087",
+          "id": "TASK-098",
           "title": "Configure Android build (EAS Build)",
           "status": "backlog",
           "priority": "high"
         },
         {
-          "id": "TASK-088",
+          "id": "TASK-099",
           "title": "Integrate MapLibre GL Native SDK",
           "status": "backlog",
           "priority": "high"
         },
         {
-          "id": "TASK-089",
+          "id": "TASK-100",
           "title": "Port authentication flow to React Native",
           "status": "backlog",
           "priority": "high"
         },
         {
-          "id": "TASK-090",
+          "id": "TASK-101",
           "title": "Port map screen to React Native",
           "status": "backlog",
           "priority": "high"
         },
         {
-          "id": "TASK-091",
+          "id": "TASK-102",
           "title": "Implement native GPS background service",
           "status": "backlog",
           "priority": "high"
         },
         {
-          "id": "TASK-092",
+          "id": "TASK-103",
           "title": "Port adaptive polling logic to native",
           "status": "backlog",
           "priority": "medium"
         },
         {
-          "id": "TASK-093",
+          "id": "TASK-104",
           "title": "Port convoy join/create flow to mobile",
           "status": "backlog",
           "priority": "high"
         },
         {
-          "id": "TASK-094",
+          "id": "TASK-105",
           "title": "Implement deep link handling (Android intent filters)",
           "status": "backlog",
           "priority": "high"
         },
         {
-          "id": "TASK-095",
+          "id": "TASK-106",
           "title": "Port vehicle roster sidebar to mobile",
           "status": "backlog",
           "priority": "medium"
         },
         {
-          "id": "TASK-096",
+          "id": "TASK-107",
           "title": "Implement turn-by-turn navigation with TTS (FR-MAP-05)",
           "status": "backlog",
           "priority": "medium"
         },
         {
-          "id": "TASK-097",
+          "id": "TASK-108",
           "title": "Port chat UI to React Native",
           "status": "backlog",
           "priority": "medium"
         },
         {
-          "id": "TASK-098",
+          "id": "TASK-109",
           "title": "Implement push notifications (FCM)",
           "status": "backlog",
           "priority": "high"
@@ -752,50 +838,50 @@
       ]
     },
     {
-      "id": 9,
-      "name": "Sprint 9: iOS Foundation",
+      "id": 10,
+      "name": "Sprint 10: iOS Foundation",
       "platform": "iOS",
-      "startDate": "2026-11-13",
-      "endDate": "2026-11-27",
+      "startDate": "2026-11-27",
+      "endDate": "2026-12-11",
       "tasks": [
         {
-          "id": "TASK-099",
+          "id": "TASK-110",
           "title": "Configure iOS build (EAS Build)",
           "status": "backlog",
           "priority": "high"
         },
         {
-          "id": "TASK-100",
+          "id": "TASK-111",
           "title": "Implement iOS-specific deep links (Universal Links)",
           "status": "backlog",
           "priority": "high"
         },
         {
-          "id": "TASK-101",
+          "id": "TASK-112",
           "title": "Implement iOS background location mode",
           "status": "backlog",
           "priority": "high"
         },
         {
-          "id": "TASK-102",
+          "id": "TASK-113",
           "title": "Implement iOS push notifications (APNs)",
           "status": "backlog",
           "priority": "high"
         },
         {
-          "id": "TASK-103",
+          "id": "TASK-114",
           "title": "Test iOS-specific UI (safe area, notch, dynamic island)",
           "status": "backlog",
           "priority": "medium"
         },
         {
-          "id": "TASK-104",
+          "id": "TASK-115",
           "title": "iOS App Store submission preparation",
           "status": "backlog",
           "priority": "medium"
         },
         {
-          "id": "TASK-105",
+          "id": "TASK-116",
           "title": "Test iOS WebRTC compatibility",
           "status": "backlog",
           "priority": "high"
@@ -803,86 +889,86 @@
       ]
     },
     {
-      "id": 10,
-      "name": "Sprint 10: Polish & Testing",
+      "id": 11,
+      "name": "Sprint 11: Polish & Testing",
       "platform": "All",
-      "startDate": "2026-11-27",
-      "endDate": "2026-12-11",
+      "startDate": "2026-12-11",
+      "endDate": "2026-12-25",
       "tasks": [
         {
-          "id": "TASK-106",
+          "id": "TASK-117",
           "title": "Optimize battery consumption across all states",
           "status": "backlog",
           "priority": "high"
         },
         {
-          "id": "TASK-107",
+          "id": "TASK-118",
           "title": "Implement location update batching",
           "status": "backlog",
           "priority": "medium"
         },
         {
-          "id": "TASK-108",
+          "id": "TASK-119",
           "title": "Write unit tests for all services (>85% coverage)",
           "status": "backlog",
           "priority": "high"
         },
         {
-          "id": "TASK-109",
+          "id": "TASK-120",
           "title": "Write integration tests for API endpoints",
           "status": "backlog",
           "priority": "high"
         },
         {
-          "id": "TASK-110",
+          "id": "TASK-121",
           "title": "Write E2E tests for web (Playwright)",
           "status": "backlog",
           "priority": "high"
         },
         {
-          "id": "TASK-111",
+          "id": "TASK-122",
           "title": "Write E2E tests for Android (Detox)",
           "status": "backlog",
           "priority": "medium"
         },
         {
-          "id": "TASK-112",
+          "id": "TASK-123",
           "title": "Performance profiling & optimization",
           "status": "backlog",
           "priority": "medium"
         },
         {
-          "id": "TASK-113",
+          "id": "TASK-124",
           "title": "Add error boundaries & crash reporting (Sentry)",
           "status": "backlog",
           "priority": "medium"
         },
         {
-          "id": "TASK-114",
+          "id": "TASK-125",
           "title": "Implement analytics tracking",
           "status": "backlog",
           "priority": "low"
         },
         {
-          "id": "TASK-115",
+          "id": "TASK-126",
           "title": "Accessibility audit (WCAG 2.1 AA) - web",
           "status": "backlog",
           "priority": "medium"
         },
         {
-          "id": "TASK-116",
+          "id": "TASK-127",
           "title": "Security audit (OWASP Mobile + Web)",
           "status": "backlog",
           "priority": "high"
         },
         {
-          "id": "TASK-117",
+          "id": "TASK-128",
           "title": "Load testing for PocketBase Realtime",
           "status": "backlog",
           "priority": "medium"
         },
         {
-          "id": "TASK-118",
+          "id": "TASK-129",
           "title": "API documentation (OpenAPI/Swagger)",
           "status": "backlog",
           "priority": "low"
@@ -890,92 +976,92 @@
       ]
     },
     {
-      "id": 11,
-      "name": "Sprint 11: Deploy & Launch",
+      "id": 12,
+      "name": "Sprint 12: Deploy & Launch",
       "platform": "All",
-      "startDate": "2026-12-11",
-      "endDate": "2026-12-18",
+      "startDate": "2026-12-25",
+      "endDate": "2027-01-08",
       "tasks": [
         {
-          "id": "TASK-119",
+          "id": "TASK-130",
           "title": "Set up CI/CD pipeline (GitHub Actions)",
           "status": "backlog",
           "priority": "high"
         },
         {
-          "id": "TASK-120",
+          "id": "TASK-131",
           "title": "Configure production Docker images",
           "status": "backlog",
           "priority": "high"
         },
         {
-          "id": "TASK-121",
+          "id": "TASK-132",
           "title": "Set up Docker Swarm / K3s orchestration",
           "status": "backlog",
           "priority": "medium"
         },
         {
-          "id": "TASK-122",
+          "id": "TASK-133",
           "title": "Configure production PocketBase instance",
           "status": "backlog",
           "priority": "high"
         },
         {
-          "id": "TASK-123",
+          "id": "TASK-134",
           "title": "Set up Redis for session caching",
           "status": "backlog",
           "priority": "medium"
         },
         {
-          "id": "TASK-124",
+          "id": "TASK-135",
           "title": "Configure CDN for map tiles",
           "status": "backlog",
           "priority": "medium"
         },
         {
-          "id": "TASK-125",
+          "id": "TASK-136",
           "title": "Set up monitoring & alerting (Grafana/Prometheus)",
           "status": "backlog",
           "priority": "high"
         },
         {
-          "id": "TASK-126",
+          "id": "TASK-137",
           "title": "Configure logging aggregation",
           "status": "backlog",
           "priority": "medium"
         },
         {
-          "id": "TASK-127",
+          "id": "TASK-138",
           "title": "Set up staging environment",
           "status": "backlog",
           "priority": "high"
         },
         {
-          "id": "TASK-128",
+          "id": "TASK-139",
           "title": "Perform staging validation",
           "status": "backlog",
           "priority": "high"
         },
         {
-          "id": "TASK-129",
+          "id": "TASK-140",
           "title": "Deploy web PWA to production (Vercel/Cloudflare)",
           "status": "backlog",
           "priority": "high"
         },
         {
-          "id": "TASK-130",
+          "id": "TASK-141",
           "title": "Submit Android app to Google Play",
           "status": "backlog",
           "priority": "high"
         },
         {
-          "id": "TASK-131",
+          "id": "TASK-142",
           "title": "Production deployment & smoke testing",
           "status": "backlog",
           "priority": "high"
         },
         {
-          "id": "TASK-132",
+          "id": "TASK-143",
           "title": "Post-launch monitoring setup",
           "status": "backlog",
           "priority": "medium"

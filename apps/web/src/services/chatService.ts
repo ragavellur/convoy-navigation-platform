@@ -16,14 +16,29 @@ export interface ChatMessage {
 
 let chatUnsub: (() => void) | null = null
 
+async function resolveConvoyRecordId(codeOrId: string): Promise<string> {
+  const existing = await pb
+    .collection('convoys')
+    .getFirstListItem(`id = "${codeOrId}"`)
+    .catch(() => null)
+  if (existing) return existing.id
+  const byCode = await pb
+    .collection('convoys')
+    .getFirstListItem(`code = "${codeOrId}"`)
+    .catch(() => null)
+  if (byCode) return byCode.id
+  return codeOrId
+}
+
 export async function sendTextMessage(
   convoyId: string,
   senderId: string,
   senderName: string,
   content: string,
 ): Promise<ChatMessage> {
+  const recordId = await resolveConvoyRecordId(convoyId)
   return pb.collection('messages').create({
-    convoy: convoyId,
+    convoy: recordId,
     sender: senderId,
     sender_name: senderName,
     type: 'text',
@@ -32,8 +47,9 @@ export async function sendTextMessage(
 }
 
 export async function getMessages(convoyId: string, limit = 50): Promise<ChatMessage[]> {
+  const recordId = await resolveConvoyRecordId(convoyId)
   const records = await pb.collection('messages').getFullList<ChatMessage>({
-    filter: `convoy = "${convoyId}"`,
+    filter: `convoy ~ "${recordId}"`,
     sort: '-created',
     limit,
   })
@@ -46,8 +62,13 @@ export async function subscribeToMessages(
 ): Promise<() => void> {
   chatUnsub?.()
 
+  const recordId = await resolveConvoyRecordId(convoyId)
+
   const unsub = await pb.collection('messages').subscribe('*', (event) => {
-    if (event.record.convoy !== convoyId) return
+    const eventConvoy = Array.isArray(event.record.convoy)
+      ? event.record.convoy[0]
+      : event.record.convoy
+    if (eventConvoy !== recordId) return
     if (event.action === 'create') {
       onMessage(event.record as unknown as ChatMessage)
     }

@@ -1,7 +1,7 @@
 # E2E Test Plan — Real-Time Convoy Navigation & Communication Platform
 
 **Project:** Real-Time Convoy Navigation & Communication Platform
-**Scope:** Full-stack end-to-end verification post-Sprint 5
+**Scope:** Full-stack end-to-end verification post-Sprint 7 critical fixes
 **Environment:** Local development (Docker + Vite dev server)
 **Created:** 2026-07-26
 **Last Updated:** 2026-07-27
@@ -22,11 +22,12 @@
 | Convoy Lifecycle         | 10     | 10     | 0      | 0       |
 | Real-Time Position       | 8      | 8      | 0      | 0       |
 | Roster & UI              | 11     | 11     | 0      | 0       |
-| Voice & Chat             | 10     | 0      | 0      | 10      |
+| Voice & Chat             | 15     | 0      | 0      | 15      |
 | Multi-Browser Concurrent | 3      | 3      | 0      | 0       |
 | Edge Cases               | 6      | 6      | 0      | 0       |
 | Browser Support          | 5      | 0      | 0      | 5       |
-| **Total**                | **75** | **60** | **0**  | **15**  |
+| Sprint 7 Critical Fixes  | 14     | 0      | 0      | 14      |
+| **Total**                | **94** | **60** | **0**  | **34**  |
 
 ---
 
@@ -123,7 +124,24 @@
 
 ---
 
-## 7. Multi-Browser Concurrent Test
+## 7. Voice & Chat (Sprint 6)
+
+| ID   | Test                         | Steps                                   | Expected Result                                      | Sprint   |
+| ---- | ---------------------------- | --------------------------------------- | ---------------------------------------------------- | -------- |
+| V-1  | Voice server health check    | GET http://localhost:3001/health        | HTTP 200 with status ok                              | TASK-060 |
+| V-2  | Voice channel join/leave     | Click Join Voice → Click Leave Voice    | State transitions: disconnected→connecting→connected | TASK-062 |
+| V-3  | PTT hold-to-talk             | Hold PTT button → Release               | Speaking state while held, stops on release          | TASK-064 |
+| V-4  | Volume reduction             | Another user starts PTT                 | Non-speaker audio reduced to 80%                     | TASK-065 |
+| V-5  | Active speaker indicator     | User holds PTT button                   | All participants see active speaker name             | TASK-067 |
+| C-11 | Chat panel expand/collapse   | Click Chat header                       | Chat panel toggles open/closed                       | TASK-071 |
+| C-12 | Send text message            | Type message → Press Enter              | Message appears with sender name and timestamp       | TASK-071 |
+| C-13 | Chat message persistence     | Send message → Refresh page → Open chat | Previous messages loaded from PocketBase             | TASK-070 |
+| C-14 | Real-time chat delivery      | User A sends, User B has chat open      | Message appears instantly for User B                 | TASK-069 |
+| C-15 | Chat message bubbles styling | Send messages from self and others      | Self=right indigo, Others=left gray, with timestamps | TASK-071 |
+
+---
+
+## 8. Multi-Browser Concurrent Test
 
 | ID  | Test                     | Steps                                                  | Expected Result                        | Sprint   |
 | --- | ------------------------ | ------------------------------------------------------ | -------------------------------------- | -------- |
@@ -133,7 +151,7 @@
 
 ---
 
-## 7. Edge Cases
+## 9. Edge Cases
 
 | ID  | Test                   | Steps                           | Expected Result                              | Sprint   |
 | --- | ---------------------- | ------------------------------- | -------------------------------------------- | -------- |
@@ -146,7 +164,7 @@
 
 ---
 
-## 8. Browser Support
+## 10. Browser Support
 
 | ID  | Browser                 | Priority | Sprint |
 | --- | ----------------------- | -------- | ------ |
@@ -158,12 +176,60 @@
 
 ---
 
-## Sprint Traceability
+## 11. Sprint 7 Critical Fixes
 
-Each test maps to specific sprint tasks:
+### Vehicle Management (Issue #3)
+
+| ID   | Test                      | Steps                                              | Expected Result                                   | Sprint   |
+| ---- | ------------------------- | -------------------------------------------------- | ------------------------------------------------- | -------- |
+| S7-1 | Create vehicle in Profile | Go to Profile → Add Vehicle → Fill name/type/plate | Vehicle listed in Profile page                    | TASK-079 |
+| S7-2 | Edit vehicle in Profile   | Click edit on existing vehicle                     | Edit form shown, save updates record              | TASK-079 |
+| S7-3 | Delete vehicle in Profile | Click delete on vehicle                            | Vehicle removed, confirmation shown               | TASK-079 |
+| S7-4 | Vehicle required at join  | Join convoy without vehicles → prompted to create  | Cannot proceed without selecting a vehicle        | TASK-081 |
+| S7-5 | Select vehicle at join    | Join convoy with existing vehicles → select one    | convoy_members.vehicle set to selected vehicle ID | TASK-081 |
+
+### Source & Destination (Issue #1)
+
+| ID   | Test                              | Steps                                     | Expected Result                                    | Sprint   |
+| ---- | --------------------------------- | ----------------------------------------- | -------------------------------------------------- | -------- |
+| S7-6 | Create convoy with source/dest    | Create convoy → fill source + destination | Convoy created with lat/lng + name for both        | TASK-080 |
+| S7-7 | Source/destination in convoy list | View convoy list                          | Source and destination names shown for each convoy | TASK-080 |
+
+### Deep Link Fix (Issue #4)
+
+| ID   | Test                           | Steps                                | Expected Result                                     | Sprint   |
+| ---- | ------------------------------ | ------------------------------------ | --------------------------------------------------- | -------- |
+| S7-8 | Deep link preserves all params | Click invite link → login → redirect | All params (code, trip_id, token) preserved in join | TASK-082 |
+| S7-9 | Security token validation      | Open deep link with invalid token    | Error: "Invalid or expired invite link"             | TASK-082 |
+
+### One Active Convoy (Issue #5)
+
+| ID    | Test                  | Steps                                      | Expected Result                       | Sprint   |
+| ----- | --------------------- | ------------------------------------------ | ------------------------------------- | -------- |
+| S7-10 | One-convoy constraint | Join convoy while active in another convoy | Warning shown → auto-leave old convoy | TASK-081 |
+
+### Vehicle Identity on Map (Issue #6)
+
+| ID    | Test                     | Steps                                 | Expected Result                                       | Sprint   |
+| ----- | ------------------------ | ------------------------------------- | ----------------------------------------------------- | -------- |
+| S7-11 | Own vehicle marker       | Join convoy → Open map                | Own vehicle has distinct visual (blue ring/border)    | TASK-083 |
+| S7-12 | Position uses vehicle ID | Check PocketBase positions collection | vehicle field = actual vehicle record ID, not user ID | TASK-083 |
+
+### Search Improvements (Issue #7)
+
+| ID    | Test                       | Steps                                  | Expected Result                                 | Sprint   |
+| ----- | -------------------------- | -------------------------------------- | ----------------------------------------------- | -------- |
+| S7-13 | Search keyboard navigation | Type in search → Arrow Down/Up → Enter | Results navigable by keyboard, Enter selects    | TASK-084 |
+| S7-14 | Public Nominatim fallback  | Search for non-Monaco location         | Results returned from public Nominatim instance | TASK-084 |
+
+---
+
+## Sprint Traceability
 
 - **Sprint 1 (TASK-000–017):** Infrastructure, Auth, Map basics → Tests I-1–6, A-1–6, M-1
 - **Sprint 2 (TASK-018–026):** Search, Routing, Traffic → Tests M-3–8
 - **Sprint 3 (TASK-027–038):** Convoy CRUD, Deep links, Sharing → Tests C-1–10
 - **Sprint 4 (TASK-039–048):** GPS, Realtime, Markers, Vectors → Tests M-2, M-9–10, P-1–8, X-1–3, E-1–6
 - **Sprint 5 (TASK-049–059):** Roster, UI, Dark Mode → Tests R-1–11
+- **Sprint 6 (TASK-060–073):** Voice, Chat → Tests V-1–5, C-11–15
+- **Sprint 7 (TASK-074–085):** Critical Convoy Fixes → Tests S7-1–14

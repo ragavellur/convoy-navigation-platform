@@ -11,38 +11,8 @@
 
 ## Sprint 1: Web Foundation & Core (Week 1-2)
 
-### 📌 Backlog
-
-- [x] [TASK-005] Configure Docker Compose for all backend services
-- [x] [TASK-005A] Set up PocketBase Docker container with persistent volume
-- [x] [TASK-005B] Set up OSRM Docker container with map data volume
-- [x] [TASK-005C] Set up Nominatim Docker container with geocoding data
-- [x] [TASK-005D] Set up Redis Docker container for session caching
-- [x] [TASK-005E] Configure Docker network isolation and health checks
-- [x] [TASK-005F] Create .env file with all environment variables
-- [x] [TASK-006] Design database schema in PocketBase (convoys, members, telemetry, messages)
-- [x] [TASK-004] Set up PocketBase instance (auth + database + realtime)
-
-### 🔄 In Progress
-
-(none — Sprint 1 complete)
-
 ### ✅ Done
 
-- [x] [TASK-014] Create PWA manifest.json with icons (FR-WEB-02)
-- [x] [TASK-015] Set up shared API client library (packages/shared)
-- [x] [TASK-016] Create responsive layout shell (desktop/tablet/mobile) (FR-WEB-05)
-- [x] [TASK-016A] Fix auth guard - pb.authStore.onChange overriding localStorage handler
-- [x] [TASK-017] Sprint 1 Review - 10/10 tests pass, all acceptance criteria met
-- [x] [TASK-007] Implement user registration (PocketBase auth) (FR-AUTH-01)
-- [x] [TASK-008] Implement user login with session management (FR-AUTH-02)
-- [x] [TASK-009] JWT token management & secure storage (FR-AUTH-04)
-- [x] [TASK-003] Configure ESLint, Prettier, Husky (shared config)
-- [x] [TASK-002] Set up React + Vite + TypeScript web project (FR-WEB-01)
-- [x] [TASK-010] Integrate MapLibre GL JS into web project (FR-WEB-04)
-- [x] [TASK-011] Self-host Nominatim geocoder via Docker
-- [x] [TASK-012] Self-host OSRM routing engine via Docker
-- [x] [TASK-013] Create basic map page with zoom/pan controls
 - [x] [TASK-000] Copy PRD document to project folder
 - [x] [TASK-000A] Create comprehensive project plan (PRD_analysis.md)
 - [x] [TASK-000B] Initialize git repository and configure user
@@ -50,15 +20,34 @@
 - [x] [TASK-000D] Enable GitHub Pages for sprint board
 - [x] [TASK-000E] Create sprint-board.html and sprint-data.json
 - [x] [TASK-000F] Update Agents.md with sprint tracking rules
-- [x] [TASK-001] Initialize monorepo structure (Turborepo) with apps/web, apps/mobile, packages/shared
+- [x] [TASK-001] Initialize monorepo structure (Turborepo)
+- [x] [TASK-002] Set up React + Vite + TypeScript web project (FR-WEB-01)
+- [x] [TASK-003] Configure ESLint, Prettier, Husky (shared config)
+- [x] [TASK-004] Set up PocketBase instance (auth + database + realtime)
+- [x] [TASK-005] Configure Docker Compose for all backend services
+- [x] [TASK-005A] Set up PocketBase Docker container with persistent volume
+- [x] [TASK-005B] Set up OSRM Docker container with map data volume
+- [x] [TASK-005C] Set up Nominatim Docker container with geocoding data
+- [x] [TASK-005D] Set up Redis Docker container for session caching
+- [x] [TASK-005E] Configure Docker network isolation and health checks
+- [x] [TASK-005F] Create .env file with all environment variables
+- [x] [TASK-006] Design database schema in PocketBase
+- [x] [TASK-007] Implement user registration (PocketBase auth) (FR-AUTH-01)
+- [x] [TASK-008] Implement user login with session management (FR-AUTH-02)
+- [x] [TASK-009] JWT token management & secure storage (FR-AUTH-04)
+- [x] [TASK-010] Integrate MapLibre GL JS into web project (FR-WEB-04)
+- [x] [TASK-011] Self-host Nominatim geocoder via Docker
+- [x] [TASK-012] Self-host OSRM routing engine via Docker
+- [x] [TASK-013] Create basic map page with zoom/pan controls
+- [x] [TASK-014] Create PWA manifest.json with icons (FR-WEB-02)
+- [x] [TASK-015] Set up shared API client library (packages/shared)
+- [x] [TASK-016] Create responsive layout shell (desktop/tablet/mobile)
+- [x] [TASK-016A] Fix auth guard - pb.authStore.onChange overriding localStorage
+- [x] [TASK-017] Sprint 1 Review - all acceptance criteria met
 
 ---
 
 ## Sprint 2: Web Navigation & Search (Week 3-4)
-
-### 📌 Backlog
-
-### 🔄 In Progress
 
 ### ✅ Done
 
@@ -71,34 +60,19 @@
 - [x] [TASK-023] Add route summary panel (distance, ETA, time)
 - [x] [TASK-024] Implement route alternatives selection
 - [x] [TASK-025] Cache frequently used routes in PocketBase
-- [x] [TASK-026] Build desktop sidebar layout (map + roster side-by-side) (FR-WEB-09)
+- [x] [TASK-026] Build desktop sidebar layout (map + roster side-by-side)
 
 ---
 
 ## Sprint 3: Web Convoy Sessions (Week 5-6)
 
-### 📌 Backlog
-
-- [ ] [TASK-029] Build deep link generation system (FR-CNV-02)
-- [ ] [TASK-030] Implement deep link parsing & validation (FR-CNV-03)
-- [ ] [TASK-031] Build convoy join flow - web redirect (open web app directly)
-- [ ] [TASK-032] Implement vehicle type selection UI (FR-CNV-04)
-- [ ] [TASK-033] Build convoy host dashboard (FR-CNV-05)
-- [ ] [TASK-034] Implement host controls (remove member, end session)
-- [ ] [TASK-035] Build session state management (active/inactive/cleanup)
-- [ ] [TASK-036] Implement convoy roster data model
-- [ ] [TASK-037] Add deep link sharing via WhatsApp/SMS/Email
-- [ ] [TASK-038] Build convoy invite notification system
-
-### 🔄 In Progress
-
 ### ✅ Done
 
-- [x] [TASK-027] Implement "Create Convoy" API (PocketBase collection) (FR-CNV-01)
+- [x] [TASK-027] Implement Create Convoy API (PocketBase collection) (FR-CNV-01)
 - [x] [TASK-028] Generate unique trip_id with security tokens
 - [x] [TASK-029] Build deep link generation system (FR-CNV-02)
 - [x] [TASK-030] Implement deep link parsing & validation (FR-CNV-03)
-- [x] [TASK-031] Build convoy join flow - web redirect (open web app directly)
+- [x] [TASK-031] Build convoy join flow - web redirect
 - [x] [TASK-032] Implement vehicle type selection UI (FR-CNV-04)
 - [x] [TASK-033] Build convoy host dashboard (FR-CNV-05)
 - [x] [TASK-034] Implement host controls (remove member, end session)
@@ -111,20 +85,11 @@
 
 ## Sprint 4: Web Real-Time Tracking (Week 7-8)
 
-### 📌 Backlog
-
-(none — Sprint 4 complete)
-
-### 🔄 In Progress
-
 ### ✅ Done
 
 - [x] [TASK-039] Set up PocketBase Realtime subscriptions
 - [x] [TASK-040] Implement browser Geolocation API streaming (FR-GPS-01)
-- [x] [TASK-041] Build adaptive polling logic (FR-GPS-02):
-  - [x] [TASK-041a] Stationary state: 30s heartbeat
-  - [x] [TASK-041b] Urban state (<40km/h): 5s / 15m delta
-  - [x] [TASK-041c] Highway state (>40km/h): 3s / 40m delta
+- [x] [TASK-041] Build adaptive polling logic (FR-GPS-02)
 - [x] [TASK-042] Create custom map markers for vehicle types (FR-GPS-03)
 - [x] [TASK-043] Implement marker LERP interpolation (FR-GPS-04)
 - [x] [TASK-044] Add dead-reckoning for smooth transitions
@@ -137,10 +102,6 @@
 
 ## Sprint 5: Web UI & Roster (Week 9-10)
 
-### 📌 Backlog
-
-### 🔄 In Progress
-
 ### ✅ Done
 
 - [x] [TASK-049] Build vehicle roster sidebar component (FR-ROS-01)
@@ -148,7 +109,7 @@
 - [x] [TASK-051] Add vehicle type classification display (FR-ROS-02)
 - [x] [TASK-052] Build status indicators (In-Transit/Stopped/Offline) (FR-ROS-03)
 - [x] [TASK-053] Add speed & ETA display per member (FR-ROS-04)
-- [x] [TASK-054] Implement "Focus on Member" map interaction (FR-ROS-05)
+- [x] [TASK-054] Implement Focus on Member map interaction (FR-ROS-05)
 - [x] [TASK-055] Build convoy member avatar & info cards
 - [x] [TASK-056] Add member count badge on roster toggle
 - [x] [TASK-057] Implement real-time roster updates via PocketBase Realtime
@@ -158,10 +119,6 @@
 ---
 
 ## Sprint 6: Web Communication Module (Week 11-12)
-
-### 📌 Backlog
-
-### 🔄 In Progress
 
 ### ✅ Done
 
@@ -182,22 +139,32 @@
 
 ---
 
-## Sprint 7: Web PWA Polish (Week 13-14)
+## Sprint 7: Critical Convoy Flow Fixes (Week 13-14)
+
+**DB cleaned — fresh start. 7 critical issues (high priority, work first):**
+
+1. Vehicle ownership model → user-global, not convoy-scoped
+2. Source & destination for convoys
+3. Vehicle selection at convoy join
+4. Deep link fix (GitHub Pages SPA routing)
+5. One active convoy at a time
+6. Vehicle identity on map (own vs. others)
+7. Search improvements (keyboard nav, Nominatim fallback, pin preview)
 
 ### 📌 Backlog
 
-- [ ] [TASK-074] Configure Service Worker with Workbox (FR-WEB-03)
-- [ ] [TASK-075] Implement map tile caching strategy (IndexedDB + SW) (FR-WEB-08)
-- [ ] [TASK-076] Implement offline mode - view cached convoy state (FR-WEB-08)
-- [ ] [TASK-077] Implement background sync for location updates (FR-WEB-03)
-- [ ] [TASK-078] Set up Web Push Notifications (FR-WEB-07)
-- [ ] [TASK-079] Implement push notification permission flow
-- [ ] [TASK-080] Create PWA install prompt UI (beforeinstallprompt)
-- [ ] [TASK-081] Add service worker update notification
-- [ ] [TASK-082] Optimize PWA Lighthouse score (>90 target)
-- [ ] [TASK-083] Test PWA on Chrome, Safari, Firefox, Edge
-- [ ] [TASK-084] Implement web app caching for static assets
-- [ ] [TASK-085] Add PWA meta tags and Open Graph tags
+- [ ] [TASK-074] Restructure vehicles collection: user-owned, remove convoy FK
+- [ ] [TASK-075] Add source/destination fields to convoys collection
+- [ ] [TASK-076] Make convoy_members.vehicle required
+- [ ] [TASK-077] One-active-convoy constraint (server-side check)
+- [ ] [TASK-078] Update shared API types for new schema
+- [ ] [TASK-079] Vehicle management in ProfilePage
+- [ ] [TASK-080] Source/destination in convoy creation UI
+- [ ] [TASK-081] Vehicle selection at join + one-convoy warning
+- [ ] [TASK-082] Fix deep link param preservation + token validation
+- [ ] [TASK-083] Fix position publishing vehicle identity + own-vehicle marker
+- [ ] [TASK-084] Search: keyboard nav + public Nominatim fallback + pin preview
+- [ ] [TASK-085] Configure Service Worker with Workbox (FR-WEB-03)
 
 ### 🔄 In Progress
 
@@ -205,113 +172,123 @@
 
 ---
 
-## Sprint 8: Android Foundation (Week 15-16)
+## Sprint 8: PWA Polish (Week 15-16)
 
 ### 📌 Backlog
 
-- [ ] [TASK-086] Set up React Native / Expo project for Android
-- [ ] [TASK-087] Configure Android build (EAS Build)
-- [ ] [TASK-088] Integrate MapLibre GL Native SDK
-- [ ] [TASK-089] Port authentication flow to React Native
-- [ ] [TASK-090] Port map screen to React Native
-- [ ] [TASK-091] Implement native GPS background service
-- [ ] [TASK-092] Port adaptive polling logic to native
-- [ ] [TASK-093] Port convoy join/create flow to mobile
-- [ ] [TASK-094] Implement deep link handling (Android intent filters)
-- [ ] [TASK-095] Port vehicle roster sidebar to mobile
-- [ ] [TASK-096] Implement turn-by-turn navigation with TTS (FR-MAP-05)
-- [ ] [TASK-097] Port chat UI to React Native
-- [ ] [TASK-098] Implement push notifications (FCM)
-
-### 🔄 In Progress
-
-### ✅ Done
+- [ ] [TASK-086] Implement map tile caching strategy (IndexedDB + SW) (FR-WEB-08)
+- [ ] [TASK-087] Implement offline mode - view cached convoy state (FR-WEB-08)
+- [ ] [TASK-088] Implement background sync for location updates (FR-WEB-03)
+- [ ] [TASK-089] Set up Web Push Notifications (FR-WEB-07)
+- [ ] [TASK-090] Implement push notification permission flow
+- [ ] [TASK-091] Create PWA install prompt UI (beforeinstallprompt)
+- [ ] [TASK-092] Add service worker update notification
+- [ ] [TASK-093] Optimize PWA Lighthouse score (>90 target)
+- [ ] [TASK-094] Test PWA on Chrome, Safari, Firefox, Edge
+- [ ] [TASK-095] Implement web app caching for static assets
+- [ ] [TASK-096] Add PWA meta tags and Open Graph tags
 
 ---
 
-## Sprint 9: iOS Foundation (Week 17-18)
+## Sprint 9: Android Foundation (Week 17-18)
 
 ### 📌 Backlog
 
-- [ ] [TASK-099] Configure iOS build (EAS Build)
-- [ ] [TASK-100] Implement iOS-specific deep links (Universal Links)
-- [ ] [TASK-101] Implement iOS background location mode
-- [ ] [TASK-102] Implement iOS push notifications (APNs)
-- [ ] [TASK-103] Test iOS-specific UI (safe area, notch, dynamic island)
-- [ ] [TASK-104] iOS App Store submission preparation
-- [ ] [TASK-105] Test iOS WebRTC compatibility
-
-### 🔄 In Progress
-
-### ✅ Done
+- [ ] [TASK-097] Set up React Native / Expo project for Android
+- [ ] [TASK-098] Configure Android build (EAS Build)
+- [ ] [TASK-099] Integrate MapLibre GL Native SDK
+- [ ] [TASK-100] Port authentication flow to React Native
+- [ ] [TASK-101] Port map screen to React Native
+- [ ] [TASK-102] Implement native GPS background service
+- [ ] [TASK-103] Port adaptive polling logic to native
+- [ ] [TASK-104] Port convoy join/create flow to mobile
+- [ ] [TASK-105] Implement deep link handling (Android intent filters)
+- [ ] [TASK-106] Port vehicle roster sidebar to mobile
+- [ ] [TASK-107] Implement turn-by-turn navigation with TTS (FR-MAP-05)
+- [ ] [TASK-108] Port chat UI to React Native
+- [ ] [TASK-109] Implement push notifications (FCM)
 
 ---
 
-## Sprint 10: Polish & Testing (Week 19-20)
+## Sprint 10: iOS Foundation (Week 19-20)
 
 ### 📌 Backlog
 
-- [ ] [TASK-106] Optimize battery consumption across all states
-- [ ] [TASK-107] Implement location update batching
-- [ ] [TASK-108] Write unit tests for all services (>85% coverage)
-- [ ] [TASK-109] Write integration tests for API endpoints
-- [ ] [TASK-110] Write E2E tests for web (Playwright)
-- [ ] [TASK-111] Write E2E tests for Android (Detox)
-- [ ] [TASK-112] Performance profiling & optimization
-- [ ] [TASK-113] Add error boundaries & crash reporting (Sentry)
-- [ ] [TASK-114] Implement analytics tracking
-- [ ] [TASK-115] Accessibility audit (WCAG 2.1 AA) - web
-- [ ] [TASK-116] Security audit (OWASP Mobile + Web)
-- [ ] [TASK-117] Load testing for PocketBase Realtime
-- [ ] [TASK-118] API documentation (OpenAPI/Swagger)
-
-### 🔄 In Progress
-
-### ✅ Done
+- [ ] [TASK-110] Configure iOS build (EAS Build)
+- [ ] [TASK-111] Implement iOS-specific deep links (Universal Links)
+- [ ] [TASK-112] Implement iOS background location mode
+- [ ] [TASK-113] Implement iOS push notifications (APNs)
+- [ ] [TASK-114] Test iOS-specific UI (safe area, notch, dynamic island)
+- [ ] [TASK-115] iOS App Store submission preparation
+- [ ] [TASK-116] Test iOS WebRTC compatibility
 
 ---
 
-## Sprint 11: Deploy & Launch (Week 21)
+## Sprint 11: Polish & Testing (Week 21-22)
 
 ### 📌 Backlog
 
-- [ ] [TASK-119] Set up CI/CD pipeline (GitHub Actions)
-- [ ] [TASK-120] Configure production Docker images
-- [ ] [TASK-121] Set up Docker Swarm / K3s orchestration
-- [ ] [TASK-122] Configure production PocketBase instance
-- [ ] [TASK-123] Set up Redis for session caching
-- [ ] [TASK-124] Configure CDN for map tiles
-- [ ] [TASK-125] Set up monitoring & alerting (Grafana/Prometheus)
-- [ ] [TASK-126] Configure logging aggregation
-- [ ] [TASK-127] Set up staging environment
-- [ ] [TASK-128] Perform staging validation
-- [ ] [TASK-129] Deploy web PWA to production (Vercel/Cloudflare)
-- [ ] [TASK-130] Submit Android app to Google Play
-- [ ] [TASK-131] Production deployment & smoke testing
-- [ ] [TASK-132] Post-launch monitoring setup
+- [ ] [TASK-117] Optimize battery consumption across all states
+- [ ] [TASK-118] Implement location update batching
+- [ ] [TASK-119] Write unit tests for all services (>85% coverage)
+- [ ] [TASK-120] Write integration tests for API endpoints
+- [ ] [TASK-121] Write E2E tests for web (Playwright)
+- [ ] [TASK-122] Write E2E tests for Android (Detox)
+- [ ] [TASK-123] Performance profiling & optimization
+- [ ] [TASK-124] Add error boundaries & crash reporting (Sentry)
+- [ ] [TASK-125] Implement analytics tracking
+- [ ] [TASK-126] Accessibility audit (WCAG 2.1 AA) - web
+- [ ] [TASK-127] Security audit (OWASP Mobile + Web)
+- [ ] [TASK-128] Load testing for PocketBase Realtime
+- [ ] [TASK-129] API documentation (OpenAPI/Swagger)
 
-### 🔄 In Progress
+---
 
-### ✅ Done
+## Sprint 12: Deploy & Launch (Week 23-24)
+
+### 📌 Backlog
+
+- [ ] [TASK-130] Set up CI/CD pipeline (GitHub Actions)
+- [ ] [TASK-131] Configure production Docker images
+- [ ] [TASK-132] Set up Docker Swarm / K3s orchestration
+- [ ] [TASK-133] Configure production PocketBase instance
+- [ ] [TASK-134] Set up Redis for session caching
+- [ ] [TASK-135] Configure CDN for map tiles
+- [ ] [TASK-136] Set up monitoring & alerting (Grafana/Prometheus)
+- [ ] [TASK-137] Configure logging aggregation
+- [ ] [TASK-138] Set up staging environment
+- [ ] [TASK-139] Perform staging validation
+- [ ] [TASK-140] Deploy web PWA to production (Vercel/Cloudflare)
+- [ ] [TASK-141] Submit Android app to Google Play
+- [ ] [TASK-142] Production deployment & smoke testing
+- [ ] [TASK-143] Post-launch monitoring setup
 
 ---
 
 ## Progress Summary
 
-| Sprint    | Total Tasks | Backlog | In Progress | Done   | Platform     |
-| --------- | ----------- | ------- | ----------- | ------ | ------------ |
-| Sprint 1  | 32          | 12      | 0           | 20     | Web + Docker |
-| Sprint 2  | 10          | 10      | 0           | 0      | Web          |
-| Sprint 3  | 12          | 12      | 0           | 0      | Web          |
-| Sprint 4  | 10          | 10      | 0           | 0      | Web          |
-| Sprint 5  | 11          | 11      | 0           | 0      | Web          |
-| Sprint 6  | 14          | 14      | 0           | 0      | Web          |
-| Sprint 7  | 12          | 12      | 0           | 0      | Web PWA      |
-| Sprint 8  | 13          | 13      | 0           | 0      | Android      |
-| Sprint 9  | 7           | 7       | 0           | 0      | iOS          |
-| Sprint 10 | 13          | 13      | 0           | 0      | All          |
-| Sprint 11 | 14          | 14      | 0           | 0      | All          |
-| **Total** | **148**     | **128** | **0**       | **20** |              |
+| Sprint    | Total Tasks | Backlog | In Progress | Done   | Platform           |
+| --------- | ----------- | ------- | ----------- | ------ | ------------------ |
+| Sprint 1  | 32          | 0       | 0           | 32     | Web + Docker       |
+| Sprint 2  | 10          | 0       | 0           | 10     | Web                |
+| Sprint 3  | 12          | 0       | 0           | 12     | Web                |
+| Sprint 4  | 10          | 0       | 0           | 10     | Web                |
+| Sprint 5  | 11          | 0       | 0           | 11     | Web                |
+| Sprint 6  | 14          | 0       | 0           | 14     | Web                |
+| Sprint 7  | 12          | 12      | 0           | 0      | Web Critical Fixes |
+| Sprint 8  | 11          | 11      | 0           | 0      | Web PWA            |
+| Sprint 9  | 13          | 13      | 0           | 0      | Android            |
+| Sprint 10 | 7           | 7       | 0           | 0      | iOS                |
+| Sprint 11 | 13          | 13      | 0           | 0      | All                |
+| Sprint 12 | 14          | 14      | 0           | 0      | All                |
+| **Total** | **159**     | **70**  | **0**       | **89** |                    |
+
+---
+
+## Nominatim Data Note
+
+**Option B (Current):** Public Nominatim fallback for non-local results. Fast, no disk overhead.
+**Option A (Deferred):** Download larger OSM extract from Geofabrik for full offline geocoding. Requires ~2-10GB disk + re-indexing. Documented here for future reference when self-hosted coverage needs to expand beyond Monaco.
 
 ---
 
@@ -327,10 +304,10 @@
 ## Platform Delivery Order
 
 ```
-Sprint 1-7:  [████████████████████████████] Web (PWA) - Full Feature Parity
-Sprint 8:    [████████████] Android Foundation
-Sprint 9:    [████████] iOS Foundation
-Sprint 10-11:[████████████████] Polish & Deploy (All Platforms)
+Sprint 1-8:   [████████████████████████████] Web (PWA) - Full Feature Parity
+Sprint 9:     [████████████] Android Foundation
+Sprint 10:    [████████] iOS Foundation
+Sprint 11-12: [████████████████] Polish & Deploy (All Platforms)
 ```
 
 ---
@@ -340,5 +317,5 @@ Sprint 10-11:[████████████████] Polish & Deploy 
 - **Web first strategy** - fastest iteration, no app store approval delays
 - **PocketBase** - single solution for auth, database, realtime, file storage
 - **Full PWA parity** - web is not a companion, it's a first-class citizen
+- **Sprint 7** - critical fixes addressing 7 core flow issues; DB cleaned for fresh start
 - Estimated velocity: 5-7 tasks per sprint (2 weeks)
-- **Sprint 1 is ready to begin** - Web foundation tasks are well-defined

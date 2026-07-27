@@ -861,6 +861,152 @@
           "priority": "low"
         }
       ]
+    },
+    {
+      "id": "sprint7-critical-fixes",
+      "name": "Sprint 7 Critical Fixes",
+      "tests": [
+        {
+          "id": "S7-1",
+          "title": "Create vehicle in Profile",
+          "steps": "Go to Profile \u2192 Add Vehicle \u2192 Fill name/type/plate",
+          "expected": "Vehicle listed in Profile page",
+          "status": "pending",
+          "sprint": "Sprint 7",
+          "taskId": "TASK-079",
+          "priority": "high"
+        },
+        {
+          "id": "S7-2",
+          "title": "Edit vehicle in Profile",
+          "steps": "Click edit on existing vehicle",
+          "expected": "Edit form shown, save updates record",
+          "status": "pending",
+          "sprint": "Sprint 7",
+          "taskId": "TASK-079",
+          "priority": "high"
+        },
+        {
+          "id": "S7-3",
+          "title": "Delete vehicle in Profile",
+          "steps": "Click delete on vehicle",
+          "expected": "Vehicle removed, confirmation shown",
+          "status": "pending",
+          "sprint": "Sprint 7",
+          "taskId": "TASK-079",
+          "priority": "medium"
+        },
+        {
+          "id": "S7-4",
+          "title": "Vehicle required at join",
+          "steps": "Join convoy without vehicles \u2192 prompted to create",
+          "expected": "Cannot proceed without selecting a vehicle",
+          "status": "pending",
+          "sprint": "Sprint 7",
+          "taskId": "TASK-081",
+          "priority": "high"
+        },
+        {
+          "id": "S7-5",
+          "title": "Select vehicle at join",
+          "steps": "Join convoy with existing vehicles \u2192 select one",
+          "expected": "convoy_members.vehicle set to selected vehicle ID",
+          "status": "pending",
+          "sprint": "Sprint 7",
+          "taskId": "TASK-081",
+          "priority": "high"
+        },
+        {
+          "id": "S7-6",
+          "title": "Create convoy with source/dest",
+          "steps": "Create convoy \u2192 fill source + destination",
+          "expected": "Convoy created with lat/lng + name for both",
+          "status": "pending",
+          "sprint": "Sprint 7",
+          "taskId": "TASK-080",
+          "priority": "high"
+        },
+        {
+          "id": "S7-7",
+          "title": "Source/destination in convoy list",
+          "steps": "View convoy list",
+          "expected": "Source and destination names shown for each convoy",
+          "status": "pending",
+          "sprint": "Sprint 7",
+          "taskId": "TASK-080",
+          "priority": "medium"
+        },
+        {
+          "id": "S7-8",
+          "title": "Deep link preserves all params",
+          "steps": "Click invite link \u2192 login \u2192 redirect",
+          "expected": "All params (code, trip_id, token) preserved in join",
+          "status": "pending",
+          "sprint": "Sprint 7",
+          "taskId": "TASK-082",
+          "priority": "high"
+        },
+        {
+          "id": "S7-9",
+          "title": "Security token validation",
+          "steps": "Open deep link with invalid token",
+          "expected": "Error: Invalid or expired invite link",
+          "status": "pending",
+          "sprint": "Sprint 7",
+          "taskId": "TASK-082",
+          "priority": "high"
+        },
+        {
+          "id": "S7-10",
+          "title": "One-convoy constraint",
+          "steps": "Join convoy while active in another convoy",
+          "expected": "Warning shown, auto-leave old convoy",
+          "status": "pending",
+          "sprint": "Sprint 7",
+          "taskId": "TASK-081",
+          "priority": "high"
+        },
+        {
+          "id": "S7-11",
+          "title": "Own vehicle marker",
+          "steps": "Join convoy \u2192 Open map",
+          "expected": "Own vehicle has distinct visual (blue ring/border)",
+          "status": "pending",
+          "sprint": "Sprint 7",
+          "taskId": "TASK-083",
+          "priority": "medium"
+        },
+        {
+          "id": "S7-12",
+          "title": "Position uses vehicle ID",
+          "steps": "Check PocketBase positions collection",
+          "expected": "vehicle field = actual vehicle record ID, not user ID",
+          "status": "pending",
+          "sprint": "Sprint 7",
+          "taskId": "TASK-083",
+          "priority": "high"
+        },
+        {
+          "id": "S7-13",
+          "title": "Search keyboard navigation",
+          "steps": "Type in search \u2192 Arrow Down/Up \u2192 Enter",
+          "expected": "Results navigable by keyboard, Enter selects",
+          "status": "pending",
+          "sprint": "Sprint 7",
+          "taskId": "TASK-084",
+          "priority": "medium"
+        },
+        {
+          "id": "S7-14",
+          "title": "Public Nominatim fallback",
+          "steps": "Search for non-Monaco location",
+          "expected": "Results returned from public Nominatim instance",
+          "status": "pending",
+          "sprint": "Sprint 7",
+          "taskId": "TASK-084",
+          "priority": "medium"
+        }
+      ]
     }
   ]
 }
