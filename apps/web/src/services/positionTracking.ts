@@ -1,4 +1,5 @@
 import pb from './pocketbase'
+import { queuePendingPosition, getPendingPositions, removePendingPosition } from '../lib/db'
 
 export interface Position {
   id: string
@@ -52,6 +53,22 @@ export async function publishPosition(params: {
     return null
   }
 
+  if (!navigator.onLine) {
+    await queuePendingPosition({
+      id: `pending-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      vehicleId: params.vehicleId,
+      convoyId: params.convoyId,
+      lat: params.lat,
+      lng: params.lng,
+      speed: params.speed ?? undefined,
+      heading: params.heading ?? undefined,
+      accuracy: params.accuracy ?? undefined,
+      timestamp: new Date().toISOString(),
+    })
+    lastPublished = { lat: params.lat, lng: params.lng, vehicleId: params.vehicleId }
+    return null
+  }
+
   const data: Record<string, unknown> = {
     vehicle: params.vehicleId,
     convoy: params.convoyId,
@@ -81,6 +98,46 @@ export async function publishPosition(params: {
   }
   lastPublished = { lat: params.lat, lng: params.lng, vehicleId: params.vehicleId }
   return result
+}
+
+export async function flushPendingPositions(): Promise<number> {
+  if (!navigator.onLine) return 0
+  const pending = await getPendingPositions()
+  let flushed = 0
+
+  for (const pos of pending) {
+    try {
+      const data: Record<string, unknown> = {
+        vehicle: pos.vehicleId,
+        convoy: pos.convoyId,
+        lat: pos.lat,
+        lng: pos.lng,
+      }
+      if (pos.speed != null) data.speed = pos.speed
+      if (pos.heading != null) data.heading = pos.heading
+      if (pos.accuracy != null) data.accuracy = pos.accuracy
+
+      let existing: Position | null = null
+      try {
+        existing = await pb
+          .collection('positions')
+          .getFirstListItem<Position>(`vehicle = "${pos.vehicleId}" && convoy = "${pos.convoyId}"`)
+      } catch {
+        // not found
+      }
+
+      if (existing) {
+        await pb.collection('positions').update(existing.id, data)
+      } else {
+        await pb.collection('positions').create(data)
+      }
+      await removePendingPosition(pos.id)
+      flushed++
+    } catch {
+      // keep in queue for next attempt
+    }
+  }
+  return flushed
 }
 
 let positionUnsub: (() => void) | null = null

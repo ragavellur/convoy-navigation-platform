@@ -2,11 +2,15 @@ import { useState } from 'react'
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useTheme } from '../stores/ThemeContext'
+import { useSWUpdate } from '../hooks/useSWUpdate'
+import { usePwaInstall } from '../hooks/usePwaInstall'
 import RosterSidebar from './RosterSidebar'
 
 function Layout() {
   const { isAuthenticated, user, logout } = useAuth()
   const { theme, toggleTheme } = useTheme()
+  const { showUpdate, offlineReady, dismiss: dismissUpdate, applyUpdate } = useSWUpdate()
+  const { canInstall, promptInstall, dismiss: dismissInstall } = usePwaInstall()
   const navigate = useNavigate()
   const location = useLocation()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -301,6 +305,86 @@ function Layout() {
             })}
           </div>
         </nav>
+      )}
+
+      {(showUpdate || offlineReady) && (
+        <div
+          className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-[100] px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 max-w-sm"
+          style={{
+            background: 'rgba(15, 23, 42, 0.95)',
+            backdropFilter: 'blur(16px)',
+            border: '1px solid rgba(99, 102, 241, 0.3)',
+          }}
+        >
+          <div className="flex-1">
+            <p className="text-sm font-medium text-white">
+              {offlineReady ? 'App ready for offline use' : 'New version available'}
+            </p>
+            <p className="text-xs text-slate-400 mt-0.5">
+              {offlineReady
+                ? 'You can use Convoy without internet.'
+                : 'Refresh to get the latest updates.'}
+            </p>
+          </div>
+          {showUpdate && (
+            <button
+              onClick={applyUpdate}
+              className="px-3 py-1.5 text-xs font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-500 transition-colors whitespace-nowrap"
+            >
+              Refresh
+            </button>
+          )}
+          <button
+            onClick={dismissUpdate}
+            className="p-1 text-slate-400 hover:text-white transition-colors"
+            aria-label="Dismiss"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+      )}
+
+      {canInstall && (
+        <div
+          className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-[100] px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 max-w-sm"
+          style={{
+            background: 'rgba(15, 23, 42, 0.95)',
+            backdropFilter: 'blur(16px)',
+            border: '1px solid rgba(16, 185, 129, 0.3)',
+          }}
+        >
+          <div className="flex-1">
+            <p className="text-sm font-medium text-white">Install Convoy</p>
+            <p className="text-xs text-slate-400 mt-0.5">Add to home screen for quick access.</p>
+          </div>
+          <button
+            onClick={promptInstall}
+            className="px-3 py-1.5 text-xs font-medium rounded-lg text-white bg-emerald-600 hover:bg-emerald-500 transition-colors whitespace-nowrap"
+          >
+            Install
+          </button>
+          <button
+            onClick={dismissInstall}
+            className="p-1 text-slate-400 hover:text-white transition-colors"
+            aria-label="Dismiss"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
       )}
     </div>
   )

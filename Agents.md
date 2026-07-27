@@ -152,6 +152,54 @@ All backend services MUST run in Docker containers. No exceptions.
 
 ---
 
+# 🚀 PHASE 5B: PRODUCTION DEPLOYMENT CHECKLIST
+
+Every production deployment MUST execute this checklist in order. Skipping steps causes silent failures (e.g., frontend connecting to local DB instead of production).
+
+### Pre-Deploy Verification
+
+```
+DENIED: Building without verifying environment configuration.
+REQUIRED: Run through ALL checklist items before `vite build` or `npm run build`.
+```
+
+1. **Environment Config**
+   - [ ] `apps/web/.env.production` exists and contains correct `VITE_POCKETBASE_URL` (production domain, NOT localhost)
+   - [ ] Grep codebase for hardcoded `localhost:8090` or `localhost:PORT` — ALL must use `import.meta.env.VITE_*` vars with localhost fallback
+   - [ ] `apps/web/vite.config.ts` icons/pwa config points to production paths
+
+2. **Build Integrity**
+   - [ ] `npm run build` succeeds (TypeScript + Vite)
+   - [ ] No hardcoded credentials, tokens, or secrets in source
+   - [ ] Service Worker config (Workbox) max file size covers large assets
+
+3. **Server Sync**
+   - [ ] All PocketBase collections exist on server (run `setup-collections.sh` if needed)
+   - [ ] Server `.env` has correct env vars (PB admin creds, Redis, OSRM, etc.)
+   - [ ] Docker containers healthy: `docker ps` — all 6 containers running
+   - [ ] PocketBase admin accessible at server IP:8090
+
+4. **Deploy Steps**
+   - [ ] rsync build output to server `/tmp/convoy-deploy/`
+   - [ ] `sudo cp -r /tmp/convoy-deploy/* /var/www/convoy/` (files are root-owned)
+   - [ ] `sudo chown -R root:root /var/www/convoy/`
+   - [ ] Purge Cloudflare cache (dashboard) or wait for edge expiry
+
+5. **Post-Deploy Smoke Test**
+   - [ ] `https://convoy.vellur.in` loads without blank page
+   - [ ] Login/Register works (creates user in SERVER PocketBase)
+   - [ ] Create convoy works (appears in server DB)
+   - [ ] Simulation start/stop works (convoy found on server)
+   - [ ] Check browser DevTools Network tab: PocketBase API calls go to `convoy.vellur.in/api/`, NOT `localhost`
+
+```
+FLOW: Verify env config → Build → Server sync → Deploy files → Purge cache → Smoke test
+DENIED: Deploying without running the full checklist.
+DENIED: Building with missing or incorrect VITE_POCKETBASE_URL.
+```
+
+---
+
 # 🚫 ANTI-RATIONALIZATION & BOUNDARIES
 
 Do not bypass these rules under any circumstances. Below are common anti-patterns you must explicitly reject:

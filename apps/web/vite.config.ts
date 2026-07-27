@@ -49,11 +49,11 @@ export default defineConfig({
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/tile\.openstreetmap\.org\/.*/i,
-            handler: 'CacheFirst',
+            handler: 'StaleWhileRevalidate',
             options: {
               cacheName: 'osm-tiles',
               expiration: {
-                maxEntries: 500,
+                maxEntries: 1000,
                 maxAgeSeconds: 60 * 60 * 24 * 30,
               },
             },
@@ -64,7 +64,19 @@ export default defineConfig({
             options: {
               cacheName: 'pocketbase-api',
               expiration: {
-                maxEntries: 50,
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60,
+              },
+              networkTimeoutSeconds: 5,
+            },
+          },
+          {
+            urlPattern: /^https?:\/\/(localhost:8090|convoy\.vellur\.in)\/simulation\/.*/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'simulation-api',
+              expiration: {
+                maxEntries: 20,
                 maxAgeSeconds: 60 * 60,
               },
               networkTimeoutSeconds: 5,
