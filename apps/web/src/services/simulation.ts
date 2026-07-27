@@ -1,4 +1,11 @@
-const SIMULATION_API_URL = import.meta.env.VITE_SIMULATION_API_URL || 'http://localhost:3002'
+function getBaseUrl(): string {
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    return `${window.location.origin}/simulation`
+  }
+  return import.meta.env.VITE_SIMULATION_API_URL || '/simulation'
+}
+
+const SIMULATION_API_URL = getBaseUrl()
 
 export interface SimulationStatus {
   running: boolean
