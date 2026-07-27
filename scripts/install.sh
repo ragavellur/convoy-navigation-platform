@@ -262,10 +262,61 @@ start_services() {
   ok "Backend services started."
 }
 
+# ─── Setup OSRM data ────────────────────────────────────────────────────────
+setup_osrm_data() {
+  info "Downloading and processing Monaco OSM data for OSRM..."
+
+  # Download Monaco OSM data
+  docker exec convoy-osrm wget -q \
+    https://download.geofabrik.de/europe/monaco-latest.osm.pbf \
+    -O /data/monaco-latest.osm.pbf 2>&1 || fail "Failed to download OSM data."
+
+  # Extract routing data
+  info "Extracting OSRM routing data (may take a few minutes)..."
+  docker exec convoy-osrm osrm-extract \
+    -p /opt/car.lua \
+    /data/monaco-latest.osm.pbf 2>&1 | tail -5
+
+  # Partition
+  info "Partitioning OSRM data..."
+  docker exec convoy-osrm osrm-partition \
+    /data/monaco-latest.osrm 2>&1 | tail -3
+
+  # Customize
+  info "Customizing OSRM data..."
+  docker exec convoy-osrm osrm-customize \
+    /data/monaco-latest.osrm 2>&1 | tail -3
+
+  # Restart OSRM to pick up new data
+  info "Restarting OSRM container..."
+  docker restart convoy-osrm
+
+  # Wait for healthy
+  info "Waiting for OSRM to become healthy..."
+  local retries=30
+  while [[ $retries -gt 0 ]]; do
+    if docker inspect --format='{{.State.Health.Status}}' convoy-osrm 2>/dev/null | grep -q healthy; then
+      break
+    fi
+    sleep 3
+    retries=$((retries - 1))
+    echo -n "."
+  done
+  echo ""
+
+  local status
+  status=$(docker inspect --format='{{.State.Health.Status}}' convoy-osrm 2>/dev/null || echo "unknown")
+  if [[ "$status" == "healthy" ]]; then
+    ok "OSRM data ready and healthy."
+  else
+    warn "OSRM status: $status — routing may not work for non-Monaco locations."
+  fi
+}
+
 # ─── Build frontend ──────────────────────────────────────────────────────────
 build_frontend() {
   info "Installing frontend dependencies..."
-  cd apps/web
+  cd "$INSTALL_DIR/apps/web"
   npm ci --silent 2>&1 | tail -5
 
   info "Building frontend for production..."
@@ -508,6 +559,7 @@ main() {
   clone_repo
   generate_env
   start_services
+  setup_osrm_data
   build_frontend
   configure_nginx
   setup_ssl
