@@ -182,11 +182,11 @@
 - [ ] [TASK-089] Set up Web Push Notifications (FR-WEB-07)
 - [ ] [TASK-090] Implement push notification permission flow
 - [ ] [TASK-091] Create PWA install prompt UI (beforeinstallprompt)
-- [ ] [TASK-092] Add service worker update notification
+- [~] [TASK-092] Add service worker update notification
 - [ ] [TASK-093] Optimize PWA Lighthouse score (>90 target)
 - [ ] [TASK-094] Test PWA on Chrome, Safari, Firefox, Edge
-- [ ] [TASK-095] Implement web app caching for static assets
-- [ ] [TASK-096] Add PWA meta tags and Open Graph tags
+- [x] [TASK-095] Implement web app caching for static assets
+- [x] [TASK-096] Add PWA meta tags and Open Graph tags
 
 ---
 

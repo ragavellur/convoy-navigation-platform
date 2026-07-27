@@ -721,7 +721,7 @@
         {
           "id": "TASK-092",
           "title": "Add service worker update notification",
-          "status": "backlog",
+          "status": "in-progress",
           "priority": "low"
         },
         {
@@ -739,13 +739,13 @@
         {
           "id": "TASK-095",
           "title": "Implement web app caching for static assets",
-          "status": "backlog",
+          "status": "done",
           "priority": "medium"
         },
         {
           "id": "TASK-096",
           "title": "Add PWA meta tags and Open Graph tags",
-          "status": "backlog",
+          "status": "done",
           "priority": "low"
         }
       ]
