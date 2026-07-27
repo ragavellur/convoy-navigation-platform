@@ -1,4 +1,9 @@
-const BASE_URL = 'https://ragavellur.github.io/convoy-navigation-platform'
+function getBaseUrl(): string {
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    return window.location.origin
+  }
+  return import.meta.env.VITE_APP_URL || 'https://convoy.vellur.in'
+}
 
 export interface DeepLinkData {
   code: string
@@ -10,7 +15,7 @@ export function generateDeepLink(code: string, tripId?: string, securityToken?: 
   const params = new URLSearchParams({ code })
   if (tripId) params.set('trip_id', tripId)
   if (securityToken) params.set('token', securityToken)
-  return `${BASE_URL}/join?${params.toString()}`
+  return `${getBaseUrl()}/join?${params.toString()}`
 }
 
 export function parseDeepLink(url: string): DeepLinkData | null {
@@ -19,7 +24,7 @@ export function parseDeepLink(url: string): DeepLinkData | null {
     if (url.startsWith('http://') || url.startsWith('https://')) {
       parsed = new URL(url)
     } else if (url.startsWith('/join')) {
-      parsed = new URL(`${BASE_URL}${url}`)
+      parsed = new URL(`${getBaseUrl()}${url}`)
     } else {
       return null
     }
