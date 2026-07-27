@@ -1,21 +1,35 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { searchPlaces, NominatimResult } from '../services/nominatim'
 import type { SearchResult } from '../types'
 
 interface SearchBarProps {
   onResultSelect: (result: SearchResult) => void
+  onHoverResult?: (result: SearchResult | null) => void
   mapBounds?: [number, number, number, number]
 }
 
-export default function SearchBar({ onResultSelect, mapBounds }: SearchBarProps) {
+export default function SearchBar({ onResultSelect, onHoverResult, mapBounds }: SearchBarProps) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<NominatimResult[]>([])
   const [isOpen, setIsOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [activeIndex, setActiveIndex] = useState(-1)
   const inputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const toSearchResult = useCallback((result: NominatimResult): SearchResult => {
+    const boundingBox = result.boundingbox.map(Number) as [number, number, number, number]
+    return {
+      id: String(result.place_id),
+      name: result.display_name.split(',')[0],
+      displayName: result.display_name,
+      lat: parseFloat(result.lat),
+      lng: parseFloat(result.lon),
+      boundingBox,
+    }
+  }, [])
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -26,18 +40,15 @@ export default function SearchBar({ onResultSelect, mapBounds }: SearchBarProps)
         !inputRef.current.contains(event.target as Node)
       ) {
         setIsOpen(false)
+        setActiveIndex(-1)
       }
     }
-
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
   useEffect(() => {
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current)
-    }
-
+    if (debounceRef.current) clearTimeout(debounceRef.current)
     if (query.length < 2) return
 
     debounceRef.current = setTimeout(async () => {
@@ -52,6 +63,7 @@ export default function SearchBar({ onResultSelect, mapBounds }: SearchBarProps)
         })
         setResults(searchResults)
         setIsOpen(searchResults.length > 0)
+        setActiveIndex(-1)
       } catch {
         setError('Search failed. Please try again.')
         setResults([])
@@ -62,24 +74,48 @@ export default function SearchBar({ onResultSelect, mapBounds }: SearchBarProps)
     }, 300)
 
     return () => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current)
-      }
+      if (debounceRef.current) clearTimeout(debounceRef.current)
     }
   }, [query, mapBounds])
 
   function handleSelect(result: NominatimResult) {
-    const boundingBox = result.boundingbox.map(Number) as [number, number, number, number]
-    onResultSelect({
-      id: String(result.place_id),
-      name: result.display_name.split(',')[0],
-      displayName: result.display_name,
-      lat: parseFloat(result.lat),
-      lng: parseFloat(result.lon),
-      boundingBox,
-    })
-    setQuery(result.display_name.split(',')[0])
+    const sr = toSearchResult(result)
+    onResultSelect(sr)
+    setQuery(sr.name)
     setIsOpen(false)
+    setActiveIndex(-1)
+    onHoverResult?.(null)
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (!isOpen || results.length === 0) return
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      const next = activeIndex < results.length - 1 ? activeIndex + 1 : 0
+      setActiveIndex(next)
+      onHoverResult?.(toSearchResult(results[next]))
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      const prev = activeIndex > 0 ? activeIndex - 1 : results.length - 1
+      setActiveIndex(prev)
+      onHoverResult?.(toSearchResult(results[prev]))
+    } else if (e.key === 'Enter' && activeIndex >= 0) {
+      e.preventDefault()
+      handleSelect(results[activeIndex])
+    } else if (e.key === 'Escape') {
+      setIsOpen(false)
+      setActiveIndex(-1)
+      onHoverResult?.(null)
+    }
+  }
+
+  function handleItemHover(result: NominatimResult) {
+    onHoverResult?.(toSearchResult(result))
+  }
+
+  function handleItemLeave() {
+    onHoverResult?.(null)
   }
 
   return (
@@ -93,12 +129,14 @@ export default function SearchBar({ onResultSelect, mapBounds }: SearchBarProps)
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => results.length > 0 && setIsOpen(true)}
+          onKeyDown={handleKeyDown}
           placeholder="Search for a place..."
           className="w-full px-4 py-2 pl-10 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white shadow-sm"
           aria-label="Search places"
           aria-expanded={isOpen}
           aria-autocomplete="list"
           aria-controls="search-results"
+          aria-activedescendant={activeIndex >= 0 ? `search-result-${activeIndex}` : undefined}
           role="combobox"
         />
         <svg
@@ -134,13 +172,18 @@ export default function SearchBar({ onResultSelect, mapBounds }: SearchBarProps)
           role="listbox"
           className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto"
         >
-          {results.map((result) => (
+          {results.map((result, index) => (
             <button
               key={result.place_id}
+              id={`search-result-${index}`}
               onClick={() => handleSelect(result)}
+              onMouseEnter={() => handleItemHover(result)}
+              onMouseLeave={handleItemLeave}
               role="option"
-              aria-selected={false}
-              className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 last:border-b-0 focus:bg-gray-50 focus:outline-none"
+              aria-selected={activeIndex === index}
+              className={`w-full px-4 py-3 text-left border-b border-gray-100 last:border-b-0 focus:outline-none ${
+                activeIndex === index ? 'bg-indigo-50' : 'hover:bg-gray-50'
+              }`}
             >
               <div className="text-sm font-medium text-gray-900 truncate">
                 {result.display_name.split(',')[0]}

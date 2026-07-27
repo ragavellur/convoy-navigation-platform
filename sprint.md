@@ -153,23 +153,22 @@
 
 ### 📌 Backlog
 
-- [ ] [TASK-076] Make convoy_members.vehicle required
-- [ ] [TASK-077] One-active-convoy constraint (server-side check)
-- [ ] [TASK-084] Search: keyboard nav + public Nominatim fallback + pin preview
-- [ ] [TASK-085] Configure Service Worker with Workbox (FR-WEB-03)
-
 ### 🔄 In Progress
 
 ### ✅ Done
 
 - [x] [TASK-074] Restructure vehicles collection: user-owned, remove convoy FK
 - [x] [TASK-075] Add source/destination fields to convoys collection
+- [x] [TASK-076] Make convoy_members.vehicle required
+- [x] [TASK-077] One-active-convoy constraint (server-side check)
 - [x] [TASK-078] Update shared API types for new schema
 - [x] [TASK-079] Vehicle management in ProfilePage
 - [x] [TASK-080] Source/destination in convoy creation UI
 - [x] [TASK-081] Vehicle selection at join + one-convoy warning
 - [x] [TASK-082] Fix deep link param preservation + token validation
 - [x] [TASK-083] Fix position publishing vehicle identity + own-vehicle marker
+- [x] [TASK-084] Search: keyboard nav + public Nominatim fallback + pin preview
+- [x] [TASK-085] Configure Service Worker with Workbox (FR-WEB-03)
 
 ---
 

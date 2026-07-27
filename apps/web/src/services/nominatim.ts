@@ -1,4 +1,6 @@
-const NOMINATIM_BASE_URL = 'http://localhost:8080'
+const LOCAL_NOMINATIM_URL = 'http://localhost:8080'
+const PUBLIC_NOMINATIM_URL = 'https://nominatim.openstreetmap.org'
+const USER_AGENT = 'ConvoyNavigationPlatform/1.0'
 
 export interface NominatimResult {
   place_id: number
@@ -21,38 +23,55 @@ export interface SearchParams {
   bounded?: boolean
 }
 
-export async function searchPlaces(params: SearchParams): Promise<NominatimResult[]> {
-  const { query, limit = 5, viewbox, bounded = false } = params
+async function fetchFromNominatim(
+  baseUrl: string,
+  params: URLSearchParams,
+  headers: Record<string, string> = {},
+): Promise<NominatimResult[]> {
+  const response = await fetch(`${baseUrl}/search?${params.toString()}`, {
+    headers: { 'Accept-Language': 'en', ...headers },
+  })
+  if (!response.ok) {
+    throw new Error(`Nominatim search failed: ${response.status}`)
+  }
+  return await response.json()
+}
 
-  if (!query || query.length < 2) return []
-
-  const searchParams = new URLSearchParams({
-    q: query,
+function buildSearchParams(params: SearchParams): URLSearchParams {
+  const sp = new URLSearchParams({
+    q: params.query,
     format: 'json',
-    limit: String(limit),
+    limit: String(params.limit ?? 5),
     addressdetails: '1',
     extratags: '1',
   })
+  if (params.viewbox) {
+    sp.set(
+      'viewbox',
+      `${params.viewbox[0]},${params.viewbox[1]},${params.viewbox[2]},${params.viewbox[3]}`,
+    )
+    sp.set('bounded', params.bounded ? '1' : '0')
+  }
+  return sp
+}
 
-  if (viewbox) {
-    searchParams.set('viewbox', `${viewbox[0]},${viewbox[1]},${viewbox[2]},${viewbox[3]}`)
-    searchParams.set('bounded', bounded ? '1' : '0')
+export async function searchPlaces(params: SearchParams): Promise<NominatimResult[]> {
+  const { query } = params
+  if (!query || query.length < 2) return []
+
+  const sp = buildSearchParams(params)
+
+  try {
+    const results = await fetchFromNominatim(LOCAL_NOMINATIM_URL, sp)
+    if (results.length > 0) return results
+  } catch {
+    // Local Nominatim unavailable, fall through to public
   }
 
   try {
-    const response = await fetch(`${NOMINATIM_BASE_URL}/search?${searchParams.toString()}`, {
-      headers: {
-        'Accept-Language': 'en',
-      },
-    })
-
-    if (!response.ok) {
-      throw new Error(`Nominatim search failed: ${response.status}`)
-    }
-
-    return await response.json()
+    return await fetchFromNominatim(PUBLIC_NOMINATIM_URL, sp, { 'User-Agent': USER_AGENT })
   } catch (error) {
-    console.error('Nominatim search error:', error)
+    console.error('Nominatim search error (local + public failed):', error)
     throw error
   }
 }
@@ -66,9 +85,10 @@ export async function reverseGeocode(lat: number, lon: number): Promise<Nominati
   })
 
   try {
-    const response = await fetch(`${NOMINATIM_BASE_URL}/reverse?${params.toString()}`, {
+    const response = await fetch(`${LOCAL_NOMINATIM_URL}/reverse?${params.toString()}`, {
       headers: {
         'Accept-Language': 'en',
+        'User-Agent': USER_AGENT,
       },
     })
 

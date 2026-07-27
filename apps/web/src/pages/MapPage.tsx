@@ -40,6 +40,7 @@ function MapPage() {
   const mapContainer = useRef<HTMLDivElement>(null)
   const map = useRef<maplibregl.Map | null>(null)
   const markersRef = useRef<maplibregl.Marker[]>([])
+  const previewMarkerRef = useRef<maplibregl.Marker | null>(null)
   const convoyMarkersRef = useRef<Map<string, maplibregl.Marker>>(new Map())
   const offRouteTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const routeRef = useRef<RouteResponse['routes'][0] | null>(null)
@@ -227,10 +228,34 @@ function MapPage() {
     routeRef.current = null
   }, [])
 
+  const handleHoverResult = useCallback((result: SearchResult | null) => {
+    if (!map.current) return
+    if (previewMarkerRef.current) {
+      previewMarkerRef.current.remove()
+      previewMarkerRef.current = null
+    }
+    if (result) {
+      const marker = new maplibregl.Marker({ color: '#f59e0b', scale: 1.2 })
+        .setLngLat([result.lng, result.lat])
+        .setPopup(
+          new maplibregl.Popup({ offset: 25 }).setHTML(
+            `<div class="p-2 text-sm font-medium">${result.name}</div>`,
+          ),
+        )
+      marker.addTo(map.current)
+      previewMarkerRef.current = marker
+    }
+  }, [])
+
   const handleSearchResult = useCallback(
     async (result: SearchResult) => {
       if (!map.current) return
       clearRoute()
+
+      if (previewMarkerRef.current) {
+        previewMarkerRef.current.remove()
+        previewMarkerRef.current = null
+      }
 
       const origin: [number, number] = position ? [position.lng, position.lat] : [2.3522, 48.8566]
       const destination: [number, number] = [result.lng, result.lat]
@@ -632,7 +657,11 @@ function MapPage() {
         </div>
       )}
       <div className="absolute top-4 left-4 z-10">
-        <SearchBar onResultSelect={handleSearchResult} mapBounds={mapBounds} />
+        <SearchBar
+          onResultSelect={handleSearchResult}
+          onHoverResult={handleHoverResult}
+          mapBounds={mapBounds}
+        />
       </div>
       {isOffRoute && routeData && (
         <div className="absolute top-20 left-4 right-4 md:left-auto md:right-4 md:w-96 z-20 bg-amber-50 border border-amber-300 rounded-lg shadow-lg p-4">

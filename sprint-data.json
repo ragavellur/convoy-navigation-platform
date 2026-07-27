@@ -607,14 +607,14 @@
         {
           "id": "TASK-076",
           "title": "Make convoy_members.vehicle required",
-          "status": "backlog",
+          "status": "done",
           "priority": "high",
           "issue": "#3"
         },
         {
           "id": "TASK-077",
           "title": "One-active-convoy constraint (server-side check)",
-          "status": "backlog",
+          "status": "done",
           "priority": "high",
           "issue": "#5"
         },
@@ -663,14 +663,14 @@
         {
           "id": "TASK-084",
           "title": "Search: keyboard nav + public Nominatim fallback + pin preview",
-          "status": "backlog",
+          "status": "done",
           "priority": "high",
           "issue": "#7"
         },
         {
           "id": "TASK-085",
           "title": "Configure Service Worker with Workbox (FR-WEB-03)",
-          "status": "backlog",
+          "status": "done",
           "priority": "high"
         }
       ]
