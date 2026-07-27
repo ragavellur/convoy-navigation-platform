@@ -360,7 +360,7 @@ setup_osrm_data() {
 build_frontend() {
   info "Installing frontend dependencies..."
   cd "$INSTALL_DIR/apps/web"
-  npm ci --silent 2>&1 | tail -5
+  npm install --silent 2>&1 | tail -5
 
   info "Building frontend for production..."
   # Cloudflare terminates SSL — origin serves plain HTTP
