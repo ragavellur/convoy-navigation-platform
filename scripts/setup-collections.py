@@ -105,7 +105,11 @@ def patch_rules(name, list_rule=None, view_rule=None, create_rule=None, update_r
 
 
 def patch_schema(name, new_fields):
-    cid = ids.get(name)
+    # For auth collection, use known ID pattern
+    if name == "_pb_users_auth_":
+        cid = name
+    else:
+        cid = ids.get(name)
     if not cid:
         print(f"  SKIP schema for {name} (not created)")
         return
@@ -159,7 +163,7 @@ create_or_get("vehicles", [
     {"name": "type", "type": "select", "required": True, "options": {"values": ["car", "truck", "motorcycle", "other"], "maxSelect": 1}},
     {"name": "color", "type": "text", "required": False},
     {"name": "license_plate", "type": "text", "required": True},
-    {"name": "image", "type": "file", "required": False, "options": {"maxSelect": 1, "mimeTypes": ["image/jpeg", "image/png", "image/webp"]}},
+    {"name": "image", "type": "file", "required": False, "options": {"maxSelect": 1, "maxSize": 5242880, "mimeTypes": ["image/jpeg", "image/png", "image/webp"]}},
     {"name": "telemetry_config", "type": "json", "required": False, "options": {"maxSize": 2000000}},
     {"name": "status", "type": "select", "required": True, "options": {"values": ["active", "inactive", "maintenance"], "maxSelect": 1}},
 ], [
@@ -343,7 +347,7 @@ print("\n=== Phase 3: Update users auth collection ===")
 
 patch_schema("_pb_users_auth_", [
     {"name": "name", "type": "text", "required": False, "options": {"max": 100}},
-    {"name": "avatar", "type": "file", "required": False, "options": {"maxSelect": 1, "mimeTypes": ["image/jpeg", "image/png", "image/webp"]}},
+    {"name": "avatar", "type": "file", "required": False, "options": {"maxSelect": 1, "maxSize": 5242880, "mimeTypes": ["image/jpeg", "image/png", "image/webp"]}},
     {"name": "phone", "type": "text", "required": False},
     {"name": "role", "type": "select", "required": False, "options": {"values": ["admin", "member"], "maxSelect": 1}},
     {"name": "status", "type": "select", "required": False, "options": {"values": ["active", "inactive", "banned"], "maxSelect": 1}},
