@@ -18,7 +18,10 @@ const PB_PASSWORD = process.env.PB_ADMIN_PASSWORD || 'admin123456'
 
 const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY
 const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY
-const VAPID_EMAIL = process.env.VAPID_EMAIL || 'mailto:raga.vellur@gmail.com'
+const VAPID_EMAIL_RAW = process.env.VAPID_EMAIL || 'mailto:raga.vellur@gmail.com'
+const VAPID_EMAIL = VAPID_EMAIL_RAW.startsWith('mailto:')
+  ? VAPID_EMAIL_RAW
+  : `mailto:${VAPID_EMAIL_RAW}`
 
 if (VAPID_PRIVATE_KEY && VAPID_PUBLIC_KEY) {
   const webpush = require('web-push')
