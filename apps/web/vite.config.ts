@@ -11,7 +11,8 @@ export default defineConfig({
       manifest: {
         name: 'Convoy Navigator',
         short_name: 'ConvoyNav',
-        description: 'Real-time convoy navigation and communication platform',
+        description:
+          'Stay Together, Drive Smarter - Real-time navigation and communication for convoy operations',
         theme_color: '#071320',
         background_color: '#071320',
         display: 'standalone',
