@@ -4,12 +4,27 @@
 **Scope:** Full-stack end-to-end verification post-Sprint 4
 **Environment:** Local development (Docker + Vite dev server)
 **Created:** 2026-07-26
+**Last Updated:** 2026-07-26
 
 ---
 
 ## Test Board
 
 **Dashboard:** [e2e-test-board.html](https://ragavellur.github.io/convoy-navigation-platform/e2e-test-board.html)
+
+### Current Status
+
+| Category                 | Total  | Passed | Failed | Pending |
+| ------------------------ | ------ | ------ | ------ | ------- |
+| Infrastructure Smoke     | 6      | 6      | 0      | 0       |
+| Authentication Flow      | 6      | 6      | 0      | 0       |
+| Map & Search             | 10     | 10     | 0      | 0       |
+| Convoy Lifecycle         | 10     | 10     | 0      | 0       |
+| Real-Time Position       | 8      | 8      | 0      | 0       |
+| Multi-Browser Concurrent | 3      | 3      | 0      | 0       |
+| Edge Cases               | 6      | 6      | 0      | 0       |
+| Browser Support          | 5      | 0      | 0      | 5       |
+| **Total**                | **54** | **49** | **0**  | **5**   |
 
 ---
 

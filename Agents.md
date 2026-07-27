@@ -244,3 +244,39 @@ DENIED: Marking in-progress without committing sprint files to git.
 DENIED: Auto-marking tasks as complete without user verification.
 REQUIRED: User must explicitly approve completion (e.g., "LGTM", "approved", "looks good").
 ```
+
+### Sprint Pre-Flight: Test Plan & Test Data Updates
+
+Before starting ANY new sprint, you MUST update the test plan and test data to reflect the current state of the project.
+
+#### Required Files
+
+- `e2e-test-plan.md` — Full test plan documentation with sprint traceability
+- `e2e-test-data.json` — Machine-readable test data with status tracking
+- `e2e-test-board.html` — Interactive Kanban dashboard for test execution
+
+#### Pre-Flight Protocol
+
+```
+FLOW: Complete current sprint → Update e2e-test-data.json (run infrastructure tests) →
+      Update e2e-test-plan.md (add tests for new sprint) → Commit/push → Start new sprint
+
+DENIED: Starting a new sprint without updating test plan and test data.
+REQUIRED: Update test plan + test data → Commit/push → Then start new sprint
+```
+
+#### What to Update Before Each Sprint
+
+1. **Run infrastructure smoke tests** (I-1 through I-6) — verify Docker services are healthy
+2. **Mark completed feature tests as passed/failed** — update status in `e2e-test-data.json`
+3. **Add new tests for the upcoming sprint** — map each new task to a test case
+4. **Update sprint traceability** — ensure every test maps to a sprint task ID
+5. **Commit and push** — so the test board on GitHub Pages reflects current state
+
+#### Test Data Status Values
+
+- `pending` — Test not yet executed
+- `running` — Test currently being executed
+- `passed` — Test passed successfully
+- `failed` — Test failed (requires investigation)
+- `skipped` — Test intentionally skipped (with reason)
