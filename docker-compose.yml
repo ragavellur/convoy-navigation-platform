@@ -95,6 +95,9 @@ services:
       - OSRM_URL=http://osrm:5000
       - PB_ADMIN_EMAIL=${POCKETBASE_ADMIN_EMAIL:-admin@convoy.local}
       - PB_ADMIN_PASSWORD=${POCKETBASE_ADMIN_PASSWORD:-admin123456}
+      - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}
+      - VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY}
+      - VAPID_EMAIL=${VAPID_EMAIL:-mailto:raga.vellur@gmail.com}
     volumes:
       - ./scripts:/app/scripts:ro
     healthcheck:
