@@ -223,7 +223,7 @@ NOMINATIM_PORT=8080
 NOMINATIM_DB_PASSWORD=$NOMINATIM_DB_PASSWORD
 REDIS_PORT=6379
 REDIS_PASSWORD=$REDIS_PASSWORD
-VITE_POCKETBASE_URL=${API_SCHEME}://$DOMAIN/api
+VITE_POCKETBASE_URL=${API_SCHEME}://$DOMAIN
 VITE_OSRM_URL=${API_SCHEME}://$DOMAIN/routing
 VITE_NOMINATIM_URL=${API_SCHEME}://$DOMAIN/geocode
 VITE_MAP_TILES_URL=https://tile.openstreetmap.org/{z}/{x}/{y}.png
@@ -304,11 +304,7 @@ build_frontend() {
 
   info "Building frontend for production..."
   cd "$INSTALL_DIR/apps/web"
-  if [[ "$USE_CLOUDFLARE" == "y" ]]; then
-    FE_API="http://$DOMAIN/api"; FE_OSRM="http://$DOMAIN/routing"; FE_GEO="http://$DOMAIN/geocode"
-  else
-    FE_API="https://$DOMAIN/api"; FE_OSRM="https://$DOMAIN/routing"; FE_GEO="https://$DOMAIN/geocode"
-  fi
+  FE_API="${API_SCHEME}://$DOMAIN"; FE_OSRM="${API_SCHEME}://$DOMAIN/routing"; FE_GEO="${API_SCHEME}://$DOMAIN/geocode"
   VITE_POCKETBASE_URL="$FE_API" VITE_OSRM_URL="$FE_OSRM" VITE_NOMINATIM_URL="$FE_GEO" \
     npm run build 2>&1 | tail -5
 
