@@ -471,6 +471,116 @@
           "taskId": "TASK-044",
           "priority": "high",
           "notes": "Feature implemented and verified in sprint"
+        },
+        {
+          "id": "R-1",
+          "title": "Roster sidebar renders on map page",
+          "steps": "Join convoy \u2192 Navigate to /map \u2192 Check sidebar",
+          "expected": "Sidebar shows convoy members with avatars",
+          "status": "pending",
+          "sprint": "Sprint 5",
+          "taskId": "TASK-049",
+          "priority": "medium"
+        },
+        {
+          "id": "R-2",
+          "title": "Roster drawer expand/collapse",
+          "steps": "Click expand button on roster sidebar",
+          "expected": "Sidebar expands to show full member details",
+          "status": "pending",
+          "sprint": "Sprint 5",
+          "taskId": "TASK-050",
+          "priority": "medium"
+        },
+        {
+          "id": "R-3",
+          "title": "Vehicle type icon in roster",
+          "steps": "Check roster member with vehicle",
+          "expected": "Correct vehicle icon (car/truck/motorcycle) displayed",
+          "status": "pending",
+          "sprint": "Sprint 5",
+          "taskId": "TASK-051",
+          "priority": "low"
+        },
+        {
+          "id": "R-4",
+          "title": "Status indicators (In-Transit/Stopped/Offline)",
+          "steps": "Check roster members with different positions",
+          "expected": "Green=In-Transit, Yellow=Stopped, Gray=Offline",
+          "status": "pending",
+          "sprint": "Sprint 5",
+          "taskId": "TASK-052",
+          "priority": "medium"
+        },
+        {
+          "id": "R-5",
+          "title": "Speed & ETA display per member",
+          "steps": "Check roster with active position data",
+          "expected": "Speed (km/h) and ETA shown for each member",
+          "status": "pending",
+          "sprint": "Sprint 5",
+          "taskId": "TASK-053",
+          "priority": "low"
+        },
+        {
+          "id": "R-6",
+          "title": "Focus on member map interaction",
+          "steps": "Click a member in roster sidebar",
+          "expected": "Map flies to that member's marker position",
+          "status": "pending",
+          "sprint": "Sprint 5",
+          "taskId": "TASK-054",
+          "priority": "medium"
+        },
+        {
+          "id": "R-7",
+          "title": "Member avatar & info cards",
+          "steps": "Check roster member cards",
+          "expected": "Avatar with name, role, vehicle info displayed",
+          "status": "pending",
+          "sprint": "Sprint 5",
+          "taskId": "TASK-055",
+          "priority": "low"
+        },
+        {
+          "id": "R-8",
+          "title": "Member count badge on roster toggle",
+          "steps": "Check roster toggle button",
+          "expected": "Badge shows number of active members",
+          "status": "pending",
+          "sprint": "Sprint 5",
+          "taskId": "TASK-056",
+          "priority": "low"
+        },
+        {
+          "id": "R-9",
+          "title": "Real-time roster updates",
+          "steps": "User B joins convoy while User A views roster",
+          "expected": "Roster updates instantly without page refresh",
+          "status": "pending",
+          "sprint": "Sprint 5",
+          "taskId": "TASK-057",
+          "priority": "medium"
+        },
+        {
+          "id": "R-10",
+          "title": "Touch-optimized gestures",
+          "steps": "Swipe left/right on roster on mobile",
+          "expected": "Drawer opens/closes with swipe gesture",
+          "status": "pending",
+          "sprint": "Sprint 5",
+          "taskId": "TASK-058",
+          "priority": "low"
+        },
+        {
+          "id": "R-11",
+          "title": "Dark mode toggle",
+          "steps": "Click dark mode toggle",
+          "expected": "Map style switches to dark, UI theme inverts",
+          "status": "pending",
+          "sprint": "Sprint 5",
+          "taskId": "TASK-059",
+          "priority": "low"
         }
       ]
     },

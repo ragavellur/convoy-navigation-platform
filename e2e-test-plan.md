@@ -1,10 +1,10 @@
 # E2E Test Plan — Real-Time Convoy Navigation & Communication Platform
 
 **Project:** Real-Time Convoy Navigation & Communication Platform
-**Scope:** Full-stack end-to-end verification post-Sprint 4
+**Scope:** Full-stack end-to-end verification post-Sprint 5
 **Environment:** Local development (Docker + Vite dev server)
 **Created:** 2026-07-26
-**Last Updated:** 2026-07-26
+**Last Updated:** 2026-07-27
 
 ---
 
@@ -21,10 +21,11 @@
 | Map & Search             | 10     | 10     | 0      | 0       |
 | Convoy Lifecycle         | 10     | 10     | 0      | 0       |
 | Real-Time Position       | 8      | 8      | 0      | 0       |
+| Roster & UI              | 11     | 0      | 0      | 11      |
 | Multi-Browser Concurrent | 3      | 3      | 0      | 0       |
 | Edge Cases               | 6      | 6      | 0      | 0       |
 | Browser Support          | 5      | 0      | 0      | 5       |
-| **Total**                | **54** | **49** | **0**  | **5**   |
+| **Total**                | **65** | **49** | **0**  | **16**  |
 
 ---
 
@@ -103,7 +104,25 @@
 
 ---
 
-## 6. Multi-Browser Concurrent Test
+## 6. Roster & UI (Sprint 5)
+
+| ID   | Test                          | Steps                                          | Expected Result                                       | Sprint   |
+| ---- | ----------------------------- | ---------------------------------------------- | ----------------------------------------------------- | -------- |
+| R-1  | Roster sidebar renders        | Join convoy → Navigate to /map → Check sidebar | Sidebar shows convoy members with avatars             | TASK-049 |
+| R-2  | Roster drawer expand/collapse | Click expand button on roster sidebar          | Sidebar expands to show full member details           | TASK-050 |
+| R-3  | Vehicle type icon in roster   | Check roster member with vehicle               | Correct vehicle icon (car/truck/motorcycle) displayed | TASK-051 |
+| R-4  | Status indicators             | Check roster members with different positions  | Green=In-Transit, Yellow=Stopped, Gray=Offline        | TASK-052 |
+| R-5  | Speed & ETA display           | Check roster with active position data         | Speed (km/h) and ETA shown for each member            | TASK-053 |
+| R-6  | Focus on member interaction   | Click a member in roster sidebar               | Map flies to that member's marker position            | TASK-054 |
+| R-7  | Member avatar & info cards    | Check roster member cards                      | Avatar with name, role, vehicle info displayed        | TASK-055 |
+| R-8  | Member count badge            | Check roster toggle button                     | Badge shows number of active members                  | TASK-056 |
+| R-9  | Real-time roster updates      | User B joins convoy while User A views roster  | Roster updates instantly without page refresh         | TASK-057 |
+| R-10 | Touch-optimized gestures      | Swipe left/right on roster on mobile           | Drawer opens/closes with swipe gesture                | TASK-058 |
+| R-11 | Dark mode toggle              | Click dark mode toggle                         | Map style switches to dark, UI theme inverts          | TASK-059 |
+
+---
+
+## 7. Multi-Browser Concurrent Test
 
 | ID  | Test                     | Steps                                                  | Expected Result                        | Sprint   |
 | --- | ------------------------ | ------------------------------------------------------ | -------------------------------------- | -------- |
@@ -146,3 +165,4 @@ Each test maps to specific sprint tasks:
 - **Sprint 2 (TASK-018–026):** Search, Routing, Traffic → Tests M-3–8
 - **Sprint 3 (TASK-027–038):** Convoy CRUD, Deep links, Sharing → Tests C-1–10
 - **Sprint 4 (TASK-039–048):** GPS, Realtime, Markers, Vectors → Tests M-2, M-9–10, P-1–8, X-1–3, E-1–6
+- **Sprint 5 (TASK-049–059):** Roster, UI, Dark Mode → Tests R-1–11
