@@ -46,7 +46,7 @@ function Layout() {
                 <img
                   src="/icons/logo.png"
                   alt="Convoy"
-                  className="w-[60px] h-[80px] object-contain rounded-lg"
+                  className="w-[50px] h-[60px] object-contain rounded-lg"
                 />
                 <div className="flex flex-col justify-center">
                   <span className="text-2xl font-bold text-white leading-none">Convoy</span>
