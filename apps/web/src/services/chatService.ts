@@ -1,4 +1,5 @@
 import pb from './pocketbase'
+import { notifyChatMessage } from './pushSender'
 
 export interface ChatMessage {
   id: string
@@ -70,7 +71,11 @@ export async function subscribeToMessages(
       : event.record.convoy
     if (eventConvoy !== recordId) return
     if (event.action === 'create') {
-      onMessage(event.record as unknown as ChatMessage)
+      const msg = event.record as unknown as ChatMessage
+      onMessage(msg)
+      if (msg.sender !== pb.authStore.model?.id) {
+        notifyChatMessage(recordId, msg.senderName || 'Someone', msg.content)
+      }
     }
   })
 

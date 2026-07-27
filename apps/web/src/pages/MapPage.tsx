@@ -23,6 +23,7 @@ import { createVehicleMarkerElement, getDistinctColor } from '../components/Vehi
 import pb from '../services/pocketbase'
 import { useConvoyRoster } from '../stores/ConvoyRosterContext'
 import { useTheme, getMapStyleUrl } from '../stores/ThemeContext'
+import { notifyOffRoute } from '../services/pushSender'
 import type { SearchResult, RouteResponse, RouteGeometry } from '../types'
 
 const ROUTE_SOURCE_ID = 'route'
@@ -46,6 +47,7 @@ function MapPage() {
   const routeRef = useRef<RouteResponse['routes'][0] | null>(null)
   const animatorRef = useRef<MarkerAnimator | null>(null)
   const convoyRouteLoadedRef = useRef(false)
+  const offRoutePushSentRef = useRef(false)
   const [mapLoaded, setMapLoaded] = useState(false)
   const [mapBounds, setMapBounds] = useState<[number, number, number, number] | undefined>()
   const [routeData, setRouteData] = useState<RouteResponse['routes'][0] | null>(null)
@@ -352,18 +354,30 @@ function MapPage() {
   )
 
   useEffect(() => {
-    if (!position || !routeRef.current || convoyId) return
+    if (!position || !routeRef.current) return
     const geometry = routeRef.current.geometry as RouteGeometry
-    setIsOffRoute(checkOffRoute(position.lat, position.lng, geometry))
+    const offNow = checkOffRoute(position.lat, position.lng, geometry)
+    setIsOffRoute(offNow)
+    if (offNow && convoyId && !offRoutePushSentRef.current) {
+      offRoutePushSentRef.current = true
+      notifyOffRoute(convoyId, pb.authStore.model?.name || 'A member')
+    }
+    if (!offNow) offRoutePushSentRef.current = false
   }, [position, convoyId])
 
   useEffect(() => {
-    if (!routeData || !position || convoyId) return
+    if (!routeData || !position) return
     if (offRouteTimerRef.current) clearInterval(offRouteTimerRef.current)
     offRouteTimerRef.current = setInterval(() => {
       if (!routeRef.current || !position) return
       const geometry = routeRef.current.geometry as RouteGeometry
-      setIsOffRoute(checkOffRoute(position.lat, position.lng, geometry))
+      const offNow = checkOffRoute(position.lat, position.lng, geometry)
+      setIsOffRoute(offNow)
+      if (offNow && convoyId && !offRoutePushSentRef.current) {
+        offRoutePushSentRef.current = true
+        notifyOffRoute(convoyId, pb.authStore.model?.name || 'A member')
+      }
+      if (!offNow) offRoutePushSentRef.current = false
     }, POSITION_CHECK_INTERVAL_MS)
     return () => {
       if (offRouteTimerRef.current) clearInterval(offRouteTimerRef.current)

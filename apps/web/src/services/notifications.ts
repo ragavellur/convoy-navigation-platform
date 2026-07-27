@@ -1,4 +1,5 @@
 import pb from './pocketbase'
+import { notifyMemberJoined, notifyMemberLeft } from './pushSender'
 
 export interface ConvoyNotification {
   id: string
@@ -34,6 +35,14 @@ export async function subscribeToConvoyNotifications(
       created: event.record.created || new Date().toISOString(),
     }
     onNotification(notification)
+
+    if (event.action === 'create') {
+      const name = event.record.expand?.user?.name || 'A member'
+      notifyMemberJoined(convoyId, name)
+    } else if (event.action === 'delete') {
+      const name = event.record.expand?.user?.name || 'A member'
+      notifyMemberLeft(convoyId, name)
+    }
   })
 
   activeUnsub = () => {

@@ -13,6 +13,12 @@ import {
   clearSimulationPositions,
   cleanupPositions,
 } from '../services/simulation'
+import {
+  notifyMemberLeft,
+  notifyConvoyEnded,
+  notifySimulationStarted,
+  notifySimulationStopped,
+} from '../services/pushSender'
 
 interface ConvoyRecord {
   id: string
@@ -140,8 +146,12 @@ function ConvoyDetailPage() {
 
   const handleRemoveMember = async (memberId: string) => {
     try {
+      const member = members.find((m) => m.id === memberId)
       await pb.collection('convoy_members').update(memberId, { status: 'removed' })
       await refreshData()
+      if (id && member?.expand?.user?.name) {
+        notifyMemberLeft(id, member.expand.user.name)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to remove member')
     }
@@ -162,6 +172,7 @@ function ConvoyDetailPage() {
     if (!id) return
     try {
       await pb.collection('convoys').update(id, { status: 'ended' })
+      notifyConvoyEnded(id)
       navigate('/convoy')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to end session')
@@ -185,6 +196,7 @@ function ConvoyDetailPage() {
     try {
       await startSimulation(id, simSpeed)
       setSimRunning(true)
+      notifySimulationStarted(id)
     } catch (err) {
       setSimError(err instanceof Error ? err.message : 'Failed to start simulation')
     } finally {
@@ -199,6 +211,7 @@ function ConvoyDetailPage() {
     try {
       await stopSimulation(id)
       setSimRunning(false)
+      notifySimulationStopped(id)
     } catch (err) {
       setSimError(err instanceof Error ? err.message : 'Failed to stop simulation')
     } finally {

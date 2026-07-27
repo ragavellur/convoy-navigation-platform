@@ -16,6 +16,19 @@ const SCRIPT_PATH = path.join(__dirname, 'scripts', 'simulate-convoy.js')
 const PB_EMAIL = process.env.PB_ADMIN_EMAIL || 'admin@convoy.local'
 const PB_PASSWORD = process.env.PB_ADMIN_PASSWORD || 'admin123456'
 
+const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY
+const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY
+const VAPID_EMAIL = process.env.VAPID_EMAIL || 'mailto:raga.vellur@gmail.com'
+
+if (VAPID_PRIVATE_KEY && VAPID_PUBLIC_KEY) {
+  const webpush = require('web-push')
+  webpush.setVapidDetails(VAPID_EMAIL, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY)
+  global.webpush = webpush
+  console.log('Web Push VAPID configured')
+} else {
+  console.warn('VAPID keys not set — push notifications disabled')
+}
+
 const runningSimulations = new Map()
 let cachedToken = null
 
@@ -57,6 +70,74 @@ async function pbRequest(method, apiPath, body) {
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', running: runningSimulations.size })
+})
+
+app.post('/api/push/send', async (req, res) => {
+  if (!global.webpush) {
+    return res.status(503).json({ error: 'Push notifications not configured (missing VAPID keys)' })
+  }
+
+  const { convoyId, title, body, url } = req.body
+  if (!convoyId || !title || !body) {
+    return res.status(400).json({ error: 'convoyId, title, and body are required' })
+  }
+
+  try {
+    const subsData = await pbRequest(
+      'GET',
+      `/api/collections/push_subscriptions/records?page=1&perPage=100&filter=${encodeURIComponent(`enabled = true && user != ""`)}`,
+    )
+
+    const subscriptions = subsData.items || []
+    if (subscriptions.length === 0) {
+      return res.json({ success: true, sent: 0, total: 0, message: 'No active subscribers' })
+    }
+
+    let sent = 0
+    let failed = 0
+    let deletedInvalid = 0
+
+    const payload = JSON.stringify({
+      title,
+      body,
+      icon: '/icons/logo.png',
+      badge: '/icons/icon-192x192.png',
+      url: url || '/map?convoy=' + convoyId,
+      convoyId,
+    })
+
+    for (const sub of subscriptions) {
+      try {
+        await global.webpush.sendNotification(
+          {
+            endpoint: sub.endpoint,
+            keys: { p256dh: sub.p256dh, auth: sub.auth },
+          },
+          payload,
+        )
+        sent++
+      } catch (err) {
+        failed++
+        if (err.statusCode === 404 || err.statusCode === 410) {
+          try {
+            await pbRequest('DELETE', `/api/collections/push_subscriptions/records/${sub.id}`)
+            deletedInvalid++
+          } catch {
+            /* skip */
+          }
+        }
+        console.error(
+          `Push failed for ${sub.endpoint.slice(0, 30)}...:`,
+          err.statusCode || err.message,
+        )
+      }
+    }
+
+    res.json({ success: true, sent, failed, deletedInvalid, total: subscriptions.length })
+  } catch (err) {
+    console.error('Push send error:', err.message)
+    res.status(500).json({ error: err.message })
+  }
 })
 
 app.get('/api/simulation/status/:convoyId', (req, res) => {
