@@ -35,12 +35,9 @@ fi
 docker rm -f convoy-osrm convoy-pocketbase convoy-nominatim convoy-redis \
   convoy-simulation convoy-voice 2>/dev/null || true
 
-# Remove the Docker volume(s) explicitly
-docker volume rm convoy_osrm_data convoy_nominatim_data convoy_redis_data \
-  convoy_pocketbase_data 2>/dev/null || true
-
-# Remove the Docker network
-docker network rm convoy_convoy-network 2>/dev/null || true
+# Also remove any leftover convoy containers/volumes by pattern (catches all naming conventions)
+docker volume ls --format '{{.Name}}' | grep -E 'convoy' | xargs -r docker volume rm 2>/dev/null || true
+docker network ls --format '{{.Name}}' | grep -E 'convoy' | xargs -r docker network rm 2>/dev/null || true
 
 # Prune any dangling images
 docker image prune -f 2>/dev/null || true
@@ -121,7 +118,5 @@ echo -e "    - SSL certificates"
 echo -e "    - /var/www/convoy (frontend build)"
 echo ""
 echo -e "  To reinstall:"
-echo -e "    cd ~/convoy-navigation-platform"
-echo -e "    git pull origin main"
 echo -e "    sudo ./scripts/install.sh"
 echo ""

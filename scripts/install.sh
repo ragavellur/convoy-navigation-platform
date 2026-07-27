@@ -2,10 +2,10 @@
 #
 # Convoy Navigation Platform — Interactive Production Installer
 # Supports: Ubuntu 22.04+, Debian 12+, macOS (Docker Desktop required)
+# Fully automated: cleanup → install → configure → verify
 #
 set -euo pipefail
 
-# ─── Colors ──────────────────────────────────────────────────────────────────
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; BLUE='\033[0;34m'; CYAN='\033[0;36m'; NC='\033[0m'
 
 info()    { echo -e "${BLUE}[INFO]${NC}    $*"; }
@@ -13,34 +13,68 @@ ok()      { echo -e "${GREEN}[OK]${NC}      $*"; }
 warn()    { echo -e "${YELLOW}[WARN]${NC}    $*"; }
 fail()    { echo -e "${RED}[FAIL]${NC}    $*"; exit 1; }
 
+INSTALL_DIR="/opt/convoy"
+
 # ─── Root check ──────────────────────────────────────────────────────────────
 check_root() {
-  if [[ "$EUID" -ne 0 ]]; then
-    fail "This script must be run as root. Use: sudo ./scripts/install.sh"
-  fi
+  [[ "$EUID" -eq 0 ]] || fail "Run as root: sudo ./scripts/install.sh"
 }
 
 # ─── OS detection ────────────────────────────────────────────────────────────
 detect_os() {
   if [[ -f /etc/os-release ]]; then
-    . /etc/os-release
-    OS_ID="$ID"
-    OS_VERSION="$VERSION_ID"
+    . /etc/os-release; OS_ID="$ID"; OS_VERSION="$VERSION_ID"
   elif [[ "$(uname)" == "Darwin" ]]; then
-    OS_ID="macos"
-    OS_VERSION="$(sw_vers -productVersion)"
+    OS_ID="macos"; OS_VERSION="$(sw_vers -productVersion)"
   else
     fail "Unsupported OS. Use Ubuntu 22.04+ or Debian 12+."
   fi
   info "Detected OS: $OS_ID $OS_VERSION"
 }
 
+# ─── Cleanup previous installation ───────────────────────────────────────────
+cleanup_previous() {
+  info "Cleaning up any previous installation..."
+
+  # Docker containers
+  docker rm -f convoy-osrm convoy-pocketbase convoy-nominatim convoy-redis \
+    convoy-simulation convoy-voice 2>/dev/null || true
+
+  # Docker compose down (if old install exists)
+  if [[ -d "$INSTALL_DIR" ]]; then
+    cd "$INSTALL_DIR"
+    docker compose down -v --remove-orphans 2>/dev/null || true
+    cd /
+  fi
+
+  # Docker volumes (all matching convoy*)
+  docker volume ls --format '{{.Name}}' | grep -E '^convoy' | xargs -r docker volume rm 2>/dev/null || true
+
+  # Docker network
+  docker network ls --format '{{.Name}}' | grep -E '^convoy' | xargs -r docker network rm 2>/dev/null || true
+
+  # Nginx configs
+  rm -f /etc/nginx/sites-available/convoy /etc/nginx/sites-available/convoy-temp
+  rm -f /etc/nginx/sites-enabled/convoy /etc/nginx/sites-enabled/convoy-temp
+  find /etc/nginx/sites-enabled/ -type l -exec sh -c 'readlink "$1" 2>/dev/null | grep -q convoy && rm -f "$1"' _ {} \; 2>/dev/null || true
+
+  # Frontend build
+  rm -rf /var/www/convoy
+
+  # Project directory
+  rm -rf "$INSTALL_DIR"
+
+  # Temp files
+  rm -f /tmp/monaco-latest.osm.pbf
+
+  ok "Previous installation cleaned up."
+}
+
 # ─── Prerequisite installation ───────────────────────────────────────────────
 install_prereqs() {
   if [[ "$OS_ID" == "macos" ]]; then
-    info "macOS detected — ensure Docker Desktop is running."
-    command -v docker >/dev/null 2>&1 || fail "Docker Desktop not found. Install from https://docker.com"
-    command -v git    >/dev/null 2>&1 || fail "Git not found. Install via: xcode-select --install"
+    command -v docker >/dev/null 2>&1 || fail "Docker Desktop not found"
+    command -v git    >/dev/null 2>&1 || fail "Git not found"
     ok "Docker and Git found."
     return
   fi
@@ -48,12 +82,11 @@ install_prereqs() {
   info "Updating package lists..."
   apt-get update -qq
 
-  # Docker
   if ! command -v docker >/dev/null 2>&1; then
     info "Installing Docker..."
     apt-get install -y -qq ca-certificates curl gnupg
     install -m 0755 -d /etc/apt/keyrings
-    curl -fsSL https://download.docker.com/linux/$OS_ID/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg 2>/dev/null || true
+    curl -fsSL "https://download.docker.com/linux/$OS_ID/gpg" | gpg --dearmor -o /etc/apt/keyrings/docker.gpg 2>/dev/null || true
     chmod a+r /etc/apt/keyrings/docker.gpg
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/$OS_ID $(lsb_release -cs) stable" > /etc/apt/sources.list.d/docker.list
     apt-get update -qq
@@ -64,41 +97,15 @@ install_prereqs() {
     ok "Docker already installed."
   fi
 
-  # Docker Compose plugin
-  if ! docker compose version >/dev/null 2>&1; then
-    info "Installing Docker Compose plugin..."
-    apt-get install -y -qq docker-compose-plugin
-    ok "Docker Compose installed."
-  else
-    ok "Docker Compose already installed."
-  fi
-
-  # Git
-  if ! command -v git >/dev/null 2>&1; then
-    apt-get install -y -qq git
-    ok "Git installed."
-  else
-    ok "Git already installed."
-  fi
-
-  # Nginx
+  docker compose version >/dev/null 2>&1 || { apt-get install -y -qq docker-compose-plugin 2>/dev/null; }
+  command -v git >/dev/null 2>&1 || apt-get install -y -qq git
   if ! command -v nginx >/dev/null 2>&1; then
-    info "Installing Nginx..."
-    apt-get install -y -qq nginx
-    systemctl enable nginx
-    ok "Nginx installed."
-  else
-    ok "Nginx already installed."
+    apt-get install -y -qq nginx && systemctl enable nginx
   fi
-
-  # Certbot
-  if ! command -v certbot >/dev/null 2>&1; then
-    info "Installing Certbot..."
+  if [[ "$USE_CLOUDFLARE" != "y" ]] && ! command -v certbot >/dev/null 2>&1; then
     apt-get install -y -qq certbot python3-certbot-nginx
-    ok "Certbot installed."
-  else
-    ok "Certbot already installed."
   fi
+  ok "Prerequisites ready."
 }
 
 # ─── Gather configuration ────────────────────────────────────────────────────
@@ -109,55 +116,45 @@ gather_config() {
   echo -e "${CYAN}══════════════════════════════════════════════════════════════${NC}"
   echo ""
 
-  # Domain
   while true; do
     read -rp "  Domain name (e.g. convoy.example.com): " DOMAIN
-    if [[ "$DOMAIN" =~ ^[a-zA-Z0-9]([a-zA-Z0-9.-]*[a-zA-Z0-9])?$ ]]; then
-      break
-    fi
-    warn "Invalid domain. Use something like convoy.example.com"
+    [[ "$DOMAIN" =~ ^[a-zA-Z0-9]([a-zA-Z0-9.-]*[a-zA-Z0-9])?$ ]] && break
+    warn "Invalid domain."
   done
 
-  # Admin email (for SSL)
+  while true; do
+    read -rp "  Confirm domain [$DOMAIN]: " DOMAIN_CONFIRM
+    DOMAIN_CONFIRM="${DOMAIN_CONFIRM:-$DOMAIN}"
+    [[ "$DOMAIN_CONFIRM" == "$DOMAIN" ]] && break
+    warn "Domain mismatch. Try again."
+  done
+
   while true; do
     read -rp "  Admin email (for SSL certificate): " ADMIN_EMAIL
-    if [[ "$ADMIN_EMAIL" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
-      break
-    fi
-    warn "Invalid email address."
-  done
-
-  # PocketBase admin credentials
-  while true; do
-    read -rsp "  PocketBase admin email: " PB_ADMIN_EMAIL
-    echo ""
-    if [[ -n "$PB_ADMIN_EMAIL" ]]; then
-      break
-    fi
+    [[ "$ADMIN_EMAIL" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]] && break
+    warn "Invalid email."
   done
 
   while true; do
-    read -rsp "  PocketBase admin password (min 8 chars): " PB_ADMIN_PASSWORD
-    echo ""
-    if [[ ${#PB_ADMIN_PASSWORD} -ge 8 ]]; then
-      break
-    fi
+    read -rsp "  PocketBase admin email: " PB_ADMIN_EMAIL; echo ""
+    [[ -n "$PB_ADMIN_EMAIL" ]] && break
+  done
+
+  while true; do
+    read -rsp "  PocketBase admin password (min 8 chars): " PB_ADMIN_PASSWORD; echo ""
+    [[ ${#PB_ADMIN_PASSWORD} -ge 8 ]] && break
     warn "Password must be at least 8 characters."
   done
 
   read -rp "  JWT secret (leave empty to auto-generate): " JWT_SECRET
-  if [[ -z "$JWT_SECRET" ]]; then
-    JWT_SECRET=$(openssl rand -hex 32)
-    info "Generated JWT secret."
-  fi
+  [[ -z "$JWT_SECRET" ]] && JWT_SECRET=$(openssl rand -hex 32) && info "Generated JWT secret."
 
-  read -rp "  Server public IP (for WebRTC): " SERVER_IP
+  read -rp "  Server public IP (for WebRTC, leave empty to detect): " SERVER_IP
   if [[ -z "$SERVER_IP" ]]; then
     SERVER_IP=$(curl -s ifconfig.me 2>/dev/null || echo "127.0.0.1")
     info "Detected public IP: $SERVER_IP"
   fi
 
-  # Cloudflare Tunnel?
   echo ""
   read -rp "  Using Cloudflare Tunnel for SSL? (y/N): " USE_CLOUDFLARE
   USE_CLOUDFLARE="${USE_CLOUDFLARE,,}"
@@ -175,78 +172,44 @@ gather_config() {
   echo -e "${CYAN}══════════════════════════════════════════════════════════════${NC}"
   echo ""
   read -rp "  Proceed? (y/N): " CONFIRM
-  if [[ "${CONFIRM,,}" != "y" ]]; then
-    info "Aborted."
-    exit 0
-  fi
+  [[ "${CONFIRM,,}" == "y" ]] || { info "Aborted."; exit 0; }
 }
 
 # ─── Clone repo ──────────────────────────────────────────────────────────────
 clone_repo() {
-  INSTALL_DIR="/opt/convoy"
-  if [[ -d "$INSTALL_DIR/.git" ]]; then
-    info "Repository already exists at $INSTALL_DIR. Pulling latest..."
-    cd "$INSTALL_DIR"
-    git pull origin main
-  else
-    info "Cloning repository to $INSTALL_DIR..."
-    rm -rf "$INSTALL_DIR"
-    git clone https://github.com/ragavellur/convoy-navigation-platform.git "$INSTALL_DIR"
-    cd "$INSTALL_DIR"
-  fi
+  info "Cloning repository..."
+  git clone https://github.com/ragavellur/convoy-navigation-platform.git "$INSTALL_DIR"
+  cd "$INSTALL_DIR"
   ok "Repository ready at $INSTALL_DIR"
 }
 
 # ─── Generate .env ───────────────────────────────────────────────────────────
 generate_env() {
   info "Generating .env file..."
-
-  # Cloudflare terminates SSL at edge — origin serves plain HTTP
   if [[ "$USE_CLOUDFLARE" == "y" ]]; then
-    API_SCHEME="http"
-    WS_SCHEME="ws"
+    API_SCHEME="http"; WS_SCHEME="ws"
   else
-    API_SCHEME="https"
-    WS_SCHEME="wss"
+    API_SCHEME="https"; WS_SCHEME="wss"
   fi
-
   cat > .env <<EOF
 # Convoy Navigation Platform — Production Configuration
 # Generated by install.sh on $(date -u +"%Y-%m-%dT%H:%M:%SZ")
-
-# PocketBase
 POCKETBASE_PORT=8090
 POCKETBASE_ADMIN_EMAIL=$PB_ADMIN_EMAIL
 POCKETBASE_ADMIN_PASSWORD=$PB_ADMIN_PASSWORD
-
-# OSRM
 OSRM_PORT=5001
-
-# Nominatim
 NOMINATIM_PORT=8080
 NOMINATIM_DB_PASSWORD=$NOMINATIM_DB_PASSWORD
-
-# Redis
 REDIS_PORT=6379
 REDIS_PASSWORD=$REDIS_PASSWORD
-
-# Frontend API URLs (Cloudflare terminates SSL — origin is plain HTTP)
 VITE_POCKETBASE_URL=${API_SCHEME}://$DOMAIN/api
 VITE_OSRM_URL=${API_SCHEME}://$DOMAIN/routing
 VITE_NOMINATIM_URL=${API_SCHEME}://$DOMAIN/geocode
-
-# Map tiles
 VITE_MAP_TILES_URL=https://tile.openstreetmap.org/{z}/{x}/{y}.png
 VITE_MAP_STYLE_URL=https://tiles.openfreemap.org/styles/liberty
-
-# WebRTC
 MEDIASOUP_ANNOUNCED_IP=$SERVER_IP
 VOICE_SERVER_URL=${WS_SCHEME}://$DOMAIN/voice
-
-# JWT
 JWT_SECRET=$JWT_SECRET
-
-# Simulation
 SIMULATION_SERVICE_URL=http://localhost:3002
 EOF
   chmod 600 .env
@@ -256,131 +219,80 @@ EOF
 # ─── Build & start Docker services ───────────────────────────────────────────
 start_services() {
   info "Building Docker images..."
-  docker compose build --parallel 2>&1 | tail -20
-
+  docker compose build --parallel 2>&1 | tail -5
   info "Starting backend services..."
   docker compose up -d
-
-  info "Waiting for services to become healthy..."
-  local retries=30
-  while [[ $retries -gt 0 ]]; do
-    if docker compose ps --format json 2>/dev/null | grep -q '"Health":"healthy"' || \
-       docker compose ps 2>/dev/null | grep -q "(healthy)"; then
-      break
-    fi
-    sleep 2
-    retries=$((retries - 1))
-    echo -n "."
-  done
-  echo ""
-
+  sleep 5
   docker compose ps
   ok "Backend services started."
 }
 
 # ─── Setup OSRM data ────────────────────────────────────────────────────────
-# Write directly to the Docker volume's host path — bypasses all Docker
-# volume abstraction that causes data not to persist between containers.
 setup_osrm_data() {
   info "Setting up OSRM routing data..."
-
-  # Stop the crash-looping OSRM container
   docker stop convoy-osrm 2>/dev/null || true
 
-  # Find the actual host path of the Docker volume
-  local vol_name
+  local vol_name vol_path
   vol_name=$(docker volume ls --format '{{.Name}}' | grep osrm_data | head -1)
-  if [[ -z "$vol_name" ]]; then
-    fail "Could not find OSRM Docker volume."
-  fi
-  local vol_path
+  [[ -z "$vol_name" ]] && fail "Could not find OSRM Docker volume."
   vol_path=$(docker volume inspect "$vol_name" --format '{{.Mountpoint}}')
-  info "OSRM volume: $vol_name → $vol_path"
+  info "Volume: $vol_name → $vol_path"
 
-  # Download PBF on the host
   info "Downloading Monaco OSM data..."
   curl -sL -o /tmp/monaco-latest.osm.pbf \
     https://download.geofabrik.de/europe/monaco-latest.osm.pbf \
     || fail "Failed to download OSM data."
-  ok "Downloaded $(du -h /tmp/monaco-latest.osm.pbf | cut -f1) PBF file."
 
-  # Copy PBF into volume path directly
   cp /tmp/monaco-latest.osm.pbf "$vol_path/monaco-latest.osm.pbf"
-  ok "PBF copied to volume."
 
-  # Process with a temporary container that mounts the volume path directly
-  info "Extracting OSRM routing data (may take a few minutes)..."
+  info "Extracting OSRM data (may take a minute)..."
   docker run --rm -v "$vol_path:/data" osrm/osrm-backend:latest \
-    osrm-extract -p /opt/car.lua /data/monaco-latest.osm.pbf 2>&1 | tail -5
+    osrm-extract -p /opt/car.lua /data/monaco-latest.osm.pbf 2>&1 | tail -3
 
-  info "Partitioning OSRM data..."
+  info "Partitioning..."
   docker run --rm -v "$vol_path:/data" osrm/osrm-backend:latest \
-    osrm-partition /data/monaco-latest.osrm 2>&1 | tail -3
+    osrm-partition /data/monaco-latest.osrm 2>&1 | tail -2
 
-  info "Customizing OSRM data..."
+  info "Customizing..."
   docker run --rm -v "$vol_path:/data" osrm/osrm-backend:latest \
-    osrm-customize /data/monaco-latest.osrm 2>&1 | tail -3
+    osrm-customize /data/monaco-latest.osrm 2>&1 | tail -2
 
-  # Verify data files exist
-  if ls "$vol_path"/monaco-latest.osrm.* >/dev/null 2>&1; then
-    ok "OSRM data files created: $(ls "$vol_path"/monaco-latest.osrm.* | wc -l) files"
-  else
-    fail "OSRM data files not found after processing!"
-  fi
-
-  # Clean up
   rm -f /tmp/monaco-latest.osm.pbf
 
-  # Start the real OSRM container — data exists, it will boot
-  info "Starting OSRM container..."
-  docker start convoy-osrm
+  local file_count
+  file_count=$(ls "$vol_path"/monaco-latest.osrm.* 2>/dev/null | wc -l)
+  [[ "$file_count" -gt 0 ]] || fail "OSRM data files not found after processing!"
+  ok "OSRM data ready ($file_count files)."
 
-  info "Waiting for OSRM to become healthy..."
-  local retries=30
+  docker start convoy-osrm
+  info "Waiting for OSRM health..."
+  local retries=20
   while [[ $retries -gt 0 ]]; do
-    if docker inspect --format='{{.State.Health.Status}}' convoy-osrm 2>/dev/null | grep -q healthy; then
-      break
-    fi
-    sleep 3
-    retries=$((retries - 1))
-    echo -n "."
+    docker inspect --format='{{.State.Health.Status}}' convoy-osrm 2>/dev/null | grep -q healthy && break
+    sleep 2; retries=$((retries - 1)); echo -n "."
   done
   echo ""
-
-  local status
-  status=$(docker inspect --format='{{.State.Health.Status}}' convoy-osrm 2>/dev/null || echo "unknown")
-  if [[ "$status" == "healthy" ]]; then
-    ok "OSRM data ready and healthy."
-  else
-    warn "OSRM status: $status — routing may not work for non-Monaco locations."
-  fi
+  ok "OSRM healthy."
 }
 
 # ─── Build frontend ──────────────────────────────────────────────────────────
 build_frontend() {
   info "Installing frontend dependencies..."
   cd "$INSTALL_DIR/apps/web"
-  npm install --silent 2>&1 | tail -5
+  npm install --silent 2>&1 | tail -3
 
   info "Building frontend for production..."
-  # Cloudflare terminates SSL — origin serves plain HTTP
   if [[ "$USE_CLOUDFLARE" == "y" ]]; then
-    FE_API="http://$DOMAIN/api"
-    FE_OSRM="http://$DOMAIN/routing"
-    FE_GEO="http://$DOMAIN/geocode"
+    FE_API="http://$DOMAIN/api"; FE_OSRM="http://$DOMAIN/routing"; FE_GEO="http://$DOMAIN/geocode"
   else
-    FE_API="https://$DOMAIN/api"
-    FE_OSRM="https://$DOMAIN/routing"
-    FE_GEO="https://$DOMAIN/geocode"
+    FE_API="https://$DOMAIN/api"; FE_OSRM="https://$DOMAIN/routing"; FE_GEO="https://$DOMAIN/geocode"
   fi
-  VITE_POCKETBASE_URL="$FE_API" \
-  VITE_OSRM_URL="$FE_OSRM" \
-  VITE_NOMINATIM_URL="$FE_GEO" \
-  npm run build 2>&1 | tail -10
+  VITE_POCKETBASE_URL="$FE_API" VITE_OSRM_URL="$FE_OSRM" VITE_NOMINATIM_URL="$FE_GEO" \
+    npm run build 2>&1 | tail -5
 
-  info "Copying build to Nginx serving directory..."
   mkdir -p /var/www/convoy
   cp -r dist/* /var/www/convoy/
+  [[ -f /var/www/convoy/index.html ]] || fail "Frontend build failed — index.html not found."
   ok "Frontend built and deployed."
   cd "$INSTALL_DIR"
 }
@@ -389,20 +301,15 @@ build_frontend() {
 configure_nginx() {
   info "Configuring Nginx..."
 
-  # Clean up any previous convoy configs to avoid conflicts
-  rm -f /etc/nginx/sites-available/convoy
-  rm -f /etc/nginx/sites-available/convoy-temp
-  rm -f /etc/nginx/sites-enabled/convoy
-  rm -f /etc/nginx/sites-enabled/convoy-temp
-  find /etc/nginx/sites-enabled/ -type l -exec sh -c 'readlink "$1" | grep -q convoy && rm -f "$1"' _ {} \; 2>/dev/null || true
+  rm -f /etc/nginx/sites-available/convoy /etc/nginx/sites-available/convoy-temp
+  rm -f /etc/nginx/sites-enabled/convoy /etc/nginx/sites-enabled/convoy-temp
+  rm -f /etc/nginx/sites-enabled/default
 
   if [[ "$USE_CLOUDFLARE" == "y" ]]; then
-    # Cloudflare mode: plain HTTP only (SSL terminated at Cloudflare edge)
     cat > /etc/nginx/sites-available/convoy <<NGINX
 server {
     listen 80;
     server_name $DOMAIN;
-
     client_max_body_size 10M;
 
     location / {
@@ -453,13 +360,12 @@ server {
     }
 }
 NGINX
-    ln -sf /etc/nginx/sites-available/convoy /etc/nginx/sites-enabled/convoy
   else
-    # Direct mode: HTTP→HTTPS redirect + SSL via certbot
     cat > /etc/nginx/sites-available/convoy-temp <<NGINX_TEMP
 server {
     listen 80;
     server_name $DOMAIN;
+    client_max_body_size 10M;
 
     location / {
         root /var/www/convoy;
@@ -512,35 +418,29 @@ NGINX_TEMP
     ln -sf /etc/nginx/sites-available/convoy-temp /etc/nginx/sites-enabled/convoy
   fi
 
-  rm -f /etc/nginx/sites-enabled/default
-  nginx -t
-  systemctl reload nginx
+  [[ "$USE_CLOUDFLARE" == "y" ]] && ln -sf /etc/nginx/sites-available/convoy /etc/nginx/sites-enabled/convoy
+
+  nginx -t || fail "Nginx config test failed."
+  systemctl restart nginx
   ok "Nginx configured."
 }
 
 # ─── SSL with Let's Encrypt ──────────────────────────────────────────────────
 setup_ssl() {
   info "Requesting SSL certificate from Let's Encrypt..."
-  certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos --email "$ADMIN_EMAIL" --redirect 2>&1 | tail -10
-
-  # Swap to full SSL config
+  certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos --email "$ADMIN_EMAIL" --redirect 2>&1 | tail -5
   ln -sf /etc/nginx/sites-available/convoy /etc/nginx/sites-enabled/convoy
-  nginx -t
-  systemctl reload nginx
-
-  # Setup auto-renewal
+  nginx -t && systemctl reload nginx
   systemctl enable certbot.timer 2>/dev/null || true
   systemctl start certbot.timer 2>/dev/null || true
-
-  ok "SSL certificate installed and auto-renewal configured."
+  ok "SSL configured."
 }
 
 # ─── Create PocketBase admin ─────────────────────────────────────────────────
 setup_pocketbase_admin() {
   info "Creating PocketBase admin account..."
   docker exec convoy-pocketbase /pb/pocketbase admin create \
-    "$PB_ADMIN_EMAIL" \
-    "$PB_ADMIN_PASSWORD" 2>/dev/null || warn "Admin may already exist."
+    "$PB_ADMIN_EMAIL" "$PB_ADMIN_PASSWORD" 2>/dev/null || warn "Admin may already exist."
   ok "PocketBase admin configured."
 }
 
@@ -566,8 +466,46 @@ configure_firewall() {
     ufw allow 8090/tcp comment "PocketBase admin"
     ufw allow 20000:20100/udp comment "WebRTC voice"
     ok "Firewall configured."
+  fi
+}
+
+# ─── Verify installation ────────────────────────────────────────────────────
+verify_install() {
+  info "Verifying installation..."
+  local errors=0
+
+  # PocketBase
+  if curl -sf http://localhost:8090/api/health >/dev/null 2>&1; then
+    ok "PocketBase API: healthy"
   else
-    warn "UFW not found. Configure firewall manually."
+    warn "PocketBase API: not responding"; errors=$((errors + 1))
+  fi
+
+  # OSRM
+  if docker inspect --format='{{.State.Health.Status}}' convoy-osrm 2>/dev/null | grep -q healthy; then
+    ok "OSRM: healthy"
+  else
+    warn "OSRM: not healthy"; errors=$((errors + 1))
+  fi
+
+  # Nginx
+  if curl -sf -o /dev/null http://localhost/ 2>&1; then
+    ok "Nginx: serving"
+  else
+    warn "Nginx: not serving"; errors=$((errors + 1))
+  fi
+
+  # Frontend
+  if [[ -f /var/www/convoy/index.html ]]; then
+    ok "Frontend: deployed"
+  else
+    warn "Frontend: not deployed"; errors=$((errors + 1))
+  fi
+
+  if [[ $errors -gt 0 ]]; then
+    warn "$errors verification checks failed — check logs above."
+  else
+    ok "All verification checks passed."
   fi
 }
 
@@ -578,41 +516,27 @@ print_summary() {
   echo -e "${GREEN}  Installation Complete!${NC}"
   echo -e "${GREEN}══════════════════════════════════════════════════════════════${NC}"
   echo ""
+  echo -e "  App URL:         ${CYAN}https://$DOMAIN${NC}"
+  echo -e "  Admin UI:        ${CYAN}https://$DOMAIN/pb/${NC}"
+  echo -e "  PocketBase API:  ${CYAN}https://$DOMAIN/api/${NC}"
+  echo ""
+  echo -e "  PocketBase Admin: ${YELLOW}$PB_ADMIN_EMAIL${NC}"
+  echo ""
   if [[ "$USE_CLOUDFLARE" == "y" ]]; then
-    echo -e "  App URL:         ${CYAN}https://$DOMAIN${NC}"
-    echo -e "  Admin UI:        ${CYAN}https://$DOMAIN/pb/${NC}"
-    echo -e "  PocketBase API:  ${CYAN}https://$DOMAIN/api/${NC}"
-    echo ""
-    echo -e "  ${YELLOW}Cloudflare Tunnel — Update your config:${NC}"
-    echo -e "  File: /etc/cloudflared/config.yml"
+    echo -e "  ${YELLOW}Cloudflare Tunnel config (/etc/cloudflared/config.yml):${NC}"
     echo ""
     echo -e "    ingress:"
     echo -e "      - hostname: ${GREEN}$DOMAIN${NC}"
     echo -e "        service: ${GREEN}http://localhost:80${NC}"
     echo -e "      - service: http_status:404"
     echo ""
-    echo -e "  Then run:"
-    echo -e "    ${CYAN}sudo systemctl restart cloudflared${NC}"
-  else
-    echo -e "  App URL:         ${CYAN}https://$DOMAIN${NC}"
-    echo -e "  Admin UI:        ${CYAN}https://$DOMAIN/pb/${NC}"
-    echo -e "  PocketBase API:  ${CYAN}https://$DOMAIN/api/${NC}"
+    echo -e "  Then run: ${CYAN}sudo systemctl restart cloudflared${NC}"
+    echo ""
   fi
-  echo ""
-  echo -e "  PocketBase Admin: ${YELLOW}$PB_ADMIN_EMAIL${NC}"
-  echo ""
-  echo -e "  ${YELLOW}Next steps:${NC}"
-  echo -e "  1. Open https://$DOMAIN/pb/ and create collections (see docs/pocketbase-setup.md)"
-  echo -e "  2. Create your first user account at https://$DOMAIN/"
-  echo -e "  3. Create a convoy and start navigating!"
-  echo ""
   echo -e "  ${YELLOW}Useful commands:${NC}"
-  echo -e "  cd $INSTALL_DIR"
-  echo -e "  docker compose ps          # Service status"
-  echo -e "  docker compose logs -f     # Live logs"
-  echo -e "  docker compose restart     # Restart all"
-  echo -e "  docker compose down        # Stop all"
-  echo -e "  docker compose up -d       # Start all"
+  echo -e "  cd $INSTALL_DIR && docker compose ps"
+  echo -e "  cd $INSTALL_DIR && docker compose logs -f"
+  echo -e "  sudo ./scripts/uninstall.sh    # Clean uninstall"
   echo ""
   echo -e "${GREEN}══════════════════════════════════════════════════════════════${NC}"
 }
@@ -621,20 +545,20 @@ print_summary() {
 main() {
   check_root
   detect_os
-  install_prereqs
   gather_config
+  cleanup_previous
+  install_prereqs
   clone_repo
   generate_env
   start_services
   setup_osrm_data
   build_frontend
   configure_nginx
-  if [[ "$USE_CLOUDFLARE" != "y" ]]; then
-    setup_ssl
-  fi
+  [[ "$USE_CLOUDFLARE" != "y" ]] && setup_ssl
   setup_pocketbase_admin
   setup_collections
   configure_firewall
+  verify_install
   print_summary
 }
 
