@@ -1,6 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import pb from '../services/pocketbase'
+import {
+  isPushSupported,
+  getPushSubscription,
+  subscribeToPush,
+  unsubscribeFromPush,
+  getPermissionState,
+} from '../services/pushNotifications'
 
 interface Vehicle {
   id: string
@@ -26,6 +33,9 @@ function ProfilePage() {
   })
   const [savingVehicle, setSavingVehicle] = useState(false)
   const [error, setError] = useState('')
+  const [pushEnabled, setPushEnabled] = useState(false)
+  const [pushSupported, setPushSupported] = useState(false)
+  const [pushLoading, setPushLoading] = useState(false)
 
   useEffect(() => {
     const fetchVehicles = async () => {
@@ -45,6 +55,35 @@ function ProfilePage() {
     }
     fetchVehicles()
   }, [user])
+
+  useEffect(() => {
+    const checkPush = async () => {
+      const supported = await isPushSupported()
+      setPushSupported(supported)
+      if (!supported) return
+      const sub = await getPushSubscription()
+      setPushEnabled(sub !== null || getPermissionState() === 'granted')
+    }
+    checkPush()
+  }, [])
+
+  const handleTogglePush = async () => {
+    if (!pushSupported) return
+    setPushLoading(true)
+    try {
+      if (pushEnabled) {
+        await unsubscribeFromPush()
+        setPushEnabled(false)
+      } else {
+        const sub = await subscribeToPush()
+        setPushEnabled(sub !== null)
+      }
+    } catch {
+      // permission denied or error
+    } finally {
+      setPushLoading(false)
+    }
+  }
 
   const handleAddVehicle = async () => {
     if (!newVehicle.name.trim() || !newVehicle.license_plate.trim()) return
@@ -267,13 +306,27 @@ function ProfilePage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-white">Push Notifications</p>
-                  <p className="text-sm text-slate-400">Receive alerts for convoy updates</p>
+                  <p className="text-sm text-slate-400">
+                    {!pushSupported
+                      ? 'Not supported in this browser'
+                      : pushEnabled
+                        ? 'Enabled — receive alerts for convoy updates'
+                        : 'Receive alerts for convoy updates'}
+                  </p>
                 </div>
                 <button
                   aria-label="Toggle push notifications"
-                  className="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-indigo-600 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                  onClick={handleTogglePush}
+                  disabled={!pushSupported || pushLoading}
+                  className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+                    pushEnabled ? 'bg-indigo-600' : 'bg-slate-600'
+                  }`}
                 >
-                  <span className="translate-x-5 inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
+                  <span
+                    className={`inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                      pushEnabled ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  ></span>
                 </button>
               </div>
               <div className="flex items-center justify-between">
