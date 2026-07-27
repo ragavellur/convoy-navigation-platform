@@ -279,32 +279,54 @@ start_services() {
 }
 
 # ─── Setup OSRM data ────────────────────────────────────────────────────────
-# Download PBF on host (Ubuntu has curl), then use `docker compose run` which
-# automatically inherits the correct Compose-managed volumes (no naming mismatch).
+# Write directly to the Docker volume's host path — bypasses all Docker
+# volume abstraction that causes data not to persist between containers.
 setup_osrm_data() {
   info "Setting up OSRM routing data..."
 
   # Stop the crash-looping OSRM container
   docker stop convoy-osrm 2>/dev/null || true
 
+  # Find the actual host path of the Docker volume
+  local vol_name
+  vol_name=$(docker volume ls --format '{{.Name}}' | grep osrm_data | head -1)
+  if [[ -z "$vol_name" ]]; then
+    fail "Could not find OSRM Docker volume."
+  fi
+  local vol_path
+  vol_path=$(docker volume inspect "$vol_name" --format '{{.Mountpoint}}')
+  info "OSRM volume: $vol_name → $vol_path"
+
+  # Download PBF on the host
   info "Downloading Monaco OSM data..."
   curl -sL -o /tmp/monaco-latest.osm.pbf \
     https://download.geofabrik.de/europe/monaco-latest.osm.pbf \
     || fail "Failed to download OSM data."
   ok "Downloaded $(du -h /tmp/monaco-latest.osm.pbf | cut -f1) PBF file."
 
-  # Copy PBF into Compose volume + extract in one shot
-  # docker compose run inherits osrm service's volume mounts automatically
+  # Copy PBF into volume path directly
+  cp /tmp/monaco-latest.osm.pbf "$vol_path/monaco-latest.osm.pbf"
+  ok "PBF copied to volume."
+
+  # Process with a temporary container that mounts the volume path directly
   info "Extracting OSRM routing data (may take a few minutes)..."
-  docker compose run --rm \
-    -v /tmp/monaco-latest.osm.pbf:/tmp/pbf.osm.pbf:ro \
-    osrm sh -c "cp /tmp/pbf.osm.pbf /data/monaco-latest.osm.pbf && osrm-extract -p /opt/car.lua /data/monaco-latest.osm.pbf" 2>&1 | tail -10
+  docker run --rm -v "$vol_path:/data" osrm/osrm-backend:latest \
+    osrm-extract -p /opt/car.lua /data/monaco-latest.osm.pbf 2>&1 | tail -5
 
   info "Partitioning OSRM data..."
-  docker compose run --rm osrm osrm-partition /data/monaco-latest.osrm 2>&1 | tail -3
+  docker run --rm -v "$vol_path:/data" osrm/osrm-backend:latest \
+    osrm-partition /data/monaco-latest.osrm 2>&1 | tail -3
 
   info "Customizing OSRM data..."
-  docker compose run --rm osrm osrm-customize /data/monaco-latest.osrm 2>&1 | tail -3
+  docker run --rm -v "$vol_path:/data" osrm/osrm-backend:latest \
+    osrm-customize /data/monaco-latest.osrm 2>&1 | tail -3
+
+  # Verify data files exist
+  if ls "$vol_path"/monaco-latest.osrm.* >/dev/null 2>&1; then
+    ok "OSRM data files created: $(ls "$vol_path"/monaco-latest.osrm.* | wc -l) files"
+  else
+    fail "OSRM data files not found after processing!"
+  fi
 
   # Clean up
   rm -f /tmp/monaco-latest.osm.pbf
@@ -366,6 +388,13 @@ build_frontend() {
 # ─── Configure Nginx ─────────────────────────────────────────────────────────
 configure_nginx() {
   info "Configuring Nginx..."
+
+  # Clean up any previous convoy configs to avoid conflicts
+  rm -f /etc/nginx/sites-available/convoy
+  rm -f /etc/nginx/sites-available/convoy-temp
+  rm -f /etc/nginx/sites-enabled/convoy
+  rm -f /etc/nginx/sites-enabled/convoy-temp
+  find /etc/nginx/sites-enabled/ -type l -exec sh -c 'readlink "$1" | grep -q convoy && rm -f "$1"' _ {} \; 2>/dev/null || true
 
   if [[ "$USE_CLOUDFLARE" == "y" ]]; then
     # Cloudflare mode: plain HTTP only (SSL terminated at Cloudflare edge)

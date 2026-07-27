@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Convoy Navigation Platform — Uninstall Script
-# Stops containers, removes data, cleans up nginx/SSL/frontend
+# Stops containers, removes data, cleans up nginx/SSL/frontend/Docker
 #
 set -euo pipefail
 
@@ -23,16 +23,29 @@ fi
 
 echo ""
 
-# Step 1: Stop and remove Docker containers + volumes
+# Step 1: Stop and remove Docker containers + volumes + network
+info "Stopping Docker containers and removing volumes..."
 if [[ -d /opt/convoy ]]; then
-  info "Stopping Docker containers and removing volumes..."
   cd /opt/convoy
-  docker compose down -v 2>/dev/null || true
+  docker compose down -v --remove-orphans 2>/dev/null || true
   cd /
-  ok "Docker containers stopped and volumes removed."
-else
-  warn "/opt/convoy not found — skipping Docker cleanup."
 fi
+
+# Also remove any leftover convoy containers
+docker rm -f convoy-osrm convoy-pocketbase convoy-nominatim convoy-redis \
+  convoy-simulation convoy-voice 2>/dev/null || true
+
+# Remove the Docker volume(s) explicitly
+docker volume rm convoy_osrm_data convoy_nominatim_data convoy_redis_data \
+  convoy_pocketbase_data 2>/dev/null || true
+
+# Remove the Docker network
+docker network rm convoy_convoy-network 2>/dev/null || true
+
+# Prune any dangling images
+docker image prune -f 2>/dev/null || true
+
+ok "Docker cleanup done."
 
 # Step 2: Remove project files
 if [[ -d /opt/convoy ]]; then
@@ -41,24 +54,50 @@ if [[ -d /opt/convoy ]]; then
   ok "Project files removed."
 fi
 
-# Step 3: Remove Nginx config
+# Step 3: Remove ALL Nginx convoy configs
 info "Cleaning up Nginx configuration..."
 rm -f /etc/nginx/sites-available/convoy
 rm -f /etc/nginx/sites-available/convoy-temp
 rm -f /etc/nginx/sites-enabled/convoy
 rm -f /etc/nginx/sites-enabled/convoy-temp
+# Also remove any symlink that might reference convoy
+find /etc/nginx/sites-enabled/ -type l -exec sh -c 'readlink "$1" | grep -q convoy && rm -f "$1"' _ {} \; 2>/dev/null || true
+
+# Test and restart nginx
 if nginx -t 2>/dev/null; then
   systemctl restart nginx 2>/dev/null || true
   ok "Nginx cleaned and restarted."
 else
-  warn "Nginx config test failed — you may need to fix manually."
-  systemctl restart nginx 2>/dev/null || true
+  warn "Nginx config test failed — restoring default..."
+  # Restore a minimal default config
+  cat > /etc/nginx/sites-available/default <<'DEFAULT'
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    server_name _;
+    root /var/www/html;
+    index index.html index.htm index.nginx-debian.html;
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}
+DEFAULT
+  ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
+  rm -f /etc/nginx/sites-enabled/convoy /etc/nginx/sites-enabled/convoy-temp
+  nginx -t 2>/dev/null && systemctl restart nginx 2>/dev/null || true
+  warn "Nginx reset to defaults."
 fi
 
 # Step 4: Remove SSL certificates
 if command -v certbot >/dev/null 2>&1; then
   info "Removing SSL certificates..."
-  certbot delete --cert-name convoy.vellur.in --non-interactive 2>/dev/null || warn "No SSL cert found."
+  # Delete any cert matching convoy
+  for cert in $(certbot certificates 2>/dev/null | grep -oP 'Certificate Name: \K.*' | grep -i convoy); do
+    certbot delete --cert-name "$cert" --non-interactive 2>/dev/null || true
+  done
+  # Also try common names
+  certbot delete --cert-name convoy.vellur.in --non-interactive 2>/dev/null || true
+  certbot delete --cert-name convoy.vallue.in --non-interactive 2>/dev/null || true
   ok "SSL cleanup done."
 fi
 
@@ -69,27 +108,20 @@ if [[ -d /var/www/convoy ]]; then
   ok "Frontend removed."
 fi
 
-# Step 6: Remove Docker images (optional)
-read -rp "  Remove Docker images too? (y/N): " REMOVE_IMAGES
-if [[ "${REMOVE_IMAGES,,}" == "y" ]]; then
-  info "Removing Docker images..."
-  docker rmi convoy-pocketbase convoy-simulation-service convoy-voice-server 2>/dev/null || true
-  ok "Docker images removed."
-fi
-
 echo ""
 echo -e "${GREEN}══════════════════════════════════════════════════════════════${NC}"
 echo -e "${GREEN}  Uninstall Complete${NC}"
 echo -e "${GREEN}══════════════════════════════════════════════════════════════${NC}"
 echo ""
 echo -e "  Removed:"
-echo -e "    - Docker containers and volumes"
+echo -e "    - Docker containers, volumes, and network"
 echo -e "    - /opt/convoy (project files)"
-echo -e "    - Nginx config"
+echo -e "    - All Nginx convoy configs"
 echo -e "    - SSL certificates"
 echo -e "    - /var/www/convoy (frontend build)"
 echo ""
 echo -e "  To reinstall:"
-echo -e "    git clone https://github.com/ragavellur/convoy-navigation-platform.git /opt/convoy"
-echo -e "    cd /opt/convoy && sudo ./scripts/install.sh"
+echo -e "    cd ~/convoy-navigation-platform"
+echo -e "    git pull origin main"
+echo -e "    sudo ./scripts/install.sh"
 echo ""
