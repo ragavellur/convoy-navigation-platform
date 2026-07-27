@@ -613,11 +613,6 @@ function MapPage() {
         const vehicleType = (vehicleInfo?.type as 'car' | 'truck' | 'motorcycle' | 'other') ?? 'car'
         const color = getDistinctColor(vehicleId, vehicleInfo?.color)
         const el = createVehicleMarkerElement(vehicleType, color)
-        el.addEventListener('click', () => {
-          if (map.current) {
-            map.current.flyTo({ center: [offsetLng, offsetLat], zoom: 16, duration: 800 })
-          }
-        })
         const marker = new maplibregl.Marker({ element: el })
           .setLngLat([offsetLng, offsetLat])
           .setPopup(
@@ -626,6 +621,12 @@ function MapPage() {
             ),
           )
           .addTo(map.current)
+        el.addEventListener('click', () => {
+          if (map.current) {
+            const current = marker.getLngLat()
+            map.current.flyTo({ center: [current.lng, current.lat], zoom: 16, duration: 800 })
+          }
+        })
         convoyMarkersRef.current.set(vehicleId, marker)
       }
 

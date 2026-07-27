@@ -327,136 +327,28 @@ configure_nginx() {
   rm -f /etc/nginx/sites-enabled/convoy /etc/nginx/sites-enabled/convoy-temp
   rm -f /etc/nginx/sites-enabled/default
 
-  if [[ "$USE_CLOUDFLARE" == "y" ]]; then
+  local NGINX_TEMPLATE="$INSTALL_DIR/nginx/convoy.conf"
+  if [[ -f "$NGINX_TEMPLATE" ]]; then
+    sed "s/__DOMAIN__/$DOMAIN/g" "$NGINX_TEMPLATE" > /etc/nginx/sites-available/convoy
+    ln -sf /etc/nginx/sites-available/convoy /etc/nginx/sites-enabled/convoy
+  else
+    warn "Nginx template not found at $NGINX_TEMPLATE — using default config."
     cat > /etc/nginx/sites-available/convoy <<NGINX
 server {
     listen 80;
     server_name $DOMAIN;
     client_max_body_size 10M;
-
-    location / {
-        root /var/www/convoy;
-        try_files \$uri \$uri/ /index.html;
-    }
-
-    location /api/ {
-        proxy_pass http://127.0.0.1:8090/;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection "upgrade";
-    }
-
-    location /pb/ {
-        proxy_pass http://127.0.0.1:8090/_;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-    }
-
-    location /voice/ {
-        proxy_pass http://127.0.0.1:3001/;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection "upgrade";
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_read_timeout 86400;
-    }
-
-    location /routing/ {
-        proxy_pass http://127.0.0.1:5001/;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-    }
-
-    location /simulation/ {
-        proxy_pass http://127.0.0.1:3002/;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-    }
-
-    location /geocode/ {
-        proxy_pass http://127.0.0.1:8080/;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-    }
+    location / { root /var/www/convoy; try_files \$uri \$uri/ /index.html; }
+    location /api/ { proxy_pass http://127.0.0.1:8090; proxy_set_header Host \$host; proxy_set_header X-Real-IP \$remote_addr; proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for; proxy_set_header X-Forwarded-Proto \$scheme; proxy_http_version 1.1; proxy_set_header Upgrade \$http_upgrade; proxy_set_header Connection "upgrade"; }
+    location /pb/ { proxy_pass http://127.0.0.1:8090/_; proxy_set_header Host \$host; proxy_set_header X-Real-IP \$remote_addr; }
+    location /voice/ { proxy_pass http://127.0.0.1:3001/; proxy_http_version 1.1; proxy_set_header Upgrade \$http_upgrade; proxy_set_header Connection "upgrade"; proxy_set_header Host \$host; proxy_set_header X-Real-IP \$remote_addr; proxy_read_timeout 86400; }
+    location /routing/ { proxy_pass http://127.0.0.1:5001/; proxy_set_header Host \$host; proxy_set_header X-Real-IP \$remote_addr; }
+    location /simulation/ { proxy_pass http://127.0.0.1:3002/; proxy_set_header Host \$host; proxy_set_header X-Real-IP \$remote_addr; }
+    location /geocode/ { proxy_pass http://127.0.0.1:8080/; proxy_set_header Host \$host; proxy_set_header X-Real-IP \$remote_addr; }
 }
 NGINX
-  else
-    cat > /etc/nginx/sites-available/convoy-temp <<NGINX_TEMP
-server {
-    listen 80;
-    server_name $DOMAIN;
-    client_max_body_size 10M;
-
-    location / {
-        root /var/www/convoy;
-        try_files \$uri \$uri/ /index.html;
-    }
-
-    location /api/ {
-        proxy_pass http://127.0.0.1:8090/;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection "upgrade";
-    }
-
-    location /pb/ {
-        proxy_pass http://127.0.0.1:8090/_;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-    }
-
-    location /voice/ {
-        proxy_pass http://127.0.0.1:3001/;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection "upgrade";
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_read_timeout 86400;
-    }
-
-    location /routing/ {
-        proxy_pass http://127.0.0.1:5001/;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-    }
-
-    location /simulation/ {
-        proxy_pass http://127.0.0.1:3002/;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-    }
-
-    location /geocode/ {
-        proxy_pass http://127.0.0.1:8080/;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-    }
-}
-NGINX_TEMP
-    ln -sf /etc/nginx/sites-available/convoy-temp /etc/nginx/sites-enabled/convoy
+    ln -sf /etc/nginx/sites-available/convoy /etc/nginx/sites-enabled/convoy
   fi
-
-  [[ "$USE_CLOUDFLARE" == "y" ]] && ln -sf /etc/nginx/sites-available/convoy /etc/nginx/sites-enabled/convoy
 
   nginx -t || fail "Nginx config test failed."
   systemctl restart nginx
