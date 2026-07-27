@@ -37,6 +37,13 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        navigateFallbackDenylist: [
+          /^\/api\//,
+          /^\/pb\//,
+          /^\/voice\//,
+          /^\/routing\//,
+          /^\/geocode\//,
+        ],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/tile\.openstreetmap\.org\/.*/i,
@@ -50,7 +57,7 @@ export default defineConfig({
             },
           },
           {
-            urlPattern: /^http:\/\/localhost:8090\/api\/.*/i,
+            urlPattern: /^https?:\/\/(localhost:8090|convoy\.vellur\.in)\/api\/.*/i,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'pocketbase-api',
