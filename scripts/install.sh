@@ -263,46 +263,34 @@ start_services() {
 }
 
 # ─── Setup OSRM data ────────────────────────────────────────────────────────
-# The osrm/osrm-backend image has no wget/curl — download PBF on the host,
-# then run OSRM processing via one-shot containers sharing the volume.
+# Download PBF on host (Ubuntu has curl), then use `docker compose run` which
+# automatically inherits the correct Compose-managed volumes (no naming mismatch).
 setup_osrm_data() {
   info "Setting up OSRM routing data..."
 
   # Stop the crash-looping OSRM container
   docker stop convoy-osrm 2>/dev/null || true
 
-  info "Downloading Monaco OSM data (via host curl)..."
+  info "Downloading Monaco OSM data..."
   curl -sL -o /tmp/monaco-latest.osm.pbf \
     https://download.geofabrik.de/europe/monaco-latest.osm.pbf \
     || fail "Failed to download OSM data."
   ok "Downloaded $(du -h /tmp/monaco-latest.osm.pbf | cut -f1) PBF file."
 
-  info "Copying PBF into OSRM volume..."
-  docker run --rm \
-    -v osrm_data:/data \
-    -v /tmp/monaco-latest.osm.pbf:/tmp/monaco-latest.osm.pbf:ro \
-    alpine:latest \
-    cp /tmp/monaco-latest.osm.pbf /data/monaco-latest.osm.pbf
-
+  # Copy PBF into Compose volume + extract in one shot
+  # docker compose run inherits osrm service's volume mounts automatically
   info "Extracting OSRM routing data (may take a few minutes)..."
-  docker run --rm \
-    -v osrm_data:/data \
-    osrm/osrm-backend:latest \
-    osrm-extract -p /opt/car.lua /data/monaco-latest.osm.pbf 2>&1 | tail -5
+  docker compose run --rm \
+    -v /tmp/monaco-latest.osm.pbf:/tmp/pbf.osm.pbf:ro \
+    osrm sh -c "cp /tmp/pbf.osm.pbf /data/monaco-latest.osm.pbf && osrm-extract -p /opt/car.lua /data/monaco-latest.osm.pbf" 2>&1 | tail -10
 
   info "Partitioning OSRM data..."
-  docker run --rm \
-    -v osrm_data:/data \
-    osrm/osrm-backend:latest \
-    osrm-partition /data/monaco-latest.osrm 2>&1 | tail -3
+  docker compose run --rm osrm osrm-partition /data/monaco-latest.osrm 2>&1 | tail -3
 
   info "Customizing OSRM data..."
-  docker run --rm \
-    -v osrm_data:/data \
-    osrm/osrm-backend:latest \
-    osrm-customize /data/monaco-latest.osrm 2>&1 | tail -3
+  docker compose run --rm osrm osrm-customize /data/monaco-latest.osrm 2>&1 | tail -3
 
-  # Clean up downloaded PBF
+  # Clean up
   rm -f /tmp/monaco-latest.osm.pbf
 
   # Start the real OSRM container — data exists, it will boot
