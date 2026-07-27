@@ -9,7 +9,7 @@ interface GeolocationState {
 
 const isGeolocationSupported = typeof navigator !== 'undefined' && 'geolocation' in navigator
 
-export function useGeolocation(enableHighAccuracy = false): GeolocationState {
+export function useGeolocation(enableHighAccuracy = true): GeolocationState {
   const [state, setState] = useState<GeolocationState>({
     position: null,
     error: isGeolocationSupported ? null : 'Geolocation not supported',
@@ -34,10 +34,14 @@ export function useGeolocation(enableHighAccuracy = false): GeolocationState {
           loading: false,
         })
       },
-      () => {
+      (err) => {
+        if (err.code === err.POSITION_UNAVAILABLE) {
+          setState((prev) => ({ ...prev, loading: false }))
+          return
+        }
         setState((prev) => ({ ...prev, loading: false }))
       },
-      { enableHighAccuracy, maximumAge: 10000, timeout: 15000 },
+      { enableHighAccuracy, maximumAge: 5000, timeout: 30000 },
     )
 
     return () => navigator.geolocation.clearWatch(watchId)

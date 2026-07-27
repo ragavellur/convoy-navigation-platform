@@ -747,6 +747,19 @@ function MapPage() {
   }, [theme, mapLoaded])
 
   useEffect(() => {
+    if (!position || !mapLoaded || !map.current || convoyId) return
+    const center = map.current.getCenter()
+    const isAtDefault = center.lat === 0 && center.lng === 0
+    if (isAtDefault) {
+      map.current.flyTo({
+        center: [position.lng, position.lat],
+        zoom: 13,
+        duration: 2000,
+      })
+    }
+  }, [position, mapLoaded, convoyId])
+
+  useEffect(() => {
     if (!convoyId || !mapLoaded || !map.current) return
     if (convoyRouteLoadedRef.current) return
 
@@ -1097,12 +1110,26 @@ function MapPage() {
       )}
       <button
         onClick={() => {
-          if (position && map.current) {
+          if (!map.current) return
+          if (position) {
             map.current.flyTo({
               center: [position.lng, position.lat],
               zoom: 15,
               duration: 1000,
             })
+          } else if ('geolocation' in navigator) {
+            navigator.geolocation.getCurrentPosition(
+              (pos) => {
+                if (!map.current) return
+                map.current.flyTo({
+                  center: [pos.coords.longitude, pos.coords.latitude],
+                  zoom: 15,
+                  duration: 1000,
+                })
+              },
+              () => {},
+              { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 },
+            )
           }
         }}
         className="absolute bottom-20 right-4 z-10 w-10 h-10 flex items-center justify-center rounded-full transition-colors"

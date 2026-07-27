@@ -66,14 +66,16 @@ export function useGeolocationStream(enableHighAccuracy = true) {
         listenersRef.current.forEach((l) => l(newPos))
       },
       (err) => {
+        if (err.code === err.POSITION_UNAVAILABLE) {
+          return
+        }
+
         let permissionState: PermissionState = 'denied'
         let error = 'Location access denied'
 
         if (err.code === err.TIMEOUT) {
           permissionState = 'timeout'
           error = 'Location request timed out'
-        } else if (err.code === err.POSITION_UNAVAILABLE) {
-          error = 'Location information unavailable'
         }
 
         setState((prev) => ({ ...prev, permissionState, error }))
