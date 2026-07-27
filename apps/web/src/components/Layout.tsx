@@ -1,12 +1,16 @@
 import { useState } from 'react'
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { useTheme } from '../stores/ThemeContext'
+import RosterSidebar from './RosterSidebar'
 
 function Layout() {
   const { isAuthenticated, user, logout } = useAuth()
+  const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
   const location = useLocation()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(true)
 
   const handleLogout = () => {
     logout()
@@ -56,6 +60,31 @@ function Layout() {
               </div>
             </div>
             <div className="hidden md:flex md:items-center md:space-x-4">
+              <button
+                onClick={toggleTheme}
+                className="p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+              >
+                {theme === 'light' ? (
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+                    />
+                  </svg>
+                ) : (
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+                    />
+                  </svg>
+                )}
+              </button>
               {isAuthenticated ? (
                 <>
                   <span className="text-sm text-gray-700">{user?.name || user?.email}</span>
@@ -142,6 +171,12 @@ function Layout() {
                 <div className="space-y-2">
                   <p className="text-sm text-gray-700">{user?.name || user?.email}</p>
                   <button
+                    onClick={toggleTheme}
+                    className="w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50"
+                  >
+                    {theme === 'light' ? '🌙 Dark Mode' : '☀️ Light Mode'}
+                  </button>
+                  <button
                     onClick={handleLogout}
                     className="w-full text-left px-3 py-2 rounded-md text-base font-medium text-red-600 hover:bg-red-50"
                   >
@@ -173,35 +208,10 @@ function Layout() {
 
       {isMapPage && isAuthenticated ? (
         <div className="flex-1 flex">
-          <aside className="hidden lg:flex lg:flex-col lg:w-80 bg-white border-r border-gray-200 overflow-y-auto">
-            <div className="p-4 border-b border-gray-200">
-              <h2 className="text-sm font-semibold text-gray-900">Convoy Panel</h2>
-              <p className="text-xs text-gray-500 mt-1">Route details and convoy info</p>
-            </div>
-            <div className="flex-1 p-4">
-              <div className="text-sm text-gray-500">
-                <p className="mb-3">Select a destination on the map to see route details here.</p>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-xs">
-                    <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                    <span>Online convoy members</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs">
-                    <span className="w-2 h-2 rounded-full bg-gray-400"></span>
-                    <span>Offline convoy members</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="p-4 border-t border-gray-200">
-              <Link
-                to="/convoy"
-                className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700"
-              >
-                Manage Convoy
-              </Link>
-            </div>
-          </aside>
+          <RosterSidebar
+            isExpanded={isSidebarExpanded}
+            onToggle={() => setIsSidebarExpanded(!isSidebarExpanded)}
+          />
           <main className="flex-1 min-h-0">
             <Outlet />
           </main>

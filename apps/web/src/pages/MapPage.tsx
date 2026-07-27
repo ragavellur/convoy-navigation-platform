@@ -21,6 +21,8 @@ import {
 import { MarkerAnimator } from '../services/markerAnimation'
 import { createVehicleMarkerElement } from '../components/VehicleMarker'
 import pb from '../services/pocketbase'
+import { useConvoyRoster } from '../stores/ConvoyRosterContext'
+import { useTheme, getMapStyleUrl } from '../stores/ThemeContext'
 import type { SearchResult, RouteResponse, RouteGeometry } from '../types'
 
 const ROUTE_SOURCE_ID = 'route'
@@ -55,6 +57,12 @@ function MapPage() {
   >(new Map())
   const { position } = useGeolocation()
   const geoStream = useGeolocationStream(true)
+  const { members, focusMemberId, joinConvoy, leaveConvoy } = useConvoyRoster()
+  const { theme } = useTheme()
+
+  const memberVehicleMap = useRef<Map<string, { type: string; name: string; color?: string }>>(
+    new Map(),
+  )
 
   function clearAllRouteLayers() {
     if (!map.current) return
@@ -361,6 +369,39 @@ function MapPage() {
   }, [convoyId])
 
   useEffect(() => {
+    if (!convoyId) {
+      leaveConvoy()
+      return
+    }
+    joinConvoy(convoyId)
+    return () => leaveConvoy()
+  }, [convoyId, joinConvoy, leaveConvoy])
+
+  useEffect(() => {
+    memberVehicleMap.current.clear()
+    for (const m of members) {
+      if (m.vehicleId) {
+        memberVehicleMap.current.set(m.vehicleId, {
+          type: m.vehicleType ?? 'car',
+          name: m.userName,
+          color: m.vehicleColor,
+        })
+      }
+    }
+  }, [members])
+
+  useEffect(() => {
+    if (!focusMemberId || !map.current) return
+    const member = members.find((m) => m.id === focusMemberId)
+    if (!member?.position) return
+    map.current.flyTo({
+      center: [member.position.lng, member.position.lat],
+      zoom: 16,
+      essential: true,
+    })
+  }, [focusMemberId, members])
+
+  useEffect(() => {
     if (!convoyId) return
 
     import('../services/positionTracking').then(({ getLatestPositions }) => {
@@ -425,12 +466,14 @@ function MapPage() {
       animatorRef.current!.updateTarget(vehicleId, pos.lat, pos.lng, pos.heading, pos.speed)
 
       if (!convoyMarkersRef.current.has(vehicleId) && map.current) {
-        const el = createVehicleMarkerElement('car')
+        const vehicleInfo = memberVehicleMap.current.get(vehicleId)
+        const vehicleType = (vehicleInfo?.type as 'car' | 'truck' | 'motorcycle' | 'other') ?? 'car'
+        const el = createVehicleMarkerElement(vehicleType, vehicleInfo?.color)
         const marker = new maplibregl.Marker({ element: el })
           .setLngLat([pos.lng, pos.lat])
           .setPopup(
             new maplibregl.Popup({ offset: 25 }).setHTML(
-              `<p style="font-size:12px;padding:4px;">${vehicleId.slice(0, 6)}</p>`,
+              `<p style="font-size:12px;padding:4px;font-weight:500;">${vehicleInfo?.name ?? vehicleId.slice(0, 6)}</p>`,
             ),
           )
           .addTo(map.current)
@@ -491,7 +534,7 @@ function MapPage() {
 
     map.current = new maplibregl.Map({
       container: mapContainer.current,
-      style: 'https://tiles.openfreemap.org/styles/liberty',
+      style: getMapStyleUrl(theme),
       center: [0, 0],
       zoom: 1,
     })
@@ -536,6 +579,12 @@ function MapPage() {
       map.current = null
     }
   }, [])
+
+  useEffect(() => {
+    if (map.current && mapLoaded) {
+      map.current.setStyle(getMapStyleUrl(theme))
+    }
+  }, [theme, mapLoaded])
 
   useEffect(() => {
     if (position && map.current && mapLoaded) {
