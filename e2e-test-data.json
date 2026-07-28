@@ -1007,6 +1007,52 @@
           "priority": "medium"
         }
       ]
+    },
+    {
+      "id": "error-handling",
+      "name": "Error Handling & Crash Reporting",
+      "tests": [
+        {
+          "id": "E2-1",
+          "title": "Error boundary catches render crash",
+          "steps": "Trigger a render error in React (e.g. throw in component)",
+          "expected": "Error fallback UI shown instead of blank screen",
+          "status": "pending",
+          "sprint": "Sprint 11",
+          "taskId": "TASK-151",
+          "priority": "high"
+        },
+        {
+          "id": "E2-2",
+          "title": "Sentry captures unhandled exceptions",
+          "steps": "Trigger unhandled JS exception → check Sentry dashboard",
+          "expected": "Error logged to Sentry with stack trace, user context, URL",
+          "status": "pending",
+          "sprint": "Sprint 11",
+          "taskId": "TASK-151",
+          "priority": "high"
+        },
+        {
+          "id": "E2-3",
+          "title": "Sentry captures API errors",
+          "steps": "Force PocketBase request failure → check Sentry",
+          "expected": "API error captured with request URL and status code",
+          "status": "pending",
+          "sprint": "Sprint 11",
+          "taskId": "TASK-151",
+          "priority": "medium"
+        },
+        {
+          "id": "E2-4",
+          "title": "Error boundary recovers on retry",
+          "steps": "Crashed component → click 'Try Again'",
+          "expected": "Component remounts and app continues without full reload",
+          "status": "pending",
+          "sprint": "Sprint 11",
+          "taskId": "TASK-151",
+          "priority": "medium"
+        }
+      ]
     }
   ]
 }

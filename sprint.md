@@ -220,36 +220,39 @@
 
 ## Sprint 10: CSS Refactoring - Remaining Files & Component Extraction (Week 19-20)
 
-### 🔄 In Progress
+### ✅ Done
 
-- [-] [TASK-117] Refactor ConvoyPage.tsx — replace ~12 hardcoded inline styles + Tailwind colors
-- [-] [TASK-118] Refactor ProfilePage.tsx — replace ~13 hardcoded inline styles + Tailwind colors
-- [-] [TASK-119] Refactor Layout.tsx — replace ~10 hardcoded inline styles + Tailwind colors, use .glass/.glass-strong classes
-- [-] [TASK-120] Refactor VoicePanel.tsx — replace ~10 hardcoded inline styles + Tailwind colors
-- [-] [TASK-121] Refactor ChatPanel.tsx — replace hardcoded Tailwind colors with CSS variables
-- [-] [TASK-122] Refactor SearchBar.tsx, LocationPermissionPrompt.tsx, ProtectedRoute.tsx, VehicleTypeSelector.tsx, NotFoundPage.tsx
-- [-] [TASK-123] Refactor LoginPage.tsx & RegisterPage.tsx — replace inline styles with .input-field class + CSS variables
-- [-] [TASK-124] Extract shared components: StatusBadge, MemberCard, SimulationControls from large pages
+- [x] [TASK-117] Refactor ConvoyPage.tsx — replace ~12 hardcoded inline styles + Tailwind colors
+- [x] [TASK-118] Refactor ProfilePage.tsx — replace ~13 hardcoded inline styles + Tailwind colors
+- [x] [TASK-119] Refactor Layout.tsx — replace ~10 hardcoded inline styles + Tailwind colors, use .glass/.glass-strong classes
+- [x] [TASK-120] Refactor VoicePanel.tsx — replace ~10 hardcoded inline styles + Tailwind colors
+- [x] [TASK-121] Refactor ChatPanel.tsx — replace hardcoded Tailwind colors with CSS variables
+- [x] [TASK-122] Refactor SearchBar.tsx, LocationPermissionPrompt.tsx, ProtectedRoute.tsx, VehicleTypeSelector.tsx, NotFoundPage.tsx
+- [x] [TASK-123] Refactor LoginPage.tsx & RegisterPage.tsx — replace inline styles with .input-field class + CSS variables
+- [x] [TASK-124] Extract shared components: StatusBadge, MemberCard, SimulationControls from large pages
 
 ---
 
 ## Sprint 11: Polish & Testing (Week 21-22)
 
+### 🔄 In Progress
+
+- [-] [TASK-151] Add error boundaries & crash reporting (Sentry)
+
 ### 📌 Backlog
 
-- [ ] [TASK-117] Optimize battery consumption across all states
-- [ ] [TASK-118] Implement location update batching
-- [ ] [TASK-119] Write unit tests for all services (>85% coverage)
-- [ ] [TASK-120] Write integration tests for API endpoints
-- [ ] [TASK-121] Write E2E tests for web (Playwright)
-- [ ] [TASK-122] Write E2E tests for Android (Detox)
-- [ ] [TASK-123] Performance profiling & optimization
-- [ ] [TASK-124] Add error boundaries & crash reporting (Sentry)
-- [ ] [TASK-125] Implement analytics tracking
-- [ ] [TASK-126] Accessibility audit (WCAG 2.1 AA) - web
-- [ ] [TASK-127] Security audit (OWASP Mobile + Web)
-- [ ] [TASK-128] Load testing for PocketBase Realtime
-- [ ] [TASK-129] API documentation (OpenAPI/Swagger)
+- [ ] [TASK-144] Optimize battery consumption across all states
+- [ ] [TASK-145] Implement location update batching
+- [ ] [TASK-146] Write unit tests for all services (>85% coverage)
+- [ ] [TASK-147] Write integration tests for API endpoints
+- [ ] [TASK-148] Write E2E tests for web (Playwright)
+- [ ] [TASK-149] Write E2E tests for Android (Detox)
+- [ ] [TASK-150] Performance profiling & optimization
+- [ ] [TASK-152] Implement analytics tracking
+- [ ] [TASK-153] Accessibility audit (WCAG 2.1 AA) - web
+- [ ] [TASK-154] Security audit (OWASP Mobile + Web)
+- [ ] [TASK-155] Load testing for PocketBase Realtime
+- [ ] [TASK-156] API documentation (OpenAPI/Swagger)
 
 ---
 

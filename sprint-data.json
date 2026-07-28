@@ -895,49 +895,49 @@
         {
           "id": "TASK-117",
           "title": "Refactor ConvoyPage.tsx — replace ~12 hardcoded inline styles + Tailwind colors",
-          "status": "in-progress",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-118",
           "title": "Refactor ProfilePage.tsx — replace ~13 hardcoded inline styles + Tailwind colors",
-          "status": "in-progress",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-119",
           "title": "Refactor Layout.tsx — replace ~10 hardcoded inline styles + Tailwind colors, use .glass/.glass-strong classes",
-          "status": "in-progress",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-120",
           "title": "Refactor VoicePanel.tsx — replace ~10 hardcoded inline styles + Tailwind colors",
-          "status": "in-progress",
+          "status": "done",
           "priority": "medium"
         },
         {
           "id": "TASK-121",
           "title": "Refactor ChatPanel.tsx — replace hardcoded Tailwind colors with CSS variables",
-          "status": "in-progress",
+          "status": "done",
           "priority": "medium"
         },
         {
           "id": "TASK-122",
           "title": "Refactor SearchBar.tsx, LocationPermissionPrompt.tsx, ProtectedRoute.tsx, VehicleTypeSelector.tsx, NotFoundPage.tsx",
-          "status": "in-progress",
+          "status": "done",
           "priority": "medium"
         },
         {
           "id": "TASK-123",
           "title": "Refactor LoginPage.tsx & RegisterPage.tsx — replace inline styles with .input-field class + CSS variables",
-          "status": "in-progress",
+          "status": "done",
           "priority": "medium"
         },
         {
           "id": "TASK-124",
           "title": "Extract shared components: StatusBadge, MemberCard, SimulationControls from large pages",
-          "status": "in-progress",
+          "status": "done",
           "priority": "medium"
         }
       ]
@@ -945,84 +945,84 @@
     {
       "id": 11,
       "name": "Sprint 11: Polish & Testing",
-      "platform": "All",
-      "startDate": "2026-12-11",
-      "endDate": "2026-12-25",
+      "platform": "Web",
+      "startDate": "2026-07-28",
+      "endDate": "2026-08-11",
       "tasks": [
         {
-          "id": "TASK-117",
+          "id": "TASK-144",
           "title": "Optimize battery consumption across all states",
           "status": "backlog",
           "priority": "high"
         },
         {
-          "id": "TASK-118",
+          "id": "TASK-145",
           "title": "Implement location update batching",
           "status": "backlog",
           "priority": "medium"
         },
         {
-          "id": "TASK-119",
+          "id": "TASK-146",
           "title": "Write unit tests for all services (>85% coverage)",
           "status": "backlog",
           "priority": "high"
         },
         {
-          "id": "TASK-120",
+          "id": "TASK-147",
           "title": "Write integration tests for API endpoints",
           "status": "backlog",
           "priority": "high"
         },
         {
-          "id": "TASK-121",
+          "id": "TASK-148",
           "title": "Write E2E tests for web (Playwright)",
           "status": "backlog",
           "priority": "high"
         },
         {
-          "id": "TASK-122",
+          "id": "TASK-149",
           "title": "Write E2E tests for Android (Detox)",
           "status": "backlog",
           "priority": "medium"
         },
         {
-          "id": "TASK-123",
+          "id": "TASK-150",
           "title": "Performance profiling & optimization",
           "status": "backlog",
           "priority": "medium"
         },
         {
-          "id": "TASK-124",
+          "id": "TASK-151",
           "title": "Add error boundaries & crash reporting (Sentry)",
-          "status": "backlog",
-          "priority": "medium"
+          "status": "in-progress",
+          "priority": "high"
         },
         {
-          "id": "TASK-125",
+          "id": "TASK-152",
           "title": "Implement analytics tracking",
           "status": "backlog",
           "priority": "low"
         },
         {
-          "id": "TASK-126",
+          "id": "TASK-153",
           "title": "Accessibility audit (WCAG 2.1 AA) - web",
           "status": "backlog",
           "priority": "medium"
         },
         {
-          "id": "TASK-127",
+          "id": "TASK-154",
           "title": "Security audit (OWASP Mobile + Web)",
           "status": "backlog",
           "priority": "high"
         },
         {
-          "id": "TASK-128",
+          "id": "TASK-155",
           "title": "Load testing for PocketBase Realtime",
           "status": "backlog",
           "priority": "medium"
         },
         {
-          "id": "TASK-129",
+          "id": "TASK-156",
           "title": "API documentation (OpenAPI/Swagger)",
           "status": "backlog",
           "priority": "low"

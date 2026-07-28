@@ -224,6 +224,19 @@
 
 ---
 
+## Sprint 11: Polish & Testing
+
+### Error Handling & Crash Reporting (TASK-151)
+
+| ID   | Test                                 | Steps                                       | Expected Result                                            | Sprint   |
+| ---- | ------------------------------------ | ------------------------------------------- | ---------------------------------------------------------- | -------- |
+| E2-1 | Error boundary catches render crash  | Trigger a render error (throw in component) | Error fallback UI shown instead of blank screen            | TASK-151 |
+| E2-2 | Sentry captures unhandled exceptions | Trigger unhandled JS exception              | Error logged to Sentry with stack trace, user context, URL | TASK-151 |
+| E2-3 | Sentry captures API errors           | Force PocketBase request failure            | API error captured with request URL and status             | TASK-151 |
+| E2-4 | Error boundary recovers on retry     | Crashed component → click 'Try Again'       | Component remounts, app continues without full reload      | TASK-151 |
+
+---
+
 ## Sprint Traceability
 
 - **Sprint 1 (TASK-000–017):** Infrastructure, Auth, Map basics → Tests I-1–6, A-1–6, M-1
@@ -233,3 +246,4 @@
 - **Sprint 5 (TASK-049–059):** Roster, UI, Dark Mode → Tests R-1–11
 - **Sprint 6 (TASK-060–073):** Voice, Chat → Tests V-1–5, C-11–15
 - **Sprint 7 (TASK-074–085):** Critical Convoy Fixes → Tests S7-1–14
+- **Sprint 11 (TASK-144–156):** Polish & Testing → Tests E2-1–4 (Error handling)
