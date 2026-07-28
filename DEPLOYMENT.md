@@ -1,193 +1,256 @@
 # Deployment Guide
 
-## Overview
-
-The Convoy Navigation Platform runs as a set of Docker containers behind a reverse proxy. This guide covers production deployment on a fresh Ubuntu/Debian server with a domain name.
-
-## Architecture
+## Architecture Overview
 
 ```
-Internet → Nginx (SSL) → :443
-  ├── /            → Vite static build (Nginx)
-  ├── /api         → PocketBase :8090
+Internet → Cloudflare Tunnel → Nginx (:80)
+  ├── /            → Frontend (rsync'd static files)
+  ├── /api/        → PocketBase :8090 (Auth + DB + Realtime)
   ├── /pb/         → PocketBase Admin UI :8090
-  ├── /voice       → Voice Server :3001 (WebSocket)
-  └── /*           → Vite static build (Nginx)
+  ├── /voice/      → Voice Server :3001 (WebSocket + WebRTC)
+  ├── /routing/    → OSRM :5001
+  ├── /simulation/ → Simulation Service :3002
+  └── /geocode/    → Nominatim :8080
 
-Docker Network (convoy-network):
+Docker Network (convoy-network) — all internal:
   ├── convoy-pocketbase   :8090  (SQLite + Auth + API + Realtime)
-  ├── convoy-osrm         :5000  (OSRM routing engine)
+  ├── convoy-osrm         :5000  (OSRM routing engine, mapped to 5001)
   ├── convoy-nominatim    :8080  (Nominatim geocoder)
   ├── convoy-redis        :6379  (Redis cache)
-  ├── convoy-simulation   :3002  (Simulation service)
+  ├── convoy-simulation   :3002  (Simulation service + push notifications)
   └── convoy-voice        :3001  (mediasoup SFU voice)
+
+Host:
+  └── Nginx (:80) — reverse proxy + static file serving
 ```
 
-## System Requirements
+## Three Deployment Paths
 
-| Resource | Minimum                    |
-| -------- | -------------------------- |
-| OS       | Ubuntu 22.04+ / Debian 12+ |
-| CPU      | 2 vCPU                     |
-| RAM      | 4 GB                       |
-| Disk     | 40 GB SSD                  |
-| Ports    | 80, 443, 8090 (admin only) |
+The platform has **three distinct deployment paths** depending on what changed:
 
-## Software Requirements
+| Change Type                                       | Deployment Method                                  | Downtime              |
+| ------------------------------------------------- | -------------------------------------------------- | --------------------- |
+| **Frontend** (React/Vite/JS/CSS)                  | Build locally → rsync to server → purge Cloudflare | None (instant)        |
+| **Backend** (PocketBase hooks, simulation, voice) | Rebuild Docker container on server                 | ~10-30s per container |
+| **Database schema** (collections, fields, rules)  | Run setup script against PocketBase Admin API      | None (instant)        |
 
-- Docker Engine 24+
-- Docker Compose v2+
-- Git
-- Nginx
-- Certbot (for SSL)
+> **Future:** Frontend will be containerized (multi-stage Docker build + Nginx).
+> This eliminates rsync and unifies all deployments to `docker compose up --build`.
 
-## Quick Start (Automated)
+---
+
+## Server Details
+
+| Item             | Value                                               |
+| ---------------- | --------------------------------------------------- |
+| Server IP        | `192.168.200.11`                                    |
+| Domain           | `convoy.vellur.in`                                  |
+| SSH              | `bharatradar@192.168.200.11` (password: `raga@098`) |
+| Project path     | `/opt/convoy/`                                      |
+| Frontend path    | `/var/www/convoy/`                                  |
+| Nginx config     | `/etc/nginx/sites-enabled/convoy`                   |
+| PocketBase admin | `raghavan@vellur.in` / `raga!098`                   |
+| Cloudflare       | Dashboard-managed tunnel (token file)               |
+
+---
+
+## Path 1: Frontend Deployment (rsync)
+
+This is the most common deployment — theme changes, UI fixes, new components, etc.
+
+### Step 1: Build locally
 
 ```bash
-git clone https://github.com/ragavellur/convoy-navigation-platform.git
-cd convoy-navigation-platform
-chmod +x scripts/install.sh
-sudo ./scripts/install.sh
+cd apps/web
+npm run build
 ```
 
-The install script will prompt for:
-
-1. Domain name (e.g., `convoy.example.com`)
-2. Admin email (for SSL certificate)
-3. PocketBase admin credentials
-4. JWT secret
-5. Server public IP (for WebRTC)
-
-## Manual Deployment
-
-### 1. Install Dependencies
+Verify `.env.production` has correct values before building:
 
 ```bash
-# Docker
-curl -fsSL https://get.docker.com | sh
-sudo usermod -aG docker $USER
-
-# Docker Compose
-sudo apt install docker-compose-plugin -y
-
-# Nginx
-sudo apt install nginx -y
-
-# Certbot
-sudo apt install certbot python3-certbot-nginx -y
+cat .env.production
+# VITE_POCKETBASE_URL=https://convoy.vellur.in
+# VITE_VAPID_PUBLIC_KEY=...
 ```
 
-### 2. Clone Repository
+### Step 2: rsync to server
 
 ```bash
-git clone https://github.com/ragavellur/convoy-navigation-platform.git
-cd convoy-navigation-platform
+rsync -avz --delete dist/ bharatradar@192.168.200.11:/tmp/convoy-deploy/
 ```
 
-### 3. Configure Environment
+### Step 3: Move files on server (sudo required — files are root-owned)
 
 ```bash
-cp .env.example .env
+sshpass -p 'raga@098' ssh bharatradar@192.168.200.11 "
+  sudo rm -rf /var/www/convoy/*
+  sudo cp -r /tmp/convoy-deploy/* /var/www/convoy/
+  sudo chown -R root:root /var/www/convoy/
+  rm -rf /tmp/convoy-deploy
+"
 ```
 
-Edit `.env` with production values:
+> **Why `rm -rf` first?** Old hashed asset filenames (e.g., `index-abc123.js`) would
+> linger if we just copied. `--delete` in rsync handles this too, but the sudo
+> copy step needs the clean approach.
+
+### Step 4: Purge Cloudflare cache
+
+Cloudflare CDN aggressively caches static assets. After deployment:
+
+1. Go to Cloudflare Dashboard → convoy.vellur.in → Caching → Configuration
+2. Click "Purge Everything" (or purge specific URLs)
+3. Hard-refresh the site (`Ctrl+Shift+R`)
+
+### Step 5: Smoke test
+
+- [ ] `https://convoy.vellur.in` loads without blank page
+- [ ] Login/Register works
+- [ ] Console has no 404s for JS/CSS assets
+- [ ] Theme toggle works (light/dark)
+
+---
+
+## Path 2: Backend Deployment (Docker rebuild)
+
+When backend code changes — PocketBase hooks, simulation service, voice server.
+
+### Step 1: Pull latest code on server
 
 ```bash
-# PocketBase
-POCKETBASE_PORT=8090
-POCKETBASE_ADMIN_EMAIL=admin@yourdomain.com
-POCKETBASE_ADMIN_PASSWORD=CHANGE_ME_STRONG_PASSWORD
-
-# OSRM
-OSRM_PORT=5001
-
-# Nominatim
-NOMINATIM_PORT=8080
-NOMINATIM_DB_PASSWORD=CHANGE_ME_STRONG_PASSWORD
-
-# Redis
-REDIS_PORT=6379
-REDIS_PASSWORD=CHANGE_ME_STRONG_PASSWORD
-
-# Frontend (must use HTTPS in production)
-VITE_POCKETBASE_URL=https://yourdomain.com/api
-VITE_OSRM_URL=https://yourdomain.com
-VITE_NOMINATIM_URL=https://yourdomain.com
-VITE_MAP_TILES_URL=https://tile.openstreetmap.org/{z}/{x}/{y}.png
-
-# WebRTC (set to server public IP)
-MEDIASOUP_ANNOUNCED_IP=YOUR_SERVER_PUBLIC_IP
+sshpass -p 'raga@098' ssh bharatradar@192.168.200.11 "
+  cd /opt/convoy
+  sudo git pull origin main
+"
 ```
 
-### 4. Build and Start Services
+### Step 2: Rebuild the changed service
 
 ```bash
-# Build all images
-docker compose build
-
-# Start backend services
-docker compose up -d
-
-# Verify health
-docker compose ps
+sshpass -p 'raga@098' ssh bharatradar@192.168.200.11 "
+  cd /opt/convoy
+  sudo docker compose up -d --build <service-name>
+"
 ```
 
-### 5. Configure Nginx
+Available service names:
 
-Create `/etc/nginx/sites-available/convoy`:
+- `pocketbase` — PocketBase server + custom hooks
+- `simulation-service` — Simulation API + push notifications
+- `voice-server` — WebRTC voice SFU
+- `osrm` — OSRM routing engine (rarely changes)
+- `nominatim` — Nominatim geocoder (rarely changes)
+- `redis` — Redis cache (rarely changes)
+
+### Step 3: Verify container health
+
+```bash
+sshpass -p 'raga@098' ssh bharatradar@192.168.200.11 "
+  sudo docker ps --format 'table {{.Names}}\t{{.Status}}'
+"
+```
+
+All containers should show `healthy` (except `convoy-voice` which may show `unhealthy` — known issue, voice still works).
+
+---
+
+## Path 3: Database Schema Deployment (Admin API)
+
+When collections, fields, or rules change.
+
+### Step 1: Run setup script locally against server
+
+```bash
+# Using the shell script (two-phase: create fields, then set rules)
+PB_URL="https://convoy.vellur.in" \
+PB_EMAIL="raghavan@vellur.in" \
+PB_PASSWORD="raga!098" \
+bash scripts/setup-collections.sh
+
+# Or using the Python script
+python3 scripts/setup-collections.py \
+  --url https://convoy.vellur.in \
+  --email raghavan@vellur.in \
+  --password "raga!098"
+```
+
+### Step 2: Verify via PocketBase admin UI
+
+- Go to `https://convoy.vellur.in/pb/`
+- Login with admin credentials
+- Check that new collections/fields exist
+
+> **PocketBase v0.21.3 quirks:**
+>
+> - JSON fields require `maxSize: 2000000` in options
+> - File fields require `maxSize` (e.g., `5242880`)
+> - Bool fields must NOT have `options` key
+> - PATCH returns 400 but actually applies changes
+> - Collection schema uses `schema` field (not `fields`) in API body
+> - Rules referencing schema fields must be set AFTER collection creation (two-phase)
+
+---
+
+## Cloudflare Tunnel
+
+The server uses Cloudflare Tunnel (not port forwarding) for HTTPS.
+
+- **Dashboard-managed** — config via Cloudflare Zero Trust dashboard
+- **Token file** at `/etc/cloudflared/token` on server
+- **Service:** `cloudflared` runs as a systemd service
+- **HTTPS termination** happens at Cloudflare edge, not on server
+- **Nginx listens on port 80 only** (no SSL certs on server)
+
+### Managing the tunnel
+
+```bash
+# Check tunnel status
+sshpass -p 'raga@098' ssh bharatradar@192.168.200.11 "
+  sudo systemctl status cloudflared
+"
+
+# Restart tunnel
+sshpass -p 'raga@098' ssh bharatradar@192.168.200.11 "
+  sudo systemctl restart cloudflared
+"
+```
+
+---
+
+## Nginx Configuration
+
+Server Nginx at `/etc/nginx/sites-enabled/convoy`:
 
 ```nginx
 server {
     listen 80;
-    server_name yourdomain.com;
-    return 301 https://$server_name$request_uri;
-}
-
-server {
-    listen 443 ssl http2;
-    server_name yourdomain.com;
-
-    ssl_certificate /etc/letsencrypt/live/yourdomain.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/yourdomain.com/privkey.pem;
-
-    # Security headers
-    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
-    add_header X-Content-Type-Options nosniff;
-    add_header X-Frame-Options DENY;
-    add_header X-XSS-Protection "1; mode=block";
-
+    server_name convoy.vellur.in;
     client_max_body_size 10M;
 
-    # Frontend (built Vite app)
     location / {
-        root /opt/convoy/frontend/dist;
+        root /var/www/convoy;
         try_files $uri $uri/ /index.html;
     }
 
-    # PocketBase API
     location /api/ {
-        proxy_pass http://127.0.0.1:8090/;
+        proxy_pass http://127.0.0.1:8090;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-
-        # WebSocket support (PocketBase realtime)
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
     }
 
-    # PocketBase Admin UI
     location /pb/ {
-        proxy_pass http://127.0.0.1:8090/_/;
+        proxy_pass http://127.0.0.1:8090/_;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
-    # Voice Server (WebSocket)
     location /voice/ {
         proxy_pass http://127.0.0.1:3001/;
         proxy_http_version 1.1;
@@ -199,14 +262,20 @@ server {
         proxy_read_timeout 86400;
     }
 
-    # OSRM (routing)
     location /routing/ {
         proxy_pass http://127.0.0.1:5001/;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
     }
 
-    # Nominatim (geocoding)
+    location /simulation/ {
+        proxy_pass http://127.0.0.1:3002/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
     location /geocode/ {
         proxy_pass http://127.0.0.1:8080/;
         proxy_set_header Host $host;
@@ -215,152 +284,102 @@ server {
 }
 ```
 
-```bash
-sudo ln -s /etc/nginx/sites-available/convoy /etc/nginx/sites-enabled/
-sudo nginx -t
-sudo systemctl reload nginx
-```
+> Template version at `nginx/convoy.conf` with `__DOMAIN__` placeholder.
+> Install script substitutes the domain via `sed`.
 
-### 6. Build Frontend
-
-```bash
-# Build the web app with production API URL
-cd apps/web
-VITE_POCKETBASE_URL=https://yourdomain.com/api \
-VITE_OSRM_URL=https://yourdomain.com/routing \
-VITE_NOMINATIM_URL=https://yourdomain.com/geocode \
-npm run build
-
-# Copy to nginx serving directory
-sudo mkdir -p /opt/convoy/frontend
-sudo cp -r dist/* /opt/convoy/frontend/dist/
-```
-
-### 7. SSL Certificate
-
-```bash
-sudo certbot --nginx -d yourdomain.com
-```
-
-### 8. Setup PocketBase Admin
-
-```bash
-# Create admin account via PocketBase CLI inside container
-docker exec -it convoy-pocketbase /pb/pocketbase admin create \
-  admin@yourdomain.com \
-  your-password
-```
-
-Or use the admin UI at `https://yourdomain.com/pb/`.
-
-### 9. Configure Collections
-
-After first login to PocketBase admin, create the required collections:
-
-See `docs/pocketbase-setup.md` for the full collection schema and setup instructions.
-
-Or run the setup script:
-
-```bash
-node scripts/setup-collections.js
-```
-
-### 10. Load Map Data
-
-OSRM and Nominatim come pre-loaded with Monaco data. For other regions, mount your own `.osm.pbf` file:
-
-```bash
-# Download OSM data for your region
-wget https://download.geofabrik.de/asia/india-latest.osm.pbf -O data/india-latest.osm.pbf
-
-# Process with OSRM
-docker run -v $(pwd)/data:/data ghcr.io/project-osrm/osrm-backend osrm-extract -p /opt/car.lua /data/india-latest.osm.pbf
-docker run -v $(pwd)/data:/data ghcr.io/project-osrm/osrm-backend osrm-partition /data/india-latest.osrm
-docker run -v $(pwd)/data:/data ghcr.io/project-osrm/osrm-backend osrm-customize /data/india-latest.osrm
-
-# Update docker-compose command to use your data
-# command: osrm-routed --algorithm mld /data/india-latest.osrm
-```
+---
 
 ## Service Ports
 
-| Service    | Container Port | Host Port | Purpose             |
-| ---------- | -------------- | --------- | ------------------- |
-| PocketBase | 8090           | 8090      | API, Auth, Realtime |
-| OSRM       | 5000           | 5001      | Route calculation   |
-| Nominatim  | 8080           | 8080      | Geocoding           |
-| Redis      | 6379           | 6379      | Cache               |
-| Simulation | 3002           | 3002      | Vehicle simulation  |
-| Voice      | 3001           | 3001      | WebRTC voice        |
+| Service     | Container Port | Host Port   | External Access           |
+| ----------- | -------------- | ----------- | ------------------------- |
+| PocketBase  | 8090           | 8090        | Via `/api/` and `/pb/`    |
+| OSRM        | 5000           | 5001        | Via `/routing/`           |
+| Nominatim   | 8080           | 8080        | Via `/geocode/`           |
+| Redis       | 6379           | 6379        | Internal only             |
+| Simulation  | 3002           | 3002        | Via `/simulation/`        |
+| Voice       | 3001           | 3001        | Via `/voice/` (WebSocket) |
+| Voice (UDP) | 20000-20100    | 20000-20100 | Direct (WebRTC)           |
+| Nginx       | 80             | 80          | Via Cloudflare Tunnel     |
 
-## Firewall Rules
+---
 
-```bash
-# Required
-sudo ufw allow 80/tcp    # HTTP (redirects to HTTPS)
-sudo ufw allow 443/tcp   # HTTPS
-sudo ufw allow 8090/tcp  # PocketBase admin (restrict to your IP)
+## PocketBase Collections
 
-# UDP for WebRTC voice
-sudo ufw allow 20000:20100/udp
+| Collection         | ID                | Purpose                                             |
+| ------------------ | ----------------- | --------------------------------------------------- |
+| users              | `_pb_users_auth_` | User accounts (name, email, phone, status, role)    |
+| vehicles           | `u9ckdyaer5vm8hn` | User-owned vehicles (car/truck/motorcycle/trekker)  |
+| convoys            | `hz79pz013alllc0` | Convoy groups (name, route, type: vehicle/trekker)  |
+| convoy_members     | (auto)            | User-convoy assignments (role: owner/admin/member)  |
+| positions          | (auto)            | Real-time vehicle positions (lat/lng/speed/heading) |
+| push_subscriptions | `VFJ7GDQLPCCZV4Q` | Web push notification subscriptions                 |
 
-# Optional (restrict as needed)
-sudo ufw allow 5001/tcp  # OSRM (if exposing directly)
-sudo ufw allow 3002/tcp  # Simulation (internal use only)
-```
+---
 
-## Backup
+## Pre-Deploy Checklist
 
-```bash
-# PocketBase database (SQLite)
-docker exec convoy-pocketbase cp /pb/pb_data/data.db /pb/pb_data/backup-$(date +%Y%m%d).db
-docker cp convoy-pocketbase:/pb/pb_data/backup-$(date +%Y%m%d).db ./backups/
-```
+Before any deployment, run through this:
 
-## Updating
+### Frontend changes
 
-```bash
-cd convoy-navigation-platform
-git pull origin main
+- [ ] `apps/web/.env.production` has correct `VITE_POCKETBASE_URL` (production domain, NOT localhost)
+- [ ] `npm run build` succeeds
+- [ ] No hardcoded `localhost:8090` in source (grep for it)
+- [ ] No hardcoded credentials in source
 
-# Rebuild and restart
-docker compose build
-docker compose up -d
+### Backend changes
 
-# Rebuild frontend
-cd apps/web && npm run build
-sudo cp -r dist/* /opt/convoy/frontend/dist/
-```
+- [ ] Docker Compose file syntax valid: `docker compose config`
+- [ ] Environment variables set in server's `/opt/convoy/.env`
+- [ ] Health checks pass after rebuild
+
+### Database schema changes
+
+- [ ] Test collection creation against local PocketBase first
+- [ ] Two-phase approach: create fields first, then set rules
+- [ ] Verify via PocketBase admin UI after applying
+
+---
 
 ## Troubleshooting
 
-### Containers won't start
+### Frontend shows blank page after deploy
+
+- Check Cloudflare cache — purge everything
+- Verify `/var/www/convoy/index.html` exists on server
+- Check browser console for 404s on JS/CSS assets
+
+### Container won't start
 
 ```bash
-docker compose logs -f [service-name]
+docker compose logs -f <service-name>
 ```
 
-### OSRM unhealthy
+### PocketBase auth failures
 
-The OSRM container uses `wget` for healthchecks (no `curl` in image). If unhealthy:
+- Check that `users` collection has `verified: true` for existing users
+- Auth store bug: do NOT use `pb.authStore.onChange()` — it overrides localStorage persistence
 
-```bash
-docker exec convoy-osrm wget -q -O /dev/null http://localhost:5000/health
-```
+### Simulation API returns 404
 
-### PocketBase 403 errors
+- Frontend calls `window.location.origin + '/simulation/api/...'` — goes through Nginx proxy
+- Verify Nginx config has the `/simulation/` location block
 
-Ensure collection rules are set correctly. See `docs/pocketbase-setup.md`.
+### Cloudflare serving stale content
 
-### WebSocket connection failures
+- Cloudflare CDN caches aggressively
+- Must purge cache via dashboard after frontend deploys
+- Alternative: wait for edge expiry (varies, can be hours)
 
-Ensure Nginx has WebSocket headers configured:
+### Voice server shows unhealthy
 
-```
-proxy_set_header Upgrade $http_upgrade;
-proxy_set_header Connection "upgrade";
-```
+- `convoy-voice` health check may fail even when functional
+- Verify WebSocket connection works in browser DevTools
+- Check UDP ports 20000-20100 are open
 
-### WebRTC voice not connecting
+### OSRM returns 0 distance
 
-Ensure UDP ports 20000-20100 are open and `MEDIASOUP_ANNOUNCED_IP` is set to the server's public IP.
+- Local OSRM only has Monaco data
+- Falls back to `router.project-osrm.org` public API for non-Monaco routes
+- For full coverage, load region-specific OSM data (see OSRM Data Setup section)
