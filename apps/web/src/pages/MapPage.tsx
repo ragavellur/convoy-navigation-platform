@@ -1191,21 +1191,6 @@ function MapPage() {
           />
         </svg>
       </button>
-      {!routeData && !routeError && (
-        <div
-          className="absolute bottom-20 left-4 rounded-xl p-4 max-w-sm"
-          style={{
-            background: 'rgba(7, 19, 32, 0.85)',
-            backdropFilter: 'blur(24px)',
-            border: '1px solid var(--border)',
-          }}
-        >
-          <h3 className="font-semibold text-white">Convoy Map</h3>
-          <p className="text-sm text-slate-400 mt-1">
-            Search for a destination to calculate a route.
-          </p>
-        </div>
-      )}
       {convoyId && (
         <LocationPermissionPrompt
           permissionState={geoStream.permissionState}
