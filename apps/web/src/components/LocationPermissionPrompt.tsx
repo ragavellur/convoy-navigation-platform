@@ -17,17 +17,17 @@ function LocationPermissionPrompt({
   if (permissionState === 'granted' || permissionState === 'requesting' || dismissed) return null
 
   return (
-    <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 max-w-sm w-full bg-white shadow-lg rounded-lg border border-gray-200 p-4">
+    <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 max-w-sm w-full bg-[var(--card)] shadow-lg rounded-lg border border-[var(--border)] p-4">
       <div className="flex items-start space-x-3">
         <div className="flex-shrink-0">
           <span className="text-2xl">📍</span>
         </div>
         <div className="flex-1">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium text-gray-900">Enable Location</h3>
+            <h3 className="text-sm font-medium text-[var(--text)]">Enable Location</h3>
             <button
               onClick={() => setDismissed(true)}
-              className="text-gray-400 hover:text-gray-600"
+              className="text-[var(--text2)] hover:text-[var(--text)]"
               aria-label="Dismiss"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -40,7 +40,7 @@ function LocationPermissionPrompt({
               </svg>
             </button>
           </div>
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-[var(--text2)] mt-1">
             Allow location access to share your position with convoy members.
           </p>
           {error && <p className="text-xs text-red-600 mt-1">{error}</p>}

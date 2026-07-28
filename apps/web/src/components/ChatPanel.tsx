@@ -62,17 +62,19 @@ export default function ChatPanel() {
   return (
     <div
       className="rounded-xl border"
-      style={{ background: 'rgba(255, 255, 255, 0.05)', borderColor: 'var(--border)' }}
+      style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
     >
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between px-3 py-2 hover:bg-white/5 transition-colors"
+        className="w-full flex items-center justify-between px-3 py-2 hover:bg-[var(--surface)] transition-colors"
       >
-        <h3 className="text-sm font-semibold text-white">Chat</h3>
+        <h3 className="text-sm font-semibold text-[var(--text)]">Chat</h3>
         <div className="flex items-center gap-1">
-          {messages.length > 0 && <span className="text-xs text-slate-400">{messages.length}</span>}
+          {messages.length > 0 && (
+            <span className="text-xs text-[var(--text2)]">{messages.length}</span>
+          )}
           <svg
-            className={`h-4 w-4 text-slate-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+            className={`h-4 w-4 text-[var(--text2)] opacity-70 transition-transform ${isOpen ? 'rotate-180' : ''}`}
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -86,7 +88,9 @@ export default function ChatPanel() {
         <div className="border-t" style={{ borderColor: 'var(--border)' }}>
           <div className="h-64 overflow-y-auto p-3 space-y-2">
             {messages.length === 0 ? (
-              <p className="text-xs text-slate-500 text-center mt-8">No messages yet</p>
+              <p className="text-xs text-[var(--text2)] opacity-70 text-center mt-8">
+                No messages yet
+              </p>
             ) : (
               messages.map((msg) => (
                 <ChatBubble key={msg.id} message={msg} isSelf={msg.sender === user?.id} />
@@ -104,16 +108,16 @@ export default function ChatPanel() {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Type a message..."
-                className="flex-1 px-3 py-1.5 text-sm text-white placeholder-slate-500 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
+                className="flex-1 px-3 py-1.5 text-sm text-[var(--text)] placeholder-[var(--placeholder)] rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.05)',
+                  background: 'var(--surface)',
                   border: '1px solid var(--border)',
                 }}
               />
               <button
                 onClick={handleSend}
                 disabled={!input.trim()}
-                className="p-1.5 text-indigo-400 hover:text-indigo-300 disabled:text-slate-600 transition-colors"
+                className="p-1.5 text-indigo-400 hover:text-indigo-300 disabled:text-[var(--text2)] disabled:opacity-50 transition-colors"
               >
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
@@ -142,8 +146,8 @@ function ChatBubble({ message, isSelf }: { message: ChatMessage; isSelf: boolean
     return (
       <div className="text-center">
         <span
-          className="text-[10px] text-slate-500 px-2 py-0.5 rounded-full"
-          style={{ background: 'rgba(255, 255, 255, 0.05)' }}
+          className="text-[10px] text-[var(--text2)] opacity-70 px-2 py-0.5 rounded-full"
+          style={{ background: 'var(--surface)' }}
         >
           {message.content}
         </span>
@@ -155,15 +159,17 @@ function ChatBubble({ message, isSelf }: { message: ChatMessage; isSelf: boolean
     <div className={`flex ${isSelf ? 'justify-end' : 'justify-start'}`}>
       <div
         className={`max-w-[80%] px-3 py-1.5 rounded-xl ${
-          isSelf ? 'bg-indigo-600 text-white rounded-br-sm' : 'text-white rounded-bl-sm'
+          isSelf ? 'bg-indigo-600 text-white rounded-br-sm' : 'text-[var(--text)] rounded-bl-sm'
         }`}
-        style={!isSelf ? { background: 'rgba(255, 255, 255, 0.08)' } : undefined}
+        style={!isSelf ? { background: 'var(--surface-hover)' } : undefined}
       >
         {!isSelf && (
           <p className="text-[10px] font-medium text-indigo-400 mb-0.5">{message.senderName}</p>
         )}
         <p className="text-sm">{message.content}</p>
-        <p className={`text-[10px] mt-0.5 ${isSelf ? 'text-indigo-200' : 'text-slate-500'}`}>
+        <p
+          className={`text-[10px] mt-0.5 ${isSelf ? 'text-indigo-200' : 'text-[var(--text2)] opacity-70'}`}
+        >
           {time}
         </p>
       </div>

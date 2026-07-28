@@ -351,7 +351,7 @@ function ConvoyPage() {
   return (
     <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-white">My Convoys</h1>
+        <h1 className="text-2xl font-bold text-[var(--text)]">My Convoys</h1>
         <button
           onClick={() => setShowCreateForm(!showCreateForm)}
           className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-500 transition-colors"
@@ -364,8 +364,8 @@ function ConvoyPage() {
         <div
           className="mb-4 p-3 rounded-xl text-sm text-red-400"
           style={{
-            background: 'rgba(239, 68, 68, 0.1)',
-            border: '1px solid rgba(239, 68, 68, 0.2)',
+            background: 'var(--error-bg)',
+            border: '1px solid var(--error-border)',
           }}
         >
           {error}
@@ -376,8 +376,8 @@ function ConvoyPage() {
         <div
           className="mb-4 p-3 rounded-xl text-sm text-emerald-400"
           style={{
-            background: 'rgba(16, 185, 129, 0.1)',
-            border: '1px solid rgba(16, 185, 129, 0.2)',
+            background: 'var(--success-bg)',
+            border: '1px solid var(--success-border)',
           }}
         >
           {success}
@@ -387,9 +387,9 @@ function ConvoyPage() {
       {showCreateForm && (
         <div
           className="mb-6 rounded-xl p-4"
-          style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--border)' }}
+          style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
         >
-          <h2 className="text-lg font-medium text-white mb-3">New Convoy</h2>
+          <h2 className="text-lg font-medium text-[var(--text)] mb-3">New Convoy</h2>
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <button
@@ -398,11 +398,9 @@ function ConvoyPage() {
                 className="rounded-xl px-3 py-2.5 text-sm font-medium text-center transition-colors"
                 style={{
                   background:
-                    newConvoyType === 'vehicle'
-                      ? 'rgba(99, 102, 241, 0.15)'
-                      : 'rgba(255, 255, 255, 0.03)',
+                    newConvoyType === 'vehicle' ? 'var(--badge-vehicle-bg)' : 'var(--surface)',
                   border: `1px solid ${newConvoyType === 'vehicle' ? 'rgba(99, 102, 241, 0.4)' : 'var(--border)'}`,
-                  color: newConvoyType === 'vehicle' ? '#a5b4fc' : 'var(--text2)',
+                  color: newConvoyType === 'vehicle' ? 'var(--badge-vehicle-text)' : 'var(--text2)',
                 }}
               >
                 <span className="text-lg">🚗</span>
@@ -414,11 +412,9 @@ function ConvoyPage() {
                 className="rounded-xl px-3 py-2.5 text-sm font-medium text-center transition-colors"
                 style={{
                   background:
-                    newConvoyType === 'trekker'
-                      ? 'rgba(16, 185, 129, 0.15)'
-                      : 'rgba(255, 255, 255, 0.03)',
+                    newConvoyType === 'trekker' ? 'var(--badge-trekker-bg)' : 'var(--surface)',
                   border: `1px solid ${newConvoyType === 'trekker' ? 'rgba(16, 185, 129, 0.4)' : 'var(--border)'}`,
-                  color: newConvoyType === 'trekker' ? '#6ee7b7' : 'var(--text2)',
+                  color: newConvoyType === 'trekker' ? 'var(--badge-trekker-text)' : 'var(--text2)',
                 }}
               >
                 <span className="text-lg">🥾</span>
@@ -430,20 +426,20 @@ function ConvoyPage() {
               placeholder="Convoy name"
               value={newConvoyName}
               onChange={(e) => setNewConvoyName(e.target.value)}
-              className="w-full rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
-              style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--border)' }}
+              className="w-full rounded-xl px-3 py-2 text-sm text-[var(--text)] placeholder-[var(--placeholder)] focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
+              style={{ background: 'var(--input-bg)', border: '1px solid var(--border)' }}
             />
             <input
               type="text"
               placeholder="Description (optional)"
               value={newConvoyDesc}
               onChange={(e) => setNewConvoyDesc(e.target.value)}
-              className="w-full rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
-              style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--border)' }}
+              className="w-full rounded-xl px-3 py-2 text-sm text-[var(--text)] placeholder-[var(--placeholder)] focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
+              style={{ background: 'var(--input-bg)', border: '1px solid var(--border)' }}
             />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1">
+                <label className="block text-xs font-medium text-[var(--text2)] mb-1">
                   Starting Point
                 </label>
                 <SearchBar
@@ -453,10 +449,12 @@ function ConvoyPage() {
                     setSourceLng(result.lng)
                   }}
                 />
-                {sourceName && <p className="text-xs text-slate-400 mt-1">{sourceName}</p>}
+                {sourceName && <p className="text-xs text-[var(--text2)] mt-1">{sourceName}</p>}
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1">Destination</label>
+                <label className="block text-xs font-medium text-[var(--text2)] mb-1">
+                  Destination
+                </label>
                 <SearchBar
                   onResultSelect={(result: SearchResult) => {
                     setDestName(result.displayName)
@@ -464,14 +462,14 @@ function ConvoyPage() {
                     setDestLng(result.lng)
                   }}
                 />
-                {destName && <p className="text-xs text-slate-400 mt-1">{destName}</p>}
+                {destName && <p className="text-xs text-[var(--text2)] mt-1">{destName}</p>}
               </div>
             </div>
             <div
               className="flex items-center gap-2 p-3 rounded-xl"
               style={{
-                background: 'rgba(245, 158, 11, 0.08)',
-                border: '1px solid rgba(245, 158, 11, 0.2)',
+                background: 'var(--surface-hover)',
+                border: '1px solid var(--border)',
               }}
             >
               <input
@@ -479,11 +477,12 @@ function ConvoyPage() {
                 id="enable-simulation"
                 checked={enableSimulation}
                 onChange={(e) => setEnableSimulation(e.target.checked)}
-                className="h-4 w-4 text-amber-500 focus:ring-amber-500/50 rounded border-white/20"
+                className="h-4 w-4 text-amber-500 focus:ring-amber-500/50 rounded"
+                style={{ accentColor: '#f59e0b' }}
               />
-              <label htmlFor="enable-simulation" className="text-sm text-amber-400">
+              <label htmlFor="enable-simulation" className="text-sm text-[var(--text)]">
                 Enable simulation mode
-                <span className="block text-xs text-amber-400/70 mt-0.5">
+                <span className="block text-xs text-[var(--text2)] mt-0.5">
                   Vehicle positions will be simulated along the route instead of using real GPS
                 </span>
               </label>
@@ -501,41 +500,43 @@ function ConvoyPage() {
 
       <div
         className="rounded-xl"
-        style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--border)' }}
+        style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
       >
         <div className="px-4 py-5 sm:p-6">
           {loading ? (
             <div className="text-center py-12">
-              <p className="text-slate-400">Loading convoys...</p>
+              <p className="text-[var(--text2)]">Loading convoys...</p>
             </div>
           ) : convoys.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-slate-400">No convoys yet. Create or join one to get started.</p>
+              <p className="text-[var(--text2)]">
+                No convoys yet. Create or join one to get started.
+              </p>
             </div>
           ) : (
             <div className="space-y-4">
               {convoys.map((convoy) => (
                 <div
                   key={convoy.id}
-                  className="rounded-xl p-4 hover:bg-white/5 transition-colors"
+                  className="rounded-xl p-4 hover:bg-[var(--surface)] transition-colors"
                   style={{ border: '1px solid var(--border)' }}
                 >
                   <div onClick={() => handleOpenConvoy(convoy.id)} className="cursor-pointer">
                     <div className="flex justify-between items-start">
                       <div>
                         <div className="flex items-center gap-2">
-                          <h3 className="text-lg font-medium text-white">{convoy.name}</h3>
+                          <h3 className="text-lg font-medium text-[var(--text)]">{convoy.name}</h3>
                           <span
                             className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
                             style={{
                               background:
                                 (convoy.convoy_type || 'vehicle') === 'trekker'
-                                  ? 'rgba(16, 185, 129, 0.15)'
-                                  : 'rgba(99, 102, 241, 0.15)',
+                                  ? 'var(--badge-trekker-bg)'
+                                  : 'var(--badge-vehicle-bg)',
                               color:
                                 (convoy.convoy_type || 'vehicle') === 'trekker'
-                                  ? '#6ee7b7'
-                                  : '#a5b4fc',
+                                  ? 'var(--badge-trekker-text)'
+                                  : 'var(--badge-vehicle-text)',
                             }}
                           >
                             {(convoy.convoy_type || 'vehicle') === 'trekker'
@@ -543,12 +544,14 @@ function ConvoyPage() {
                               : '🚗 Vehicle'}
                           </span>
                         </div>
-                        <p className="text-sm text-slate-400">Code: {convoy.code}</p>
+                        <p className="text-sm text-[var(--text2)]">Code: {convoy.code}</p>
                         {convoy.description && (
-                          <p className="text-sm text-slate-300 mt-1">{convoy.description}</p>
+                          <p className="text-sm text-[var(--text)] opacity-80 mt-1">
+                            {convoy.description}
+                          </p>
                         )}
                         {(convoy.source_name || convoy.dest_name) && (
-                          <p className="text-xs text-slate-500 mt-1">
+                          <p className="text-xs text-[var(--text2)] opacity-70 mt-1">
                             {convoy.source_name || '?'} → {convoy.dest_name || '?'}
                           </p>
                         )}
@@ -561,7 +564,7 @@ function ConvoyPage() {
                   <div className="mt-3 flex space-x-2">
                     <button
                       onClick={() => handleCopyDeepLink(convoy.code, convoy.trip_id)}
-                      className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg text-slate-300 hover:text-white transition-colors"
+                      className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg text-[var(--text)] opacity-80 hover:text-[var(--text)] transition-colors"
                       style={{ border: '1px solid var(--border)' }}
                     >
                       Copy Invite Link
@@ -576,10 +579,10 @@ function ConvoyPage() {
 
       <div
         className="mt-6 rounded-xl"
-        style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--border)' }}
+        style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
       >
         <div className="px-4 py-5 sm:p-6">
-          <h2 className="text-lg font-medium text-white mb-4">Join a Convoy</h2>
+          <h2 className="text-lg font-medium text-[var(--text)] mb-4">Join a Convoy</h2>
           <div className="space-y-3">
             <div className="flex space-x-3">
               <input
@@ -590,9 +593,9 @@ function ConvoyPage() {
                   setJoinCode(e.target.value.toUpperCase())
                   if (joinConvoyLookup) setJoinConvoyLookup(null)
                 }}
-                className="flex-1 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
+                className="flex-1 rounded-xl px-3 py-2 text-sm text-[var(--text)] placeholder-[var(--placeholder)] focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.05)',
+                  background: 'var(--input-bg)',
                   border: '1px solid var(--border)',
                 }}
               />
@@ -609,23 +612,25 @@ function ConvoyPage() {
               <div
                 className="rounded-xl p-3 space-y-3"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.03)',
+                  background: 'var(--surface)',
                   border: '1px solid var(--border)',
                 }}
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-white">{joinConvoyLookup.name}</span>
+                  <span className="text-sm font-medium text-[var(--text)]">
+                    {joinConvoyLookup.name}
+                  </span>
                   <span
                     className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
                     style={{
                       background:
                         (joinConvoyLookup.convoy_type || 'vehicle') === 'trekker'
-                          ? 'rgba(16, 185, 129, 0.15)'
-                          : 'rgba(99, 102, 241, 0.15)',
+                          ? 'var(--badge-trekker-bg)'
+                          : 'var(--badge-vehicle-bg)',
                       color:
                         (joinConvoyLookup.convoy_type || 'vehicle') === 'trekker'
-                          ? '#6ee7b7'
-                          : '#a5b4fc',
+                          ? 'var(--badge-trekker-text)'
+                          : 'var(--badge-vehicle-text)',
                     }}
                   >
                     {(joinConvoyLookup.convoy_type || 'vehicle') === 'trekker'
@@ -634,23 +639,23 @@ function ConvoyPage() {
                   </span>
                 </div>
                 {(joinConvoyLookup.source_name || joinConvoyLookup.dest_name) && (
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-[var(--text2)] opacity-70">
                     {joinConvoyLookup.source_name || '?'} → {joinConvoyLookup.dest_name || '?'}
                   </p>
                 )}
 
                 {(joinConvoyLookup.convoy_type || 'vehicle') === 'vehicle' && (
                   <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1">
+                    <label className="block text-xs font-medium text-[var(--text2)] mb-1">
                       Select your vehicle
                     </label>
                     {vehicles.length > 0 ? (
                       <select
                         value={selectedVehicleId}
                         onChange={(e) => setSelectedVehicleId(e.target.value)}
-                        className="w-full rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
+                        className="w-full rounded-xl px-3 py-2 text-sm text-[var(--text)] focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
                         style={{
-                          background: 'rgba(255, 255, 255, 0.05)',
+                          background: 'var(--input-bg)',
                           border: '1px solid var(--border)',
                         }}
                       >
@@ -662,7 +667,7 @@ function ConvoyPage() {
                         ))}
                       </select>
                     ) : (
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-[var(--text2)] opacity-70">
                         You have no vehicles registered.{' '}
                         <button
                           onClick={() => navigate('/profile')}

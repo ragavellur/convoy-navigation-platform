@@ -131,9 +131,9 @@ export default function SearchBar({ onResultSelect, onHoverResult, mapBounds }: 
           onFocus={() => results.length > 0 && setIsOpen(true)}
           onKeyDown={handleKeyDown}
           placeholder="Search for a place..."
-          className="w-full px-4 py-2 pl-10 text-sm text-white placeholder-slate-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-transparent transition-colors"
+          className="w-full px-4 py-2 pl-10 text-sm text-[var(--text)] placeholder-[var(--placeholder)] rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-transparent transition-colors"
           style={{
-            background: 'rgba(7, 19, 32, 0.85)',
+            background: 'var(--nav-bg)',
             backdropFilter: 'blur(24px)',
             border: '1px solid var(--border)',
           }}
@@ -145,7 +145,7 @@ export default function SearchBar({ onResultSelect, onHoverResult, mapBounds }: 
           role="combobox"
         />
         <svg
-          className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500"
+          className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--text2)] opacity-70"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -168,9 +168,9 @@ export default function SearchBar({ onResultSelect, onHoverResult, mapBounds }: 
         <div
           className="absolute z-10 w-full mt-1 rounded-xl p-3"
           style={{
-            background: 'rgba(7, 19, 32, 0.85)',
+            background: 'var(--nav-bg)',
             backdropFilter: 'blur(24px)',
-            border: '1px solid rgba(239, 68, 68, 0.3)',
+            border: '1px solid var(--error-border)',
           }}
         >
           <p className="text-sm text-red-400">{error}</p>
@@ -184,7 +184,7 @@ export default function SearchBar({ onResultSelect, onHoverResult, mapBounds }: 
           role="listbox"
           className="absolute z-10 w-full mt-1 rounded-xl max-h-60 overflow-auto"
           style={{
-            background: 'rgba(7, 19, 32, 0.95)',
+            background: 'var(--nav-bg-solid)',
             backdropFilter: 'blur(40px)',
             border: '1px solid var(--border)',
           }}
@@ -199,14 +199,16 @@ export default function SearchBar({ onResultSelect, onHoverResult, mapBounds }: 
               role="option"
               aria-selected={activeIndex === index}
               className={`w-full px-4 py-3 text-left border-b last:border-b-0 focus:outline-none transition-colors ${
-                activeIndex === index ? 'bg-indigo-500/15' : 'hover:bg-white/5'
+                activeIndex === index ? 'bg-indigo-500/15' : 'hover:bg-[var(--surface)]'
               }`}
               style={{ borderColor: 'var(--border)' }}
             >
-              <div className="text-sm font-medium text-white truncate">
+              <div className="text-sm font-medium text-[var(--text)] truncate">
                 {result.display_name.split(',')[0]}
               </div>
-              <div className="text-xs text-slate-400 truncate mt-0.5">{result.display_name}</div>
+              <div className="text-xs text-[var(--text2)] truncate mt-0.5">
+                {result.display_name}
+              </div>
             </button>
           ))}
         </div>

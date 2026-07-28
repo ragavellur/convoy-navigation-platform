@@ -291,7 +291,7 @@ function MapPage() {
         .setLngLat(destination)
         .setPopup(
           new maplibregl.Popup({ offset: 25 }).setHTML(
-            `<div class="p-2"><div class="font-medium text-white">${result.name}</div><div class="text-xs text-slate-400 mt-1">${result.displayName}</div></div>`,
+            `<div class="p-2"><div class="font-medium" style="color:var(--text)">${result.name}</div><div class="text-xs mt-1" style="color:var(--text2)">${result.displayName}</div></div>`,
           ),
         )
       destMarker.addTo(map.current)
@@ -875,7 +875,7 @@ function MapPage() {
         >
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-400 mx-auto"></div>
-            <p className="mt-4 text-slate-400">Loading map...</p>
+            <p className="mt-4 text-[var(--text2)]">Loading map...</p>
           </div>
         </div>
       )}
@@ -904,7 +904,7 @@ function MapPage() {
         <div
           className="absolute top-20 left-4 right-4 md:left-auto md:right-4 md:w-96 z-20 rounded-xl p-4"
           style={{
-            background: 'rgba(7, 19, 32, 0.85)',
+            background: 'var(--nav-bg)',
             backdropFilter: 'blur(24px)',
             border: '1px solid rgba(245, 158, 11, 0.3)',
           }}
@@ -925,7 +925,9 @@ function MapPage() {
             </svg>
             <h3 className="font-semibold text-amber-400">Off Route</h3>
           </div>
-          <p className="text-sm text-slate-300 mb-3">You have deviated from the planned route.</p>
+          <p className="text-sm text-[var(--text2)] mb-3">
+            You have deviated from the planned route.
+          </p>
           <button
             onClick={() => {
               if (routeResponse) {
@@ -943,16 +945,16 @@ function MapPage() {
         <div
           className="absolute top-20 left-4 z-10 rounded-xl p-4 max-w-sm max-h-[60vh] overflow-y-auto"
           style={{
-            background: 'rgba(7, 19, 32, 0.85)',
+            background: 'var(--nav-bg)',
             backdropFilter: 'blur(24px)',
             border: '1px solid var(--border)',
           }}
         >
           <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-white">Route Summary</h3>
+            <h3 className="font-semibold text-[var(--text)]">Route Summary</h3>
             <button
               onClick={hideRoutePanel}
-              className="text-slate-500 hover:text-white transition-colors"
+              className="text-[var(--text2)] hover:text-[var(--text)] transition-colors"
               aria-label="Hide route summary"
             >
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -987,7 +989,7 @@ function MapPage() {
           </div>
           {alternatives.length > 1 && (
             <div className="mb-3 border-t pt-3" style={{ borderColor: 'var(--border)' }}>
-              <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">
+              <h4 className="text-xs font-semibold text-[var(--text2)] uppercase tracking-wide mb-2">
                 {alternatives.length} Routes Found
               </h4>
               <div className="space-y-2">
@@ -998,17 +1000,17 @@ function MapPage() {
                     className={`w-full text-left p-2 rounded-xl text-sm border transition-colors ${
                       selectedAltIndex === i
                         ? 'border-indigo-500/30 bg-indigo-500/10'
-                        : 'hover:bg-white/5'
+                        : 'hover:bg-[var(--surface)]'
                     }`}
                     style={selectedAltIndex !== i ? { borderColor: 'var(--border)' } : undefined}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-medium text-white">Route {i + 1}</span>
+                      <span className="font-medium text-[var(--text)]">Route {i + 1}</span>
                       {selectedAltIndex === i && (
                         <span className="text-xs text-indigo-400 font-medium">Selected</span>
                       )}
                     </div>
-                    <div className="flex gap-3 text-xs text-slate-400 mt-0.5">
+                    <div className="flex gap-3 text-xs text-[var(--text2)] mt-0.5">
                       <span>{formatDistance(alt.distance)}</span>
                       <span>{formatDuration(alt.duration)}</span>
                     </div>
@@ -1018,10 +1020,10 @@ function MapPage() {
             </div>
           )}
           <div className="mb-3 border-t pt-3" style={{ borderColor: 'var(--border)' }}>
-            <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">
+            <h4 className="text-xs font-semibold text-[var(--text2)] uppercase tracking-wide mb-2">
               Traffic
             </h4>
-            <div className="flex gap-3 text-xs text-slate-300">
+            <div className="flex gap-3 text-xs text-[var(--text2)]">
               <span className="flex items-center gap-1">
                 <span className="w-3 h-1 rounded bg-emerald-500 inline-block"></span> Free
               </span>
@@ -1038,7 +1040,7 @@ function MapPage() {
           </div>
           {firstStep && (
             <div className="border-t pt-3" style={{ borderColor: 'var(--border)' }}>
-              <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">
+              <h4 className="text-xs font-semibold text-[var(--text2)] uppercase tracking-wide mb-2">
                 Next Step
               </h4>
               <div className="flex items-start gap-2">
@@ -1061,20 +1063,22 @@ function MapPage() {
                   </svg>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-white">
+                  <p className="text-sm font-medium text-[var(--text)]">
                     {firstStep.name || 'Continue'}
                     {firstStep.maneuver.modifier && (
-                      <span className="text-slate-400"> — {firstStep.maneuver.modifier}</span>
+                      <span className="text-[var(--text2)]"> — {firstStep.maneuver.modifier}</span>
                     )}
                   </p>
-                  <p className="text-xs text-slate-400">{formatDistance(firstStep.distance)}</p>
+                  <p className="text-xs text-[var(--text2)]">
+                    {formatDistance(firstStep.distance)}
+                  </p>
                 </div>
               </div>
             </div>
           )}
           {routeData.legs[0]?.steps.length > 2 && (
             <details className="border-t pt-3 mt-3" style={{ borderColor: 'var(--border)' }}>
-              <summary className="text-xs font-semibold text-slate-400 uppercase tracking-wide cursor-pointer hover:text-white transition-colors">
+              <summary className="text-xs font-semibold text-[var(--text2)] uppercase tracking-wide cursor-pointer hover:text-[var(--text)] transition-colors">
                 {routeData.legs[0].steps.length - 1} more steps
               </summary>
               <div className="mt-2 space-y-2 max-h-48 overflow-y-auto">
@@ -1085,16 +1089,16 @@ function MapPage() {
                     className={`w-full text-left p-2 rounded-lg text-sm ${
                       selectedStepIndex === i
                         ? 'bg-indigo-500/10 border border-indigo-500/20'
-                        : 'hover:bg-white/5'
+                        : 'hover:bg-[var(--surface)]'
                     }`}
                   >
-                    <div className="font-medium text-white">
+                    <div className="font-medium text-[var(--text)]">
                       {step.name || 'Continue'}
                       {step.maneuver.modifier && (
-                        <span className="text-slate-400"> — {step.maneuver.modifier}</span>
+                        <span className="text-[var(--text2)]"> — {step.maneuver.modifier}</span>
                       )}
                     </div>
-                    <div className="text-xs text-slate-400">
+                    <div className="text-xs text-[var(--text2)]">
                       {formatDistance(step.distance)} · {formatDuration(step.duration)}
                     </div>
                   </button>
@@ -1108,7 +1112,7 @@ function MapPage() {
         <div
           className="absolute top-20 left-4 z-10 rounded-xl p-4 max-w-sm"
           style={{
-            background: 'rgba(7, 19, 32, 0.85)',
+            background: 'var(--nav-bg)',
             backdropFilter: 'blur(24px)',
             border: '1px solid rgba(239, 68, 68, 0.3)',
           }}
@@ -1127,7 +1131,7 @@ function MapPage() {
           onClick={() => setShowRoutePanel(true)}
           className="absolute top-20 left-4 z-10 flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium text-indigo-400 transition-colors"
           style={{
-            background: 'rgba(7, 19, 32, 0.85)',
+            background: 'var(--nav-bg)',
             backdropFilter: 'blur(24px)',
             border: '1px solid rgba(99, 102, 241, 0.2)',
           }}
@@ -1169,7 +1173,7 @@ function MapPage() {
         }}
         className="absolute bottom-20 right-4 z-10 w-10 h-10 flex items-center justify-center rounded-full transition-colors"
         style={{
-          background: 'rgba(7, 19, 32, 0.85)',
+          background: 'var(--nav-bg)',
           backdropFilter: 'blur(24px)',
           border: '1px solid var(--border)',
           color: 'var(--text2)',

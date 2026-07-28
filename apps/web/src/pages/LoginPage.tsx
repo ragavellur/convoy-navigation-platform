@@ -50,14 +50,14 @@ function LoginPage() {
           <div className="flex justify-center mb-4">
             <img src="/icons/icon.svg" alt="Convoy" className="h-16 w-16" />
           </div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-white">
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-[var(--text)]">
             Sign in to your account
           </h2>
-          <p className="mt-2 text-center text-sm text-slate-400">
+          <p className="mt-2 text-center text-sm text-[var(--text2)]">
             Or{' '}
             <Link
               to="/register"
-              className="font-medium text-indigo-400 hover:text-indigo-300 transition-colors"
+              className="font-medium text-[var(--primary)] hover:text-[var(--primary)] transition-colors"
             >
               create a new account
             </Link>
@@ -68,8 +68,8 @@ function LoginPage() {
             <div
               className="rounded-xl p-4"
               style={{
-                background: 'rgba(239, 68, 68, 0.1)',
-                border: '1px solid rgba(239, 68, 68, 0.2)',
+                background: 'var(--error-bg)',
+                border: '1px solid var(--error-border)',
               }}
             >
               <div className="text-sm text-red-400">{error}</div>
@@ -88,9 +88,9 @@ function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="appearance-none relative block w-full px-3 py-2 text-sm text-white placeholder-slate-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-transparent focus:z-10"
+                className="appearance-none relative block w-full px-3 py-2 text-sm text-[var(--text)] placeholder-[var(--placeholder)] rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-transparent focus:z-10"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.05)',
+                  background: 'var(--input-bg)',
                   border: '1px solid var(--border)',
                 }}
                 placeholder="Email address"
@@ -108,9 +108,9 @@ function LoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="appearance-none relative block w-full px-3 py-2 text-sm text-white placeholder-slate-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-transparent focus:z-10"
+                className="appearance-none relative block w-full px-3 py-2 text-sm text-[var(--text)] placeholder-[var(--placeholder)] rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-transparent focus:z-10"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.05)',
+                  background: 'var(--input-bg)',
                   border: '1px solid var(--border)',
                 }}
                 placeholder="Password"
@@ -128,7 +128,7 @@ function LoginPage() {
             </button>
           </div>
 
-          <p className="text-xs text-center text-slate-500">
+          <p className="text-xs text-center text-[var(--text2)]">
             Your session will be remembered until you sign out.
           </p>
         </form>

@@ -19,8 +19,8 @@ function VehicleTypeSelector({ selected, onSelect }: VehicleTypeSelectorProps) {
           onClick={() => onSelect(vehicle.value)}
           className={`flex items-center p-3 border rounded-lg text-sm font-medium transition-colors ${
             selected === vehicle.value
-              ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-              : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+              ? 'border-[var(--primary)] bg-[var(--primary)]/10 text-[var(--primary)]'
+              : 'border-[var(--border)] bg-[var(--surface)] text-[var(--text)] hover:bg-[var(--surface-hover)]'
           }`}
         >
           <span className="text-xl mr-2">{vehicle.icon}</span>

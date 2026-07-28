@@ -12,6 +12,9 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 const LIGHT_MAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty'
 const DARK_MAP_STYLE = 'https://tiles.openfreemap.org/styles/dark'
 
+const DARK_THEME_COLOR = '#071320'
+const LIGHT_THEME_COLOR = '#e9edf4'
+
 export function useTheme() {
   const ctx = useContext(ThemeContext)
   if (!ctx) throw new Error('useTheme must be used within ThemeProvider')
@@ -20,6 +23,15 @@ export function useTheme() {
 
 export function getMapStyleUrl(theme: Theme): string {
   return theme === 'dark' ? DARK_MAP_STYLE : LIGHT_MAP_STYLE
+}
+
+function applyTheme(theme: Theme) {
+  document.body.classList.toggle('light', theme === 'light')
+  document.documentElement.classList.toggle('dark', theme === 'dark')
+  const meta = document.querySelector('meta[name="theme-color"]')
+  if (meta) {
+    meta.setAttribute('content', theme === 'dark' ? DARK_THEME_COLOR : LIGHT_THEME_COLOR)
+  }
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
@@ -31,7 +43,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     localStorage.setItem('convoy_theme', theme)
-    document.documentElement.classList.toggle('dark', theme === 'dark')
+    applyTheme(theme)
   }, [theme])
 
   const toggleTheme = () => setTheme((t) => (t === 'light' ? 'dark' : 'light'))
