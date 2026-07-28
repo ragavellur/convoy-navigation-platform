@@ -88,7 +88,7 @@ app.post('/api/push/send', async (req, res) => {
   try {
     const subsData = await pbRequest(
       'GET',
-      `/api/collections/push_subscriptions/records?page=1&perPage=100&filter=${encodeURIComponent(`enabled = true && user != ""`)}`,
+      `/api/collections/push_subscriptions/records?page=1&perPage=100&filter=${encodeURIComponent(`user != ""`)}`,
     )
 
     const subscriptions = subsData.items || []
