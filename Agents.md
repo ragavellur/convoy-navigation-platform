@@ -328,3 +328,22 @@ REQUIRED: Update test plan + test data → Commit/push → Then start new sprint
 - `passed` — Test passed successfully
 - `failed` — Test failed (requires investigation)
 - `skipped` — Test intentionally skipped (with reason)
+
+---
+
+# 🖥️ SERVER INFRASTRUCTURE
+
+## Production Server
+
+- **Host:** `192.168.200.11`
+- **User:** `bharatradar`
+- **Password:** `raga@098`
+- **Project Path:** `/home/bharatradar/convoy-navigation-platform`
+- **Deploy Command:** `git pull origin main && docker compose up -d --build frontend`
+
+### First-time SSH
+
+```sh
+ssh bharatradar@192.168.200.11
+# Password: raga@098
+```
