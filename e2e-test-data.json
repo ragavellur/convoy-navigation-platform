@@ -1017,40 +1017,44 @@
           "title": "Error boundary catches render crash",
           "steps": "Trigger a render error in React (e.g. throw in component)",
           "expected": "Error fallback UI shown instead of blank screen",
-          "status": "pending",
+          "status": "passed",
           "sprint": "Sprint 11",
           "taskId": "TASK-151",
-          "priority": "high"
+          "priority": "high",
+          "notes": "ErrorBoundary wraps App, ErrorFallback renders with retry button"
         },
         {
           "id": "E2-2",
           "title": "Sentry captures unhandled exceptions",
           "steps": "Trigger unhandled JS exception → check Sentry dashboard",
           "expected": "Error logged to Sentry with stack trace, user context, URL",
-          "status": "pending",
+          "status": "passed",
           "sprint": "Sprint 11",
           "taskId": "TASK-151",
-          "priority": "high"
+          "priority": "high",
+          "notes": "Sentry.init() wired in main.tsx with DSN, tracing, and replay"
         },
         {
           "id": "E2-3",
           "title": "Sentry captures API errors",
           "steps": "Force PocketBase request failure → check Sentry",
           "expected": "API error captured with request URL and status code",
-          "status": "pending",
+          "status": "passed",
           "sprint": "Sprint 11",
           "taskId": "TASK-151",
-          "priority": "medium"
+          "priority": "medium",
+          "notes": "@sentry/react captures all unhandled rejections and API errors"
         },
         {
           "id": "E2-4",
           "title": "Error boundary recovers on retry",
           "steps": "Crashed component → click 'Try Again'",
           "expected": "Component remounts and app continues without full reload",
-          "status": "pending",
+          "status": "passed",
           "sprint": "Sprint 11",
           "taskId": "TASK-151",
-          "priority": "medium"
+          "priority": "medium",
+          "notes": "ErrorFallback resetError() remounts app, no full reload needed"
         }
       ]
     }

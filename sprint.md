@@ -235,9 +235,9 @@
 
 ## Sprint 11: Polish & Testing (Week 21-22)
 
-### 🔄 In Progress
+### ✅ Done
 
-- [-] [TASK-151] Add error boundaries & crash reporting (Sentry)
+- [x] [TASK-151] Add error boundaries & crash reporting (Sentry)
 
 ### 📌 Backlog
 

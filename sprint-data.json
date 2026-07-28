@@ -994,7 +994,7 @@
         {
           "id": "TASK-151",
           "title": "Add error boundaries & crash reporting (Sentry)",
-          "status": "in-progress",
+          "status": "done",
           "priority": "high"
         },
         {
