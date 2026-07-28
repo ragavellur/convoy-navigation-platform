@@ -70,6 +70,9 @@ function MapPage() {
   const memberVehicleMap = useRef<Map<string, { type: string; name: string; color?: string }>>(
     new Map(),
   )
+  const mapViewRestoredRef = useRef(false)
+
+  const MAP_VIEW_KEY = 'convoy-map-view'
 
   function clearAllRouteLayers() {
     if (!map.current) return
@@ -713,11 +716,25 @@ function MapPage() {
       origWarn.apply(console, args)
     }
 
+    const saved = localStorage.getItem(MAP_VIEW_KEY)
+    let initialCenter: [number, number] = [0, 0]
+    let initialZoom = convoyId ? 12 : 1
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        initialCenter = [parsed.lng, parsed.lat]
+        initialZoom = parsed.zoom
+        mapViewRestoredRef.current = true
+      } catch {
+        // ignore invalid saved state
+      }
+    }
+
     map.current = new maplibregl.Map({
       container: mapContainer.current,
       style: getMapStyleUrl(theme),
-      center: [0, 0],
-      zoom: convoyId ? 12 : 1,
+      center: initialCenter,
+      zoom: initialZoom,
     })
     map.current.addControl(new maplibregl.NavigationControl(), 'top-right')
     map.current.addControl(new maplibregl.ScaleControl(), 'bottom-left')
@@ -753,7 +770,14 @@ function MapPage() {
         },
       })
     })
-    map.current.on('moveend', () => updateBounds())
+    map.current.on('moveend', () => {
+      updateBounds()
+      const c = map.current?.getCenter()
+      const z = map.current?.getZoom()
+      if (c && z !== undefined) {
+        localStorage.setItem(MAP_VIEW_KEY, JSON.stringify({ lat: c.lat, lng: c.lng, zoom: z }))
+      }
+    })
     return () => {
       console.warn = origWarn
       map.current?.remove()
@@ -777,14 +801,16 @@ function MapPage() {
 
   useEffect(() => {
     if (!position || !mapLoaded || !map.current || convoyId) return
+    if (mapViewRestoredRef.current) return
     const center = map.current.getCenter()
     const isAtDefault = center.lat === 0 && center.lng === 0
     if (isAtDefault) {
       map.current.flyTo({
         center: [position.lng, position.lat],
-        zoom: 13,
+        zoom: 17,
         duration: 2000,
       })
+      mapViewRestoredRef.current = true
     }
   }, [position, mapLoaded, convoyId])
 
