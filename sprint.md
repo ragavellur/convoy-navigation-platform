@@ -238,10 +238,13 @@
 ### ✅ Done
 
 - [x] [TASK-151] Add error boundaries & crash reporting (Sentry)
+- [x] [TASK-144] Optimize battery consumption across all states
+- [x] [TASK-148] Write E2E tests for web (Playwright)
+- [x] [TASK-154] Security audit (OWASP Mobile + Web)
 
 ### 📌 Backlog
 
-- [ ] [TASK-144] Optimize battery consumption across all states
+- [ ] [TASK-145] Implement location update batching
 - [ ] [TASK-145] Implement location update batching
 - [ ] [TASK-146] Write unit tests for all services (>85% coverage)
 - [ ] [TASK-147] Write integration tests for API endpoints
@@ -291,9 +294,9 @@
 | Sprint 8  | 21          | 10      | 0           | 11     | Web PWA + Trekker  |
 | Sprint 9  | 5           | 0       | 0           | 5      | Web CSS Refactor   |
 | Sprint 10 | 8           | 8       | 0           | 0      | Web CSS Refactor   |
-| Sprint 11 | 13          | 13      | 0           | 0      | All                |
+| Sprint 11 | 13          | 10      | 0           | 3      | All                |
 | Sprint 12 | 14          | 14      | 0           | 0      | All                |
-| **Total** | **163**     | **79**  | **5**       | **79** |                    |
+| **Total** | **163**     | **76**  | **5**       | **82** |                    |
 
 ---
 

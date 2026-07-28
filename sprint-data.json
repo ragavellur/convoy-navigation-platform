@@ -952,7 +952,7 @@
         {
           "id": "TASK-144",
           "title": "Optimize battery consumption across all states",
-          "status": "backlog",
+          "status": "done",
           "priority": "high"
         },
         {
@@ -976,7 +976,7 @@
         {
           "id": "TASK-148",
           "title": "Write E2E tests for web (Playwright)",
-          "status": "backlog",
+          "status": "done",
           "priority": "high"
         },
         {
@@ -1012,7 +1012,7 @@
         {
           "id": "TASK-154",
           "title": "Security audit (OWASP Mobile + Web)",
-          "status": "backlog",
+          "status": "done",
           "priority": "high"
         },
         {
