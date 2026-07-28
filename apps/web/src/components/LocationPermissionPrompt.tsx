@@ -43,7 +43,7 @@ function LocationPermissionPrompt({
           <p className="text-xs text-[var(--text2)] mt-1">
             Allow location access to share your position with convoy members.
           </p>
-          {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
+          {error && <p className="text-xs text-[var(--error-text)] mt-1">{error}</p>}
           <div className="mt-3 flex space-x-2">
             <button
               onClick={onRequestPermission}

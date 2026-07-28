@@ -131,12 +131,7 @@ export default function SearchBar({ onResultSelect, onHoverResult, mapBounds }: 
           onFocus={() => results.length > 0 && setIsOpen(true)}
           onKeyDown={handleKeyDown}
           placeholder="Search for a place..."
-          className="w-full px-4 py-2 pl-10 text-sm text-[var(--text)] placeholder-[var(--placeholder)] rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-transparent transition-colors"
-          style={{
-            background: 'var(--nav-bg)',
-            backdropFilter: 'blur(24px)',
-            border: '1px solid var(--border)',
-          }}
+          className="w-full px-4 py-2 pl-10 text-sm text-[var(--text)] placeholder-[var(--placeholder)] rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-transparent transition-colors bg-[var(--nav-bg)] backdrop-blur-2xl border border-[var(--border)]"
           aria-label="Search places"
           aria-expanded={isOpen}
           aria-autocomplete="list"
@@ -165,14 +160,7 @@ export default function SearchBar({ onResultSelect, onHoverResult, mapBounds }: 
       </div>
 
       {error && (
-        <div
-          className="absolute z-10 w-full mt-1 rounded-xl p-3"
-          style={{
-            background: 'var(--nav-bg)',
-            backdropFilter: 'blur(24px)',
-            border: '1px solid var(--error-border)',
-          }}
-        >
+        <div className="absolute z-10 w-full mt-1 rounded-xl p-3 bg-[var(--nav-bg)] backdrop-blur-2xl border border-[var(--error-border)]">
           <p className="text-sm text-red-400">{error}</p>
         </div>
       )}
@@ -182,12 +170,7 @@ export default function SearchBar({ onResultSelect, onHoverResult, mapBounds }: 
           ref={dropdownRef}
           id="search-results"
           role="listbox"
-          className="absolute z-10 w-full mt-1 rounded-xl max-h-60 overflow-auto"
-          style={{
-            background: 'var(--nav-bg-solid)',
-            backdropFilter: 'blur(40px)',
-            border: '1px solid var(--border)',
-          }}
+          className="absolute z-10 w-full mt-1 rounded-xl max-h-60 overflow-auto glass-strong"
         >
           {results.map((result, index) => (
             <button
@@ -198,10 +181,9 @@ export default function SearchBar({ onResultSelect, onHoverResult, mapBounds }: 
               onMouseLeave={handleItemLeave}
               role="option"
               aria-selected={activeIndex === index}
-              className={`w-full px-4 py-3 text-left border-b last:border-b-0 focus:outline-none transition-colors ${
+              className={`w-full px-4 py-3 text-left border-b last:border-b-0 focus:outline-none transition-colors border-[var(--border)] ${
                 activeIndex === index ? 'bg-indigo-500/15' : 'hover:bg-[var(--surface)]'
               }`}
-              style={{ borderColor: 'var(--border)' }}
             >
               <div className="text-sm font-medium text-[var(--text)] truncate">
                 {result.display_name.split(',')[0]}

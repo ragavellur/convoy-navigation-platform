@@ -33,7 +33,7 @@ function Layout() {
   const isMapPage = location.pathname === '/map'
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg)' }}>
+    <div className="min-h-screen flex flex-col bg-[var(--bg)]">
       <nav
         className="sticky top-0 z-50 border-b overflow-visible"
         style={{
@@ -196,7 +196,7 @@ function Layout() {
                 </Link>
               ))}
             </div>
-            <div className="border-t px-4 py-3" style={{ borderColor: 'var(--border)' }}>
+            <div className="border-t px-4 py-3 border-[var(--border)]">
               {isAuthenticated ? (
                 <div className="space-y-2">
                   <p className="text-sm text-[var(--text2)]">{user?.name || user?.email}</p>
@@ -313,7 +313,7 @@ function Layout() {
           style={{
             background: 'var(--toast-bg)',
             backdropFilter: 'blur(16px)',
-            border: '1px solid rgba(99, 102, 241, 0.3)',
+            border: '1px solid var(--primary-border-strong)',
           }}
         >
           <div className="flex-1">
@@ -357,7 +357,7 @@ function Layout() {
           style={{
             background: 'var(--toast-bg)',
             backdropFilter: 'blur(16px)',
-            border: '1px solid rgba(16, 185, 129, 0.3)',
+            border: '1px solid var(--success-border-light)',
           }}
         >
           <div className="flex-1">

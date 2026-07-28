@@ -4,6 +4,8 @@ import pb from '../services/pocketbase'
 import { generateDeepLink } from '../services/deepLink'
 import { useNavigate } from 'react-router-dom'
 import SearchBar from '../components/SearchBar'
+import ConvoyTypeBadge from '../components/ConvoyTypeBadge'
+import StatusBadge from '../components/StatusBadge'
 import type { SearchResult } from '../types'
 
 interface ConvoyRecord {
@@ -360,47 +362,26 @@ function ConvoyPage() {
         </button>
       </div>
 
-      {error && (
-        <div
-          className="mb-4 p-3 rounded-xl text-sm text-red-400"
-          style={{
-            background: 'var(--error-bg)',
-            border: '1px solid var(--error-border)',
-          }}
-        >
-          {error}
-        </div>
-      )}
+      {error && <div className="error-banner mb-4 p-3 rounded-xl text-sm">{error}</div>}
 
-      {success && (
-        <div
-          className="mb-4 p-3 rounded-xl text-sm text-emerald-400"
-          style={{
-            background: 'var(--success-bg)',
-            border: '1px solid var(--success-border)',
-          }}
-        >
-          {success}
-        </div>
-      )}
+      {success && <div className="success-banner mb-4 p-3 rounded-xl text-sm">{success}</div>}
 
       {showCreateForm && (
-        <div
-          className="mb-6 rounded-xl p-4"
-          style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
-        >
+        <div className="card mb-6 p-4">
           <h2 className="text-lg font-medium text-[var(--text)] mb-3">New Convoy</h2>
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={() => setNewConvoyType('vehicle')}
-                className="rounded-xl px-3 py-2.5 text-sm font-medium text-center transition-colors"
+                className={`rounded-xl px-3 py-2.5 text-sm font-medium text-center transition-colors ${
+                  newConvoyType === 'vehicle'
+                    ? 'border-[var(--primary-border-strong)] text-[var(--badge-vehicle-text)]'
+                    : 'border-[var(--border)] text-[var(--text2)]'
+                }`}
                 style={{
                   background:
                     newConvoyType === 'vehicle' ? 'var(--badge-vehicle-bg)' : 'var(--surface)',
-                  border: `1px solid ${newConvoyType === 'vehicle' ? 'rgba(99, 102, 241, 0.4)' : 'var(--border)'}`,
-                  color: newConvoyType === 'vehicle' ? 'var(--badge-vehicle-text)' : 'var(--text2)',
                 }}
               >
                 <span className="text-lg">🚗</span>
@@ -409,12 +390,14 @@ function ConvoyPage() {
               <button
                 type="button"
                 onClick={() => setNewConvoyType('trekker')}
-                className="rounded-xl px-3 py-2.5 text-sm font-medium text-center transition-colors"
+                className={`rounded-xl px-3 py-2.5 text-sm font-medium text-center transition-colors ${
+                  newConvoyType === 'trekker'
+                    ? 'border-[var(--success-border-light)] text-[var(--badge-trekker-text)]'
+                    : 'border-[var(--border)] text-[var(--text2)]'
+                }`}
                 style={{
                   background:
                     newConvoyType === 'trekker' ? 'var(--badge-trekker-bg)' : 'var(--surface)',
-                  border: `1px solid ${newConvoyType === 'trekker' ? 'rgba(16, 185, 129, 0.4)' : 'var(--border)'}`,
-                  color: newConvoyType === 'trekker' ? 'var(--badge-trekker-text)' : 'var(--text2)',
                 }}
               >
                 <span className="text-lg">🥾</span>
@@ -426,16 +409,14 @@ function ConvoyPage() {
               placeholder="Convoy name"
               value={newConvoyName}
               onChange={(e) => setNewConvoyName(e.target.value)}
-              className="w-full rounded-xl px-3 py-2 text-sm text-[var(--text)] placeholder-[var(--placeholder)] focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
-              style={{ background: 'var(--input-bg)', border: '1px solid var(--border)' }}
+              className="input-field w-full rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
             />
             <input
               type="text"
               placeholder="Description (optional)"
               value={newConvoyDesc}
               onChange={(e) => setNewConvoyDesc(e.target.value)}
-              className="w-full rounded-xl px-3 py-2 text-sm text-[var(--text)] placeholder-[var(--placeholder)] focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
-              style={{ background: 'var(--input-bg)', border: '1px solid var(--border)' }}
+              className="input-field w-full rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
             />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
@@ -465,13 +446,7 @@ function ConvoyPage() {
                 {destName && <p className="text-xs text-[var(--text2)] mt-1">{destName}</p>}
               </div>
             </div>
-            <div
-              className="flex items-center gap-2 p-3 rounded-xl"
-              style={{
-                background: 'var(--surface-hover)',
-                border: '1px solid var(--border)',
-              }}
-            >
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-[var(--surface-hover)] border border-[var(--border)]">
               <input
                 type="checkbox"
                 id="enable-simulation"
@@ -498,10 +473,7 @@ function ConvoyPage() {
         </div>
       )}
 
-      <div
-        className="rounded-xl"
-        style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
-      >
+      <div className="card">
         <div className="px-4 py-5 sm:p-6">
           {loading ? (
             <div className="text-center py-12">
@@ -518,31 +490,14 @@ function ConvoyPage() {
               {convoys.map((convoy) => (
                 <div
                   key={convoy.id}
-                  className="rounded-xl p-4 hover:bg-[var(--surface)] transition-colors"
-                  style={{ border: '1px solid var(--border)' }}
+                  className="card p-4 hover:bg-[var(--surface)] transition-colors"
                 >
                   <div onClick={() => handleOpenConvoy(convoy.id)} className="cursor-pointer">
                     <div className="flex justify-between items-start">
                       <div>
                         <div className="flex items-center gap-2">
                           <h3 className="text-lg font-medium text-[var(--text)]">{convoy.name}</h3>
-                          <span
-                            className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
-                            style={{
-                              background:
-                                (convoy.convoy_type || 'vehicle') === 'trekker'
-                                  ? 'var(--badge-trekker-bg)'
-                                  : 'var(--badge-vehicle-bg)',
-                              color:
-                                (convoy.convoy_type || 'vehicle') === 'trekker'
-                                  ? 'var(--badge-trekker-text)'
-                                  : 'var(--badge-vehicle-text)',
-                            }}
-                          >
-                            {(convoy.convoy_type || 'vehicle') === 'trekker'
-                              ? '🥾 Trekker'
-                              : '🚗 Vehicle'}
-                          </span>
+                          <ConvoyTypeBadge convoyType={convoy.convoy_type} />
                         </div>
                         <p className="text-sm text-[var(--text2)]">Code: {convoy.code}</p>
                         {convoy.description && (
@@ -556,16 +511,13 @@ function ConvoyPage() {
                           </p>
                         )}
                       </div>
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/15 text-emerald-400">
-                        {convoy.status}
-                      </span>
+                      <StatusBadge status={convoy.status} />
                     </div>
                   </div>
                   <div className="mt-3 flex space-x-2">
                     <button
                       onClick={() => handleCopyDeepLink(convoy.code, convoy.trip_id)}
-                      className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg text-[var(--text)] opacity-80 hover:text-[var(--text)] transition-colors"
-                      style={{ border: '1px solid var(--border)' }}
+                      className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg text-[var(--text)] opacity-80 hover:text-[var(--text)] transition-colors border border-[var(--border)]"
                     >
                       Copy Invite Link
                     </button>
@@ -577,10 +529,7 @@ function ConvoyPage() {
         </div>
       </div>
 
-      <div
-        className="mt-6 rounded-xl"
-        style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
-      >
+      <div className="card mt-6">
         <div className="px-4 py-5 sm:p-6">
           <h2 className="text-lg font-medium text-[var(--text)] mb-4">Join a Convoy</h2>
           <div className="space-y-3">
@@ -593,11 +542,7 @@ function ConvoyPage() {
                   setJoinCode(e.target.value.toUpperCase())
                   if (joinConvoyLookup) setJoinConvoyLookup(null)
                 }}
-                className="flex-1 rounded-xl px-3 py-2 text-sm text-[var(--text)] placeholder-[var(--placeholder)] focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
-                style={{
-                  background: 'var(--input-bg)',
-                  border: '1px solid var(--border)',
-                }}
+                className="input-field flex-1 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
               />
               <button
                 onClick={handleLookupConvoy}
@@ -609,34 +554,12 @@ function ConvoyPage() {
             </div>
 
             {joinConvoyLookup && (
-              <div
-                className="rounded-xl p-3 space-y-3"
-                style={{
-                  background: 'var(--surface)',
-                  border: '1px solid var(--border)',
-                }}
-              >
+              <div className="card p-3 space-y-3">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium text-[var(--text)]">
                     {joinConvoyLookup.name}
                   </span>
-                  <span
-                    className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
-                    style={{
-                      background:
-                        (joinConvoyLookup.convoy_type || 'vehicle') === 'trekker'
-                          ? 'var(--badge-trekker-bg)'
-                          : 'var(--badge-vehicle-bg)',
-                      color:
-                        (joinConvoyLookup.convoy_type || 'vehicle') === 'trekker'
-                          ? 'var(--badge-trekker-text)'
-                          : 'var(--badge-vehicle-text)',
-                    }}
-                  >
-                    {(joinConvoyLookup.convoy_type || 'vehicle') === 'trekker'
-                      ? '🥾 Trekker'
-                      : '🚗 Vehicle'}
-                  </span>
+                  <ConvoyTypeBadge convoyType={joinConvoyLookup.convoy_type} />
                 </div>
                 {(joinConvoyLookup.source_name || joinConvoyLookup.dest_name) && (
                   <p className="text-xs text-[var(--text2)] opacity-70">
@@ -653,11 +576,7 @@ function ConvoyPage() {
                       <select
                         value={selectedVehicleId}
                         onChange={(e) => setSelectedVehicleId(e.target.value)}
-                        className="w-full rounded-xl px-3 py-2 text-sm text-[var(--text)] focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
-                        style={{
-                          background: 'var(--input-bg)',
-                          border: '1px solid var(--border)',
-                        }}
+                        className="input-field w-full rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
                       >
                         <option value="">-- Choose vehicle --</option>
                         {vehicles.map((v) => (

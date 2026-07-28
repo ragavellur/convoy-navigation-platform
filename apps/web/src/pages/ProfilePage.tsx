@@ -126,10 +126,7 @@ function ProfilePage() {
     <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
       <h1 className="text-2xl font-bold text-[var(--text)] mb-6">Profile</h1>
 
-      <div
-        className="rounded-xl"
-        style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
-      >
+      <div className="card">
         <div className="px-4 py-5 sm:p-6">
           <div className="flex items-center space-x-4 mb-6">
             <div className="h-16 w-16 rounded-full bg-indigo-500/20 flex items-center justify-center">
@@ -143,7 +140,7 @@ function ProfilePage() {
             </div>
           </div>
 
-          <div className="border-t pt-6" style={{ borderColor: 'var(--border)' }}>
+          <div className="border-t pt-6 border-[var(--border)]">
             <h3 className="text-lg font-medium text-[var(--text)] mb-4">Account Details</h3>
             <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
@@ -167,7 +164,7 @@ function ProfilePage() {
             </dl>
           </div>
 
-          <div className="border-t pt-6 mt-6" style={{ borderColor: 'var(--border)' }}>
+          <div className="border-t pt-6 mt-6 border-[var(--border)]">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-medium text-[var(--text)]">My Vehicles</h3>
               <button
@@ -178,34 +175,17 @@ function ProfilePage() {
               </button>
             </div>
 
-            {error && (
-              <div
-                className="mb-3 p-2 rounded-xl text-sm text-red-400"
-                style={{
-                  background: 'var(--error-bg)',
-                  border: '1px solid var(--error-border)',
-                }}
-              >
-                {error}
-              </div>
-            )}
+            {error && <div className="error-banner mb-3 p-2 rounded-xl text-sm">{error}</div>}
 
             {showAddVehicle && (
-              <div
-                className="mb-4 p-4 rounded-xl space-y-3"
-                style={{ background: 'var(--surface)' }}
-              >
+              <div className="card mb-4 p-4 space-y-3">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <input
                     type="text"
                     placeholder="Vehicle name"
                     value={newVehicle.name}
                     onChange={(e) => setNewVehicle((p) => ({ ...p, name: e.target.value }))}
-                    className="rounded-xl px-3 py-2 text-sm text-[var(--text)] placeholder-[var(--placeholder)] focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
-                    style={{
-                      background: 'var(--input-bg)',
-                      border: '1px solid var(--border)',
-                    }}
+                    className="input-field rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
                   />
                   <input
                     type="text"
@@ -215,22 +195,14 @@ function ProfilePage() {
                       setNewVehicle((p) => ({ ...p, license_plate: e.target.value }))
                     }
                     disabled={newVehicle.type === 'trekker'}
-                    className="rounded-xl px-3 py-2 text-sm text-[var(--text)] placeholder-[var(--placeholder)] focus:outline-none focus:ring-1 focus:ring-indigo-500/50 disabled:opacity-40"
-                    style={{
-                      background: 'var(--input-bg)',
-                      border: '1px solid var(--border)',
-                    }}
+                    className="input-field rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500/50 disabled:opacity-40"
                   />
                   <select
                     value={newVehicle.type}
                     onChange={(e) =>
                       setNewVehicle((p) => ({ ...p, type: e.target.value as Vehicle['type'] }))
                     }
-                    className="rounded-xl px-3 py-2 text-sm text-[var(--text)] focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
-                    style={{
-                      background: 'var(--input-bg)',
-                      border: '1px solid var(--border)',
-                    }}
+                    className="input-field rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
                   >
                     {VEHICLE_TYPES.map((t) => (
                       <option key={t} value={t}>
@@ -243,11 +215,7 @@ function ProfilePage() {
                     placeholder="Color (optional)"
                     value={newVehicle.color}
                     onChange={(e) => setNewVehicle((p) => ({ ...p, color: e.target.value }))}
-                    className="rounded-xl px-3 py-2 text-sm text-[var(--text)] placeholder-[var(--placeholder)] focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
-                    style={{
-                      background: 'var(--input-bg)',
-                      border: '1px solid var(--border)',
-                    }}
+                    className="input-field rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
                   />
                 </div>
                 <button
@@ -273,8 +241,7 @@ function ProfilePage() {
                 {vehicles.map((v) => (
                   <div
                     key={v.id}
-                    className="flex items-center justify-between p-3 rounded-xl"
-                    style={{ background: 'var(--surface)' }}
+                    className="flex items-center justify-between p-3 rounded-xl bg-[var(--surface)]"
                   >
                     <div className="flex items-center space-x-3">
                       <span className="text-lg">
@@ -306,7 +273,7 @@ function ProfilePage() {
             )}
           </div>
 
-          <div className="border-t pt-6 mt-6" style={{ borderColor: 'var(--border)' }}>
+          <div className="border-t pt-6 mt-6 border-[var(--border)]">
             <h3 className="text-lg font-medium text-[var(--text)] mb-4">Settings</h3>
             <div className="space-y-4">
               <div className="flex items-center justify-between">

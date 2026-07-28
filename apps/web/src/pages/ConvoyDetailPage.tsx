@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom'
 import pb from '../services/pocketbase'
 import { generateDeepLink } from '../services/deepLink'
 import { shareViaWhatsApp, shareViaSMS, shareViaEmail } from '../services/share'
+import ConvoyTypeBadge from '../components/ConvoyTypeBadge'
+import StatusBadge from '../components/StatusBadge'
 import { subscribeToConvoyNotifications, type ConvoyNotification } from '../services/notifications'
 import { useAuth } from '../hooks/useAuth'
 import {
@@ -321,30 +323,14 @@ function ConvoyDetailPage() {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-2xl font-bold text-[var(--text)]">{convoy.name}</h1>
-              <span
-                className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
-                style={{
-                  background:
-                    (convoy.convoy_type || 'vehicle') === 'trekker'
-                      ? 'var(--badge-trekker-bg)'
-                      : 'var(--badge-vehicle-bg)',
-                  color:
-                    (convoy.convoy_type || 'vehicle') === 'trekker'
-                      ? 'var(--badge-trekker-text)'
-                      : 'var(--badge-vehicle-text)',
-                }}
-              >
-                {(convoy.convoy_type || 'vehicle') === 'trekker' ? '🥾 Trekker' : '🚗 Vehicle'}
-              </span>
+              <ConvoyTypeBadge convoyType={convoy.convoy_type} />
             </div>
             <p className="text-sm text-[var(--text2)] mt-1">Code: {convoy.code}</p>
             {convoy.description && (
               <p className="text-sm text-[var(--text2)] mt-1">{convoy.description}</p>
             )}
           </div>
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[var(--success-bg)] text-[var(--success-text)]">
-            {convoy.status}
-          </span>
+          <StatusBadge status={convoy.status} />
         </div>
       </div>
 

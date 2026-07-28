@@ -41,10 +41,7 @@ function LoginPage() {
   }
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8"
-      style={{ background: 'var(--bg)' }}
-    >
+    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-[var(--bg)]">
       <div className="max-w-md w-full space-y-8">
         <div>
           <div className="flex justify-center mb-4">
@@ -65,14 +62,8 @@ function LoginPage() {
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
-            <div
-              className="rounded-xl p-4"
-              style={{
-                background: 'var(--error-bg)',
-                border: '1px solid var(--error-border)',
-              }}
-            >
-              <div className="text-sm text-red-400">{error}</div>
+            <div className="error-banner rounded-xl p-4">
+              <div className="text-sm text-[var(--error-text)]">{error}</div>
             </div>
           )}
           <div className="space-y-3">
@@ -88,11 +79,7 @@ function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="appearance-none relative block w-full px-3 py-2 text-sm text-[var(--text)] placeholder-[var(--placeholder)] rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-transparent focus:z-10"
-                style={{
-                  background: 'var(--input-bg)',
-                  border: '1px solid var(--border)',
-                }}
+                className="input-field appearance-none relative block w-full px-3 py-2 text-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-transparent focus:z-10"
                 placeholder="Email address"
               />
             </div>
@@ -108,11 +95,7 @@ function LoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="appearance-none relative block w-full px-3 py-2 text-sm text-[var(--text)] placeholder-[var(--placeholder)] rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-transparent focus:z-10"
-                style={{
-                  background: 'var(--input-bg)',
-                  border: '1px solid var(--border)',
-                }}
+                className="input-field appearance-none relative block w-full px-3 py-2 text-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-transparent focus:z-10"
                 placeholder="Password"
               />
             </div>

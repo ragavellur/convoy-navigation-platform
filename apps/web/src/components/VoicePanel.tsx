@@ -52,11 +52,8 @@ export default function VoicePanel() {
   if (!convoyId) return null
 
   return (
-    <div
-      className="rounded-xl border"
-      style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
-    >
-      <div className="px-3 py-2 border-b" style={{ borderColor: 'var(--border)' }}>
+    <div className="card">
+      <div className="px-3 py-2 border-b border-[var(--border)]">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold text-[var(--text)]">Voice Channel</h3>
           <div className="flex items-center gap-1.5">
@@ -97,7 +94,7 @@ export default function VoicePanel() {
             </div>
 
             {activeSpeaker && (
-              <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-emerald-500/10">
+              <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-[var(--success-bg)]">
                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 <span className="text-xs text-emerald-400 font-medium">
                   {activeSpeaker.userName} is speaking

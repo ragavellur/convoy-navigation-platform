@@ -60,10 +60,7 @@ export default function ChatPanel() {
   if (!convoyId) return null
 
   return (
-    <div
-      className="rounded-xl border"
-      style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
-    >
+    <div className="card">
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex items-center justify-between px-3 py-2 hover:bg-[var(--surface)] transition-colors"
@@ -85,7 +82,7 @@ export default function ChatPanel() {
       </button>
 
       {isOpen && (
-        <div className="border-t" style={{ borderColor: 'var(--border)' }}>
+        <div className="border-t border-[var(--border)]">
           <div className="h-64 overflow-y-auto p-3 space-y-2">
             {messages.length === 0 ? (
               <p className="text-xs text-[var(--text2)] opacity-70 text-center mt-8">
@@ -99,7 +96,7 @@ export default function ChatPanel() {
             <div ref={messagesEndRef} />
           </div>
 
-          <div className="p-2 border-t" style={{ borderColor: 'var(--border)' }}>
+          <div className="p-2 border-t border-[var(--border)]">
             <div className="flex items-center gap-2">
               <input
                 ref={inputRef}
@@ -108,11 +105,7 @@ export default function ChatPanel() {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Type a message..."
-                className="flex-1 px-3 py-1.5 text-sm text-[var(--text)] placeholder-[var(--placeholder)] rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
-                style={{
-                  background: 'var(--surface)',
-                  border: '1px solid var(--border)',
-                }}
+                className="input-field flex-1 px-3 py-1.5 text-sm rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
               />
               <button
                 onClick={handleSend}
@@ -145,10 +138,7 @@ function ChatBubble({ message, isSelf }: { message: ChatMessage; isSelf: boolean
   if (message.type === 'system') {
     return (
       <div className="text-center">
-        <span
-          className="text-[10px] text-[var(--text2)] opacity-70 px-2 py-0.5 rounded-full"
-          style={{ background: 'var(--surface)' }}
-        >
+        <span className="text-[10px] text-[var(--text2)] opacity-70 px-2 py-0.5 rounded-full bg-[var(--surface)]">
           {message.content}
         </span>
       </div>
