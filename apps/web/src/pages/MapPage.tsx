@@ -63,7 +63,7 @@ function MapPage() {
   const [simActive, setSimActive] = useState(false)
   const [convoyType, setConvoyType] = useState<'vehicle' | 'trekker'>('vehicle')
   const { position } = useGeolocation()
-  const geoStream = useGeolocationStream(true)
+  const geoStream = useGeolocationStream({ isInConvoy: !!convoyId })
   const { members, focusMemberId, joinConvoy, leaveConvoy } = useConvoyRoster()
   const { theme } = useTheme()
 

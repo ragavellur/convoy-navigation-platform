@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { classifyMovement, getPollingConfig, type MovementState } from '../services/adaptivePolling'
 
 export type PermissionState =
   'idle' | 'requesting' | 'granted' | 'denied' | 'unavailable' | 'timeout'
@@ -20,7 +21,18 @@ interface GeolocationStreamState {
 const isGeolocationSupported = typeof navigator !== 'undefined' && 'geolocation' in navigator
 const STORAGE_KEY = 'convoy_geo_permission'
 
-export function useGeolocationStream(enableHighAccuracy = true) {
+function getWatchOptions(state: MovementState): PositionOptions {
+  const config = getPollingConfig(state)
+  return {
+    enableHighAccuracy: state !== 'stationary',
+    maximumAge: config.intervalMs,
+    timeout: 30000,
+  }
+}
+
+export function useGeolocationStream(options?: { isInConvoy?: boolean }) {
+  const isInConvoy = options?.isInConvoy ?? false
+
   const previouslyGranted =
     typeof localStorage !== 'undefined' && localStorage.getItem(STORAGE_KEY) === 'granted'
 
@@ -36,6 +48,12 @@ export function useGeolocationStream(enableHighAccuracy = true) {
   const positionRef = useRef<GeoPosition | null>(null)
   const listenersRef = useRef<((pos: GeoPosition) => void)[]>([])
   const hasStartedRef = useRef(false)
+  const movementStateRef = useRef<MovementState>('stationary')
+  const prevPosRef = useRef<{ lat: number; lng: number } | null>(null)
+  const watchOptionsRef = useRef<PositionOptions>(getWatchOptions('stationary'))
+  const permissionRef = useRef<PermissionState>(state.permissionState)
+  const handleSuccessRef = useRef<(pos: GeolocationPosition) => void>(() => {})
+  const handleErrorRef = useRef<(err: GeolocationPositionError) => void>(() => {})
 
   const onPosition = useCallback((callback: (pos: GeoPosition) => void) => {
     listenersRef.current.push(callback)
@@ -44,45 +62,16 @@ export function useGeolocationStream(enableHighAccuracy = true) {
     }
   }, [])
 
-  const startWatching = useCallback(() => {
-    if (!isGeolocationSupported || hasStartedRef.current) return
-    hasStartedRef.current = true
-
-    setState((prev) => ({ ...prev, permissionState: 'requesting', error: null }))
-
+  const restartWatcher = useCallback(() => {
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current)
+    }
     watchIdRef.current = navigator.geolocation.watchPosition(
-      (pos) => {
-        const newPos: GeoPosition = {
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-          heading: pos.coords.heading ?? null,
-          speed: pos.coords.speed ?? null,
-          accuracy: pos.coords.accuracy,
-          timestamp: pos.timestamp,
-        }
-        positionRef.current = newPos
-        localStorage.setItem(STORAGE_KEY, 'granted')
-        setState((prev) => ({ ...prev, permissionState: 'granted', error: null }))
-        listenersRef.current.forEach((l) => l(newPos))
-      },
-      (err) => {
-        if (err.code === err.POSITION_UNAVAILABLE) {
-          return
-        }
-
-        let permissionState: PermissionState = 'denied'
-        let error = 'Location access denied'
-
-        if (err.code === err.TIMEOUT) {
-          permissionState = 'timeout'
-          error = 'Location request timed out'
-        }
-
-        setState((prev) => ({ ...prev, permissionState, error }))
-      },
-      { enableHighAccuracy, maximumAge: 5000, timeout: 30000 },
+      handleSuccessRef.current,
+      handleErrorRef.current,
+      watchOptionsRef.current,
     )
-  }, [enableHighAccuracy])
+  }, [])
 
   const stopWatching = useCallback(() => {
     if (watchIdRef.current !== null) {
@@ -92,11 +81,67 @@ export function useGeolocationStream(enableHighAccuracy = true) {
     }
   }, [])
 
+  const startWatching = useCallback(() => {
+    if (!isGeolocationSupported || hasStartedRef.current) return
+    hasStartedRef.current = true
+    setState((prev) => ({ ...prev, permissionState: 'requesting', error: null }))
+    watchIdRef.current = navigator.geolocation.watchPosition(
+      handleSuccessRef.current,
+      handleErrorRef.current,
+      watchOptionsRef.current,
+    )
+  }, [])
+
   const requestPermission = useCallback(() => {
     hasStartedRef.current = false
     stopWatching()
     startWatching()
-  }, [startWatching, stopWatching])
+  }, [stopWatching, startWatching])
+
+  useEffect(() => {
+    handleSuccessRef.current = (pos: GeolocationPosition) => {
+      const newPos: GeoPosition = {
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+        heading: pos.coords.heading ?? null,
+        speed: pos.coords.speed ?? null,
+        accuracy: pos.coords.accuracy,
+        timestamp: pos.timestamp,
+      }
+      positionRef.current = newPos
+      localStorage.setItem(STORAGE_KEY, 'granted')
+      setState((prev) => ({ ...prev, permissionState: 'granted', error: null }))
+      permissionRef.current = 'granted'
+      listenersRef.current.forEach((l) => l(newPos))
+
+      const newState = classifyMovement(
+        pos.coords.speed ?? null,
+        prevPosRef.current?.lat ?? null,
+        prevPosRef.current?.lng ?? null,
+        pos.coords.latitude,
+        pos.coords.longitude,
+      )
+
+      prevPosRef.current = { lat: pos.coords.latitude, lng: pos.coords.longitude }
+
+      if (newState !== movementStateRef.current) {
+        movementStateRef.current = newState
+        watchOptionsRef.current = getWatchOptions(newState)
+        restartWatcher()
+      }
+    }
+
+    handleErrorRef.current = (err: GeolocationPositionError) => {
+      if (err.code === err.POSITION_UNAVAILABLE) return
+      let permissionState: PermissionState = 'denied'
+      let error = 'Location access denied'
+      if (err.code === err.TIMEOUT) {
+        permissionState = 'timeout'
+        error = 'Location request timed out'
+      }
+      setState((prev) => ({ ...prev, permissionState, error }))
+    }
+  }, [restartWatcher])
 
   useEffect(() => {
     if (previouslyGranted || isGeolocationSupported) {
@@ -104,6 +149,23 @@ export function useGeolocationStream(enableHighAccuracy = true) {
     }
     return () => stopWatching()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        if (isInConvoy && permissionRef.current === 'granted') {
+          stopWatching()
+        }
+      } else {
+        if (isInConvoy) {
+          hasStartedRef.current = false
+          startWatching()
+        }
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [isInConvoy, startWatching, stopWatching])
 
   return {
     ...state,

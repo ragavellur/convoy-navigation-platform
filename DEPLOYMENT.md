@@ -40,15 +40,15 @@ Host:
 
 ## Server Details
 
-| Item             | Value                                               |
-| ---------------- | --------------------------------------------------- |
-| Server IP        | `192.168.200.11`                                    |
-| Domain           | `convoy.vellur.in`                                  |
-| SSH              | `bharatradar@192.168.200.11` (password: `raga@098`) |
-| Project path     | `/opt/convoy/`                                      |
-| Nginx config     | `/etc/nginx/sites-enabled/convoy`                   |
-| PocketBase admin | `raghavan@vellur.in` / `raga!098`                   |
-| Cloudflare       | Dashboard-managed tunnel (token file)               |
+| Item             | Value                                       |
+| ---------------- | ------------------------------------------- |
+| Server IP        | `192.168.200.11`                            |
+| Domain           | `convoy.vellur.in`                          |
+| SSH              | `ssh user@host` (use SSH keys)              |
+| Project path     | `/opt/convoy/`                              |
+| Nginx config     | `/etc/nginx/sites-enabled/convoy`           |
+| PocketBase admin | `admin@example.com` / (use strong password) |
+| Cloudflare       | Dashboard-managed tunnel (token file)       |
 
 ---
 
@@ -59,7 +59,7 @@ All code changes (frontend + backend) use the same deployment command.
 ### Step 1: Pull latest code on server
 
 ```bash
-sshpass -p 'raga@098' ssh bharatradar@192.168.200.11 "
+ssh user@host "
   cd /opt/convoy
   sudo git pull origin main
 "
@@ -68,7 +68,7 @@ sshpass -p 'raga@098' ssh bharatradar@192.168.200.11 "
 ### Step 2: Rebuild and restart all containers
 
 ```bash
-sshpass -p 'raga@098' ssh bharatradar@192.168.200.11 "
+ssh user@host "
   cd /opt/convoy
   sudo docker compose up -d --build
 "
@@ -86,7 +86,7 @@ Unchanged containers are **not rebuilt** — just left running.
 ### Step 3: Verify container health
 
 ```bash
-sshpass -p 'raga@098' ssh bharatradar@192.168.200.11 "
+ssh user@host "
   sudo docker ps --format 'table {{.Names}}\t{{.Status}}'
 "
 ```
@@ -120,15 +120,15 @@ When collections, fields, or rules change (separate from code deployment).
 ```bash
 # Using the shell script (two-phase: create fields, then set rules)
 PB_URL="https://convoy.vellur.in" \
-PB_EMAIL="raghavan@vellur.in" \
-PB_PASSWORD="raga!098" \
+PB_EMAIL="admin@example.com" \
+PB_PASSWORD="strong-password" \
 bash scripts/setup-collections.sh
 
 # Or using the Python script
 python3 scripts/setup-collections.py \
   --url https://convoy.vellur.in \
-  --email raghavan@vellur.in \
-  --password "raga!098"
+  --email admin@example.com \
+  --password "strong-password"
 ```
 
 ### Step 2: Verify via PocketBase admin UI
@@ -162,12 +162,12 @@ The server uses Cloudflare Tunnel (not port forwarding) for HTTPS.
 
 ```bash
 # Check tunnel status
-sshpass -p 'raga@098' ssh bharatradar@192.168.200.11 "
+ssh user@host "
   sudo systemctl status cloudflared
 "
 
 # Restart tunnel
-sshpass -p 'raga@098' ssh bharatradar@192.168.200.11 "
+ssh user@host "
   sudo systemctl restart cloudflared
 "
 ```

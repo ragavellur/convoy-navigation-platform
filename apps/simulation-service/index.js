@@ -1,10 +1,22 @@
 const express = require('express')
 const cors = require('cors')
+const helmet = require('helmet')
+const rateLimit = require('express-rate-limit')
 const { spawn } = require('child_process')
 const path = require('path')
 const fs = require('fs')
 
 const app = express()
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+})
+
+app.use(limiter)
+app.use(helmet())
 app.use(cors())
 app.use(express.json())
 

@@ -5,6 +5,8 @@ import express from 'express'
 import http from 'http'
 import { Server as SocketIOServer } from 'socket.io'
 import cors from 'cors'
+import helmet from 'helmet'
+import rateLimit from 'express-rate-limit'
 import { createWorkers } from './mediasoupWorkers.js'
 import { Room } from './Room.js'
 
@@ -14,6 +16,16 @@ const MEDIASOUP_PORT_MIN = parseInt(process.env.MEDIASOUP_PORT_MIN || '20000', 1
 const MEDIASOUP_PORT_MAX = parseInt(process.env.MEDIASOUP_PORT_MAX || '20100', 10)
 
 const app = express()
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+})
+
+app.use(limiter)
+app.use(helmet())
 app.use(cors())
 app.use(express.json())
 

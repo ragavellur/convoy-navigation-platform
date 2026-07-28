@@ -15,6 +15,7 @@ export interface Position {
 }
 
 const DISTANCE_THRESHOLD_M = 75
+const MIN_PUBLISH_INTERVAL_MS = 3000
 
 function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 6371000
@@ -29,11 +30,13 @@ function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: numbe
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 }
 
-let lastPublished: { lat: number; lng: number; vehicleId: string } | null = null
+let lastPublished: { lat: number; lng: number; vehicleId: string; time: number } | null = null
 
 export function hasMovedSignificantly(lat: number, lng: number, vehicleId: string): boolean {
   if (!lastPublished || lastPublished.vehicleId !== vehicleId) return true
-  return haversineDistance(lastPublished.lat, lastPublished.lng, lat, lng) >= DISTANCE_THRESHOLD_M
+  const dist = haversineDistance(lastPublished.lat, lastPublished.lng, lat, lng)
+  const elapsed = Date.now() - lastPublished.time
+  return dist >= DISTANCE_THRESHOLD_M || elapsed >= MIN_PUBLISH_INTERVAL_MS
 }
 
 export function resetPositionThreshold(): void {
@@ -65,7 +68,12 @@ export async function publishPosition(params: {
       accuracy: params.accuracy ?? undefined,
       timestamp: new Date().toISOString(),
     })
-    lastPublished = { lat: params.lat, lng: params.lng, vehicleId: params.vehicleId }
+    lastPublished = {
+      lat: params.lat,
+      lng: params.lng,
+      vehicleId: params.vehicleId,
+      time: Date.now(),
+    }
     return null
   }
 
@@ -96,7 +104,12 @@ export async function publishPosition(params: {
   } else {
     result = (await pb.collection('positions').create(data)) as unknown as Position
   }
-  lastPublished = { lat: params.lat, lng: params.lng, vehicleId: params.vehicleId }
+  lastPublished = {
+    lat: params.lat,
+    lng: params.lng,
+    vehicleId: params.vehicleId,
+    time: Date.now(),
+  }
   return result
 }
 
