@@ -242,18 +242,18 @@
 - [x] [TASK-148] Write E2E tests for web (Playwright)
 - [x] [TASK-154] Security audit (OWASP Mobile + Web)
 
+### 🔄 In Progress
+
+- [-] [TASK-146] Write unit tests for all services (>85% coverage)
+
 ### 📌 Backlog
 
 - [ ] [TASK-145] Implement location update batching
-- [ ] [TASK-145] Implement location update batching
-- [ ] [TASK-146] Write unit tests for all services (>85% coverage)
 - [ ] [TASK-147] Write integration tests for API endpoints
-- [ ] [TASK-148] Write E2E tests for web (Playwright)
 - [ ] [TASK-149] Write E2E tests for Android (Detox)
 - [ ] [TASK-150] Performance profiling & optimization
 - [ ] [TASK-152] Implement analytics tracking
 - [ ] [TASK-153] Accessibility audit (WCAG 2.1 AA) - web
-- [ ] [TASK-154] Security audit (OWASP Mobile + Web)
 - [ ] [TASK-155] Load testing for PocketBase Realtime
 - [ ] [TASK-156] API documentation (OpenAPI/Swagger)
 
@@ -294,9 +294,9 @@
 | Sprint 8  | 21          | 10      | 0           | 11     | Web PWA + Trekker  |
 | Sprint 9  | 5           | 0       | 0           | 5      | Web CSS Refactor   |
 | Sprint 10 | 8           | 8       | 0           | 0      | Web CSS Refactor   |
-| Sprint 11 | 13          | 10      | 0           | 3      | All                |
+| Sprint 11 | 13          | 8       | 1           | 3      | All                |
 | Sprint 12 | 14          | 14      | 0           | 0      | All                |
-| **Total** | **163**     | **76**  | **5**       | **82** |                    |
+| **Total** | **163**     | **74**  | **6**       | **82** |                    |
 
 ---
 

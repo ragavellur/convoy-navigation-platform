@@ -964,7 +964,7 @@
         {
           "id": "TASK-146",
           "title": "Write unit tests for all services (>85% coverage)",
-          "status": "backlog",
+          "status": "in-progress",
           "priority": "high"
         },
         {
