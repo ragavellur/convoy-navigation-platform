@@ -27,6 +27,7 @@ interface ConvoyRecord {
   description?: string
   owner: string
   status: 'active' | 'paused' | 'ended'
+  convoy_type: 'vehicle' | 'trekker'
   trip_id: string
   security_token: string
   source_lat?: number
@@ -43,7 +44,7 @@ interface MemberRecord {
   id: string
   convoy: string
   user: string
-  role: 'host' | 'member' | 'viewer'
+  role: 'owner' | 'admin' | 'member'
   status: 'active' | 'inactive' | 'removed'
   vehicle?: string
   joined_at: string
@@ -318,7 +319,21 @@ function ConvoyDetailPage() {
         </button>
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-2xl font-bold text-white">{convoy.name}</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-bold text-white">{convoy.name}</h1>
+              <span
+                className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                style={{
+                  background:
+                    (convoy.convoy_type || 'vehicle') === 'trekker'
+                      ? 'rgba(16, 185, 129, 0.15)'
+                      : 'rgba(99, 102, 241, 0.15)',
+                  color: (convoy.convoy_type || 'vehicle') === 'trekker' ? '#6ee7b7' : '#a5b4fc',
+                }}
+              >
+                {(convoy.convoy_type || 'vehicle') === 'trekker' ? '🥾 Trekker' : '🚗 Vehicle'}
+              </span>
+            </div>
             <p className="text-sm text-slate-400 mt-1">Code: {convoy.code}</p>
             {convoy.description && (
               <p className="text-sm text-slate-300 mt-1">{convoy.description}</p>
@@ -426,8 +441,15 @@ function ConvoyDetailPage() {
                         )}
                       </p>
                       <p className="text-xs text-slate-400">
-                        {member.role === 'host' ? '👑 Host' : 'Member'}
-                        {member.expand?.vehicle && ` · ${member.expand.vehicle.type}`}
+                        {member.role === 'owner'
+                          ? '👑 Owner'
+                          : member.role === 'admin'
+                            ? '⭐ Admin'
+                            : 'Member'}
+                        {member.expand?.vehicle &&
+                          (member.expand.vehicle.type === 'trekker'
+                            ? ' · 🥾 Trekker'
+                            : ` · ${member.expand.vehicle.type}`)}
                       </p>
                     </div>
                   </div>

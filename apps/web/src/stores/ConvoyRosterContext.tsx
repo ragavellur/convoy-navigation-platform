@@ -17,9 +17,9 @@ export interface RosterMember {
   userId: string
   userName: string
   userAvatar?: string
-  role: 'host' | 'member' | 'viewer'
+  role: 'owner' | 'admin' | 'member'
   vehicleId?: string
-  vehicleType?: 'car' | 'truck' | 'motorcycle' | 'other'
+  vehicleType?: 'car' | 'truck' | 'motorcycle' | 'other' | 'trekker'
   vehicleColor?: string
   vehicleName?: string
   position: Position | null

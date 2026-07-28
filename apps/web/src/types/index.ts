@@ -17,6 +17,7 @@ export interface Convoy {
   description?: string
   owner: string
   status: 'active' | 'archived'
+  convoy_type: 'vehicle' | 'trekker'
   max_members?: number
   settings?: ConvoySettings
   created: string
@@ -45,10 +46,9 @@ export interface ConvoyMember {
 
 export interface Vehicle {
   id: string
-  convoy: string
   owner: string
   name: string
-  type: 'car' | 'truck' | 'motorcycle' | 'other'
+  type: 'car' | 'truck' | 'motorcycle' | 'other' | 'trekker'
   color?: string
   license_plate?: string
   image?: string

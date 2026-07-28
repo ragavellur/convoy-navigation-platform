@@ -61,6 +61,7 @@ function MapPage() {
     Map<string, { lat: number; lng: number; heading: number | null; speed: number | null }>
   >(new Map())
   const [simActive, setSimActive] = useState(false)
+  const [convoyType, setConvoyType] = useState<'vehicle' | 'trekker'>('vehicle')
   const { position } = useGeolocation()
   const geoStream = useGeolocationStream(true)
   const { members, focusMemberId, joinConvoy, leaveConvoy } = useConvoyRoster()
@@ -190,7 +191,13 @@ function MapPage() {
             waypoints: [],
           }
         } else {
-          response = await getRoute({ origin, destination, steps: true, geometries: 'geojson' })
+          response = await getRoute({
+            origin,
+            destination,
+            steps: true,
+            geometries: 'geojson',
+            profile: convoyType === 'trekker' ? 'foot' : 'driving',
+          })
           cacheRoute(
             origin,
             destination,
@@ -309,7 +316,13 @@ function MapPage() {
             waypoints: [],
           }
         } else {
-          response = await getRoute({ origin, destination, steps: true, geometries: 'geojson' })
+          response = await getRoute({
+            origin,
+            destination,
+            steps: true,
+            geometries: 'geojson',
+            profile: convoyType === 'trekker' ? 'foot' : 'driving',
+          })
           cacheRoute(
             origin,
             destination,
@@ -412,6 +425,7 @@ function MapPage() {
           typeof convoy.settings === 'string' ? JSON.parse(convoy.settings) : convoy.settings || {}
         simulationActive = !!settings.simulation_active
         setSimActive(simulationActive)
+        setConvoyType(convoy.convoy_type || 'vehicle')
       } catch {
         simulationActive = false
       }
@@ -624,7 +638,8 @@ function MapPage() {
 
       if (!convoyMarkersRef.current.has(vehicleId) && map.current) {
         const vehicleInfo = memberVehicleMap.current.get(vehicleId)
-        const vehicleType = (vehicleInfo?.type as 'car' | 'truck' | 'motorcycle' | 'other') ?? 'car'
+        const vehicleType =
+          (vehicleInfo?.type as 'car' | 'truck' | 'motorcycle' | 'other' | 'trekker') ?? 'car'
         const color = getDistinctColor(vehicleId, vehicleInfo?.color)
         const el = createVehicleMarkerElement(vehicleType, color)
         const marker = new maplibregl.Marker({ element: el })
@@ -809,7 +824,13 @@ function MapPage() {
         destMarker.addTo(map.current!)
         markersRef.current.push(destMarker)
 
-        const response = await getRoute({ origin, destination, steps: true, geometries: 'geojson' })
+        const response = await getRoute({
+          origin,
+          destination,
+          steps: true,
+          geometries: 'geojson',
+          profile: convoyType === 'trekker' ? 'foot' : 'driving',
+        })
         if (cancelled) return
         const route = response.routes[0]
         setRouteData(route)

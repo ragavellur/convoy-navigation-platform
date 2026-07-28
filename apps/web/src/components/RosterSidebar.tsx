@@ -23,6 +23,7 @@ const VEHICLE_ICONS: Record<string, string> = {
   car: '🚗',
   truck: '🚛',
   motorcycle: '🏍️',
+  trekker: '🥾',
   other: '🚐',
 }
 
@@ -474,7 +475,7 @@ function MemberCard({
                 You
               </span>
             )}
-            {member.role === 'host' && (
+            {member.role === 'owner' && (
               <span className="text-[10px] font-medium text-amber-400 bg-amber-500/15 px-1.5 py-0.5 rounded">
                 Host
               </span>

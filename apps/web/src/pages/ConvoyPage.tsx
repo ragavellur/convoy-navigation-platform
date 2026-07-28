@@ -13,6 +13,7 @@ interface ConvoyRecord {
   description?: string
   owner: string
   status: 'active' | 'paused' | 'ended'
+  convoy_type: 'vehicle' | 'trekker'
   max_members?: number
   trip_id: string
   security_token: string
@@ -84,6 +85,9 @@ function ConvoyPage() {
   const [vehicles, setVehicles] = useState<VehicleOption[]>([])
   const [selectedVehicleId, setSelectedVehicleId] = useState('')
   const [enableSimulation, setEnableSimulation] = useState(false)
+  const [newConvoyType, setNewConvoyType] = useState<'vehicle' | 'trekker'>('vehicle')
+  const [joinConvoyLookup, setJoinConvoyLookup] = useState<ConvoyRecord | null>(null)
+  const [lookingUp, setLookingUp] = useState(false)
 
   useEffect(() => {
     const fetchConvoys = async () => {
@@ -91,8 +95,17 @@ function ConvoyPage() {
       setLoading(true)
       setError('')
       try {
+        const memberships = await pb.collection('convoy_members').getFullList({
+          filter: `user = "${user.id}" && status = "active"`,
+        })
+        const convoyIds = memberships.map((m) => m.convoy)
+        if (convoyIds.length === 0) {
+          setConvoys([])
+          return
+        }
+        const filter = convoyIds.map((id) => `id = "${id}"`).join(' || ')
         const records = await pb.collection('convoys').getFullList<ConvoyRecord>({
-          filter: 'status = "active"',
+          filter,
           sort: '-created',
         })
         setConvoys(records)
@@ -148,6 +161,7 @@ function ConvoyPage() {
         description: newConvoyDesc.trim() || undefined,
         owner: user?.id,
         status: 'active',
+        convoy_type: newConvoyType,
         trip_id: tripId,
         security_token: securityToken,
       }
@@ -164,7 +178,28 @@ function ConvoyPage() {
       if (enableSimulation) {
         data.settings = JSON.stringify({ simulation_active: false })
       }
-      await pb.collection('convoys').create(data)
+      const newConvoy = await pb.collection('convoys').create<ConvoyRecord>(data)
+
+      let creatorVehicleId: string | undefined
+      if (newConvoyType === 'trekker') {
+        const trekkerName = user?.name || user?.email?.split('@')[0] || 'Trekker'
+        const trekker = await pb.collection('vehicles').create({
+          owner: user?.id,
+          name: trekkerName,
+          type: 'trekker',
+          status: 'active',
+        })
+        creatorVehicleId = trekker.id
+      }
+
+      await pb.collection('convoy_members').create({
+        convoy: newConvoy.id,
+        user: user?.id,
+        vehicle: creatorVehicleId || undefined,
+        role: 'owner',
+        status: 'active',
+        joined_at: new Date().toISOString(),
+      })
       setNewConvoyName('')
       setNewConvoyDesc('')
       setSourceName('')
@@ -174,12 +209,20 @@ function ConvoyPage() {
       setDestLat(null)
       setDestLng(null)
       setEnableSimulation(false)
+      setNewConvoyType('vehicle')
       setShowCreateForm(false)
-      const records = await pb.collection('convoys').getFullList<ConvoyRecord>({
-        filter: 'status = "active"',
-        sort: '-created',
+      const memberships = await pb.collection('convoy_members').getFullList({
+        filter: `user = "${user?.id}" && status = "active"`,
       })
-      setConvoys(records)
+      const convoyIds = memberships.map((m) => m.convoy)
+      if (convoyIds.length > 0) {
+        const filter = convoyIds.map((id) => `id = "${id}"`).join(' || ')
+        const records = await pb.collection('convoys').getFullList<ConvoyRecord>({
+          filter,
+          sort: '-created',
+        })
+        setConvoys(records)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create convoy')
     } finally {
@@ -187,32 +230,52 @@ function ConvoyPage() {
     }
   }
 
-  const handleJoin = async () => {
+  const handleLookupConvoy = async () => {
     if (!joinCode.trim()) return
-    if (!selectedVehicleId) {
-      setError('Please select a vehicle before joining')
-      return
-    }
-    setJoining(true)
+    setLookingUp(true)
     setError('')
     setSuccess('')
+    setSelectedVehicleId('')
     try {
       const code = joinCode.trim().toUpperCase()
-      const results = await pb.collection('convoys').getFullList({
+      const results = await pb.collection('convoys').getFullList<ConvoyRecord>({
         filter: `code = "${code}" && status = "active"`,
       })
       if (results.length === 0) {
         throw new Error('Convoy not found or inactive')
       }
-      const convoy = results[0]
+      setJoinConvoyLookup(results[0])
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to look up convoy')
+      setJoinConvoyLookup(null)
+    } finally {
+      setLookingUp(false)
+    }
+  }
 
-      const vehicleInConvoy = await pb.collection('convoy_members').getFullList({
-        filter: `vehicle = "${selectedVehicleId}" && status = "active"`,
-      })
-      if (vehicleInConvoy.length > 0) {
-        throw new Error(
-          'This vehicle is already in another active convoy. Leave that convoy first or use a different vehicle.',
-        )
+  const handleJoin = async () => {
+    if (!joinConvoyLookup) return
+    setJoining(true)
+    setError('')
+    setSuccess('')
+    try {
+      const convoy = joinConvoyLookup
+      const convoyType = convoy.convoy_type || 'vehicle'
+
+      if (convoyType === 'vehicle') {
+        if (!selectedVehicleId) {
+          setError('Please select a vehicle to join this convoy.')
+          setJoining(false)
+          return
+        }
+        const vehicleInConvoy = await pb.collection('convoy_members').getFullList({
+          filter: `vehicle = "${selectedVehicleId}" && status = "active"`,
+        })
+        if (vehicleInConvoy.length > 0) {
+          throw new Error(
+            'This vehicle is already in another active convoy. Leave that convoy first or use a different vehicle.',
+          )
+        }
       }
 
       const existingActive = await pb.collection('convoy_members').getFullList({
@@ -223,16 +286,49 @@ function ConvoyPage() {
           await pb.collection('convoy_members').update(m.id, { status: 'inactive' })
         }
       }
+
+      let vehicleId = selectedVehicleId
+      if (convoyType === 'trekker') {
+        const existingTrekkers = await pb.collection('vehicles').getFullList({
+          filter: `owner = "${user?.id}" && type = "trekker" && status = "active"`,
+        })
+        if (existingTrekkers.length > 0) {
+          vehicleId = existingTrekkers[0].id
+        } else {
+          const trekkerName = user?.name || user?.email?.split('@')[0] || 'Trekker'
+          const trekker = await pb.collection('vehicles').create({
+            owner: user?.id,
+            name: trekkerName,
+            type: 'trekker',
+            status: 'active',
+          })
+          vehicleId = trekker.id
+        }
+      }
+
       await pb.collection('convoy_members').create({
         convoy: convoy.id,
         user: user?.id,
-        vehicle: selectedVehicleId,
+        vehicle: vehicleId || undefined,
         role: 'member',
         status: 'active',
         joined_at: new Date().toISOString(),
       })
       setJoinCode('')
+      setJoinConvoyLookup(null)
       setSuccess(`Joined "${convoy.name}" successfully!`)
+      const memberships = await pb.collection('convoy_members').getFullList({
+        filter: `user = "${user?.id}" && status = "active"`,
+      })
+      const convoyIds = memberships.map((m) => m.convoy)
+      if (convoyIds.length > 0) {
+        const filter = convoyIds.map((id) => `id = "${id}"`).join(' || ')
+        const records = await pb.collection('convoys').getFullList<ConvoyRecord>({
+          filter,
+          sort: '-created',
+        })
+        setConvoys(records)
+      }
       setTimeout(() => {
         navigate(`/map?convoy=${convoy.id}`)
       }, 1500)
@@ -295,6 +391,40 @@ function ConvoyPage() {
         >
           <h2 className="text-lg font-medium text-white mb-3">New Convoy</h2>
           <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setNewConvoyType('vehicle')}
+                className="rounded-xl px-3 py-2.5 text-sm font-medium text-center transition-colors"
+                style={{
+                  background:
+                    newConvoyType === 'vehicle'
+                      ? 'rgba(99, 102, 241, 0.15)'
+                      : 'rgba(255, 255, 255, 0.03)',
+                  border: `1px solid ${newConvoyType === 'vehicle' ? 'rgba(99, 102, 241, 0.4)' : 'var(--border)'}`,
+                  color: newConvoyType === 'vehicle' ? '#a5b4fc' : 'var(--text2)',
+                }}
+              >
+                <span className="text-lg">🚗</span>
+                <span className="block mt-1">Vehicle</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setNewConvoyType('trekker')}
+                className="rounded-xl px-3 py-2.5 text-sm font-medium text-center transition-colors"
+                style={{
+                  background:
+                    newConvoyType === 'trekker'
+                      ? 'rgba(16, 185, 129, 0.15)'
+                      : 'rgba(255, 255, 255, 0.03)',
+                  border: `1px solid ${newConvoyType === 'trekker' ? 'rgba(16, 185, 129, 0.4)' : 'var(--border)'}`,
+                  color: newConvoyType === 'trekker' ? '#6ee7b7' : 'var(--text2)',
+                }}
+              >
+                <span className="text-lg">🥾</span>
+                <span className="block mt-1">Trekker</span>
+              </button>
+            </div>
             <input
               type="text"
               placeholder="Convoy name"
@@ -393,7 +523,26 @@ function ConvoyPage() {
                   <div onClick={() => handleOpenConvoy(convoy.id)} className="cursor-pointer">
                     <div className="flex justify-between items-start">
                       <div>
-                        <h3 className="text-lg font-medium text-white">{convoy.name}</h3>
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-lg font-medium text-white">{convoy.name}</h3>
+                          <span
+                            className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                            style={{
+                              background:
+                                (convoy.convoy_type || 'vehicle') === 'trekker'
+                                  ? 'rgba(16, 185, 129, 0.15)'
+                                  : 'rgba(99, 102, 241, 0.15)',
+                              color:
+                                (convoy.convoy_type || 'vehicle') === 'trekker'
+                                  ? '#6ee7b7'
+                                  : '#a5b4fc',
+                            }}
+                          >
+                            {(convoy.convoy_type || 'vehicle') === 'trekker'
+                              ? '🥾 Trekker'
+                              : '🚗 Vehicle'}
+                          </span>
+                        </div>
                         <p className="text-sm text-slate-400">Code: {convoy.code}</p>
                         {convoy.description && (
                           <p className="text-sm text-slate-300 mt-1">{convoy.description}</p>
@@ -431,61 +580,119 @@ function ConvoyPage() {
       >
         <div className="px-4 py-5 sm:p-6">
           <h2 className="text-lg font-medium text-white mb-4">Join a Convoy</h2>
-          {vehicles.length === 0 ? (
-            <div className="text-center py-4">
-              <p className="text-sm text-slate-400 mb-2">You need a vehicle to join a convoy.</p>
+          <div className="space-y-3">
+            <div className="flex space-x-3">
+              <input
+                type="text"
+                placeholder="Enter convoy code"
+                value={joinCode}
+                onChange={(e) => {
+                  setJoinCode(e.target.value.toUpperCase())
+                  if (joinConvoyLookup) setJoinConvoyLookup(null)
+                }}
+                className="flex-1 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid var(--border)',
+                }}
+              />
               <button
-                onClick={() => navigate('/profile')}
-                className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-500 transition-colors"
+                onClick={handleLookupConvoy}
+                disabled={lookingUp || !joinCode.trim() || !!joinConvoyLookup}
+                className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                Add Vehicle in Profile
+                {lookingUp ? 'Looking up...' : 'Look Up'}
               </button>
             </div>
-          ) : (
-            <div className="space-y-3">
-              <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1">
-                  Select Vehicle
-                </label>
-                <select
-                  value={selectedVehicleId}
-                  onChange={(e) => setSelectedVehicleId(e.target.value)}
-                  className="w-full rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid var(--border)',
-                  }}
-                >
-                  <option value="">-- Choose vehicle --</option>
-                  {vehicles.map((v) => (
-                    <option key={v.id} value={v.id}>
-                      {v.name} ({v.type}) {v.color ? `· ${v.color}` : ''} [{v.license_plate}]
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex space-x-3">
-                <input
-                  type="text"
-                  placeholder="Enter convoy code"
-                  value={joinCode}
-                  onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                  className="flex-1 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid var(--border)',
-                  }}
-                />
+
+            {joinConvoyLookup && (
+              <div
+                className="rounded-xl p-3 space-y-3"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  border: '1px solid var(--border)',
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-white">{joinConvoyLookup.name}</span>
+                  <span
+                    className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                    style={{
+                      background:
+                        (joinConvoyLookup.convoy_type || 'vehicle') === 'trekker'
+                          ? 'rgba(16, 185, 129, 0.15)'
+                          : 'rgba(99, 102, 241, 0.15)',
+                      color:
+                        (joinConvoyLookup.convoy_type || 'vehicle') === 'trekker'
+                          ? '#6ee7b7'
+                          : '#a5b4fc',
+                    }}
+                  >
+                    {(joinConvoyLookup.convoy_type || 'vehicle') === 'trekker'
+                      ? '🥾 Trekker'
+                      : '🚗 Vehicle'}
+                  </span>
+                </div>
+                {(joinConvoyLookup.source_name || joinConvoyLookup.dest_name) && (
+                  <p className="text-xs text-slate-500">
+                    {joinConvoyLookup.source_name || '?'} → {joinConvoyLookup.dest_name || '?'}
+                  </p>
+                )}
+
+                {(joinConvoyLookup.convoy_type || 'vehicle') === 'vehicle' && (
+                  <div>
+                    <label className="block text-xs font-medium text-slate-400 mb-1">
+                      Select your vehicle
+                    </label>
+                    {vehicles.length > 0 ? (
+                      <select
+                        value={selectedVehicleId}
+                        onChange={(e) => setSelectedVehicleId(e.target.value)}
+                        className="w-full rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
+                        style={{
+                          background: 'rgba(255, 255, 255, 0.05)',
+                          border: '1px solid var(--border)',
+                        }}
+                      >
+                        <option value="">-- Choose vehicle --</option>
+                        {vehicles.map((v) => (
+                          <option key={v.id} value={v.id}>
+                            {v.name} ({v.type}) {v.color ? `· ${v.color}` : ''} [{v.license_plate}]
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <p className="text-xs text-slate-500">
+                        You have no vehicles registered.{' '}
+                        <button
+                          onClick={() => navigate('/profile')}
+                          className="text-indigo-400 hover:text-indigo-300 underline"
+                        >
+                          Add a vehicle
+                        </button>
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 <button
                   onClick={handleJoin}
-                  disabled={joining || !joinCode.trim() || !selectedVehicleId}
+                  disabled={
+                    joining ||
+                    ((joinConvoyLookup.convoy_type || 'vehicle') === 'vehicle' &&
+                      !selectedVehicleId)
+                  }
                   className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  {joining ? 'Joining...' : 'Join'}
+                  {joining
+                    ? 'Joining...'
+                    : (joinConvoyLookup.convoy_type || 'vehicle') === 'trekker'
+                      ? 'Join as Trekker'
+                      : 'Join with Vehicle'}
                 </button>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </div>

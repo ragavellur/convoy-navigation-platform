@@ -19,6 +19,8 @@ function JoinPage() {
   const [selectedVehicleId, setSelectedVehicleId] = useState('')
   const [joinState, setJoinState] = useState<'loading' | 'vehicle-select' | 'joining'>('loading')
   const [convoyId, setConvoyId] = useState<string | null>(null)
+  const [convoyType, setConvoyType] = useState<'vehicle' | 'trekker' | null>(null)
+  const [convoyName, setConvoyName] = useState('')
 
   useEffect(() => {
     const init = async () => {
@@ -48,6 +50,8 @@ function JoinPage() {
 
         const convoy = results[0]
         setConvoyId(convoy.id)
+        setConvoyType(convoy.convoy_type || 'vehicle')
+        setConvoyName(convoy.name)
 
         const existing = await pb.collection('convoy_members').getFullList({
           filter: `convoy = "${convoy.id}" && user = "${pb.authStore.record?.id}" && status = "active"`,
@@ -55,6 +59,29 @@ function JoinPage() {
 
         if (existing.length > 0) {
           navigate(`/map?convoy=${convoy.id}`)
+          return
+        }
+
+        if (convoy.convoy_type === 'trekker') {
+          let trekkerVehicleId = ''
+          const existingTrekkers = await pb.collection('vehicles').getFullList({
+            filter: `owner = "${pb.authStore.record?.id}" && type = "trekker" && status = "active"`,
+          })
+          if (existingTrekkers.length > 0) {
+            trekkerVehicleId = existingTrekkers[0].id
+          } else {
+            const trekkerName =
+              pb.authStore.record?.name || pb.authStore.record?.email?.split('@')[0] || 'Trekker'
+            const trekker = await pb.collection('vehicles').create({
+              owner: pb.authStore.record?.id,
+              name: trekkerName,
+              type: 'trekker',
+              status: 'active',
+            })
+            trekkerVehicleId = trekker.id
+          }
+          setSelectedVehicleId(trekkerVehicleId)
+          setJoinState('vehicle-select')
           return
         }
 
@@ -92,22 +119,25 @@ function JoinPage() {
   }, [searchParams, navigate])
 
   const handleJoin = async () => {
-    if (!convoyId || !selectedVehicleId) return
+    if (!convoyId) return
+    if (convoyType === 'vehicle' && !selectedVehicleId) return
     setJoinState('joining')
     setError('')
     try {
-      const vehicleInConvoy = await pb.collection('convoy_members').getFullList({
-        filter: `vehicle = "${selectedVehicleId}" && status = "active"`,
-      })
-      if (vehicleInConvoy.length > 0) {
-        throw new Error(
-          'This vehicle is already in another active convoy. Leave that convoy first or use a different vehicle.',
-        )
+      if (selectedVehicleId) {
+        const vehicleInConvoy = await pb.collection('convoy_members').getFullList({
+          filter: `vehicle = "${selectedVehicleId}" && status = "active"`,
+        })
+        if (vehicleInConvoy.length > 0) {
+          throw new Error(
+            'This vehicle is already in another active convoy. Leave that convoy first or use a different vehicle.',
+          )
+        }
       }
       await pb.collection('convoy_members').create({
         convoy: convoyId,
         user: pb.authStore.record?.id,
-        vehicle: selectedVehicleId,
+        vehicle: selectedVehicleId || undefined,
         role: 'member',
         status: 'active',
         joined_at: new Date().toISOString(),
@@ -137,11 +167,21 @@ function JoinPage() {
   }
 
   if (joinState === 'vehicle-select') {
+    const isTrekker = convoyType === 'trekker'
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="max-w-md w-full bg-white shadow rounded-lg p-6">
-          <h1 className="text-xl font-bold text-gray-900 mb-4 text-center">Join Convoy</h1>
-          {vehicles.length === 0 ? (
+          <h1 className="text-xl font-bold text-gray-900 mb-2 text-center">Join Convoy</h1>
+          {convoyName && (
+            <p className="text-sm text-gray-500 text-center mb-4">
+              {isTrekker ? '🥾' : '🚗'} {convoyName}
+            </p>
+          )}
+          {isTrekker ? (
+            <p className="text-sm text-gray-500 text-center mb-4">
+              Trekking convoy — no vehicle needed.
+            </p>
+          ) : vehicles.length === 0 ? (
             <div className="text-center">
               <p className="text-sm text-gray-500 mb-4">You need a vehicle to join a convoy.</p>
               <button
@@ -170,15 +210,15 @@ function JoinPage() {
                   ))}
                 </select>
               </div>
-              <button
-                onClick={handleJoin}
-                disabled={!selectedVehicleId}
-                className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Join with Selected Vehicle
-              </button>
             </div>
           )}
+          <button
+            onClick={handleJoin}
+            disabled={!isTrekker && !selectedVehicleId}
+            className="mt-4 w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isTrekker ? 'Join as Trekker' : 'Join with Selected Vehicle'}
+          </button>
         </div>
       </div>
     )

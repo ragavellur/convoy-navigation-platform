@@ -9,6 +9,7 @@ interface OSRMRouteParams {
   alternatives?: boolean
   steps?: boolean
   geometries?: 'geojson' | 'polyline' | 'polyline6'
+  profile?: 'driving' | 'foot'
 }
 
 async function fetchOSRM(
@@ -24,8 +25,29 @@ async function fetchOSRM(
   return data
 }
 
+const WALKING_SPEED_MS = 5 / 3.6
+
+function adjustForWalking(data: RouteResponse): void {
+  for (const route of data.routes) {
+    route.duration = route.distance / WALKING_SPEED_MS
+    for (const leg of route.legs) {
+      leg.duration = leg.distance / WALKING_SPEED_MS
+      for (const step of leg.steps) {
+        step.duration = step.distance / WALKING_SPEED_MS
+      }
+    }
+  }
+}
+
 export async function getRoute(params: OSRMRouteParams): Promise<RouteResponse> {
-  const { origin, destination, alternatives = true, steps = true, geometries = 'geojson' } = params
+  const {
+    origin,
+    destination,
+    alternatives = true,
+    steps = true,
+    geometries = 'geojson',
+    profile = 'driving',
+  } = params
 
   const coordinates = `${origin[0]},${origin[1]};${destination[0]},${destination[1]}`
   const searchParams = new URLSearchParams({
@@ -38,13 +60,22 @@ export async function getRoute(params: OSRMRouteParams): Promise<RouteResponse> 
   try {
     const data = await fetchOSRM(LOCAL_OSRM_URL, coordinates, searchParams)
     const route = data.routes[0]
-    if (route && route.distance > 0) return data
+    if (route && route.distance > 0) {
+      if (profile === 'foot') {
+        adjustForWalking(data)
+      }
+      return data
+    }
     console.warn('Local OSRM returned 0 distance, trying public...')
   } catch (e) {
     console.warn('Local OSRM failed, trying public:', e)
   }
 
-  return fetchOSRM(PUBLIC_OSRM_URL, coordinates, searchParams)
+  const data = await fetchOSRM(PUBLIC_OSRM_URL, coordinates, searchParams)
+  if (profile === 'foot') {
+    adjustForWalking(data)
+  }
+  return data
 }
 
 export function formatDistance(meters: number): string {

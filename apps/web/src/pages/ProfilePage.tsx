@@ -12,13 +12,13 @@ import {
 interface Vehicle {
   id: string
   name: string
-  type: 'car' | 'truck' | 'motorcycle' | 'other'
+  type: 'car' | 'truck' | 'motorcycle' | 'other' | 'trekker'
   color?: string
   license_plate: string
   status: string
 }
 
-const VEHICLE_TYPES = ['car', 'truck', 'motorcycle', 'other'] as const
+const VEHICLE_TYPES = ['car', 'truck', 'motorcycle', 'other', 'trekker'] as const
 
 function ProfilePage() {
   const { user } = useAuth()
@@ -86,7 +86,8 @@ function ProfilePage() {
   }
 
   const handleAddVehicle = async () => {
-    if (!newVehicle.name.trim() || !newVehicle.license_plate.trim()) return
+    if (!newVehicle.name.trim()) return
+    if (newVehicle.type !== 'trekker' && !newVehicle.license_plate.trim()) return
     setSavingVehicle(true)
     setError('')
     try {
@@ -94,7 +95,7 @@ function ProfilePage() {
         name: newVehicle.name.trim(),
         type: newVehicle.type,
         color: newVehicle.color.trim() || undefined,
-        license_plate: newVehicle.license_plate.trim(),
+        license_plate: newVehicle.type === 'trekker' ? undefined : newVehicle.license_plate.trim(),
         owner: user?.id,
         status: 'active',
       })
@@ -206,12 +207,13 @@ function ProfilePage() {
                   />
                   <input
                     type="text"
-                    placeholder="License plate"
+                    placeholder={newVehicle.type === 'trekker' ? 'N/A' : 'License plate'}
                     value={newVehicle.license_plate}
                     onChange={(e) =>
                       setNewVehicle((p) => ({ ...p, license_plate: e.target.value }))
                     }
-                    className="rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
+                    disabled={newVehicle.type === 'trekker'}
+                    className="rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 disabled:opacity-40"
                     style={{
                       background: 'rgba(255, 255, 255, 0.05)',
                       border: '1px solid var(--border)',
@@ -249,7 +251,9 @@ function ProfilePage() {
                 <button
                   onClick={handleAddVehicle}
                   disabled={
-                    savingVehicle || !newVehicle.name.trim() || !newVehicle.license_plate.trim()
+                    savingVehicle ||
+                    !newVehicle.name.trim() ||
+                    (newVehicle.type !== 'trekker' && !newVehicle.license_plate.trim())
                   }
                   className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 transition-colors"
                 >
