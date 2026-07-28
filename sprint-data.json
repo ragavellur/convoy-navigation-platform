@@ -855,7 +855,7 @@
       "tasks": [
         {
           "id": "TASK-112",
-          "title": "Add missing CSS variables to index.css (info, border-light, subtle-bg, primary-border, primary-faint-bg) — dark + light modes",
+          "title": "Add missing CSS variables to index.css (info, border-light, subtle-bg, primary-border, primary-faint-bg) \u2014 dark + light modes",
           "status": "done",
           "priority": "high"
         },
@@ -867,19 +867,19 @@
         },
         {
           "id": "TASK-114",
-          "title": "Refactor ConvoyDetailPage.tsx — replace ~30 hardcoded inline styles + Tailwind colors with CSS variables & utility classes",
+          "title": "Refactor ConvoyDetailPage.tsx \u2014 replace ~30 hardcoded inline styles + Tailwind colors with CSS variables & utility classes",
           "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-115",
-          "title": "Refactor MapPage.tsx — replace ~25 hardcoded inline styles + Tailwind colors with CSS variables & utility classes",
+          "title": "Refactor MapPage.tsx \u2014 replace ~25 hardcoded inline styles + Tailwind colors with CSS variables & utility classes",
           "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-116",
-          "title": "Refactor RosterSidebar.tsx — replace ~21 hardcoded inline styles + Tailwind colors with CSS variables & utility classes",
+          "title": "Refactor RosterSidebar.tsx \u2014 replace ~21 hardcoded inline styles + Tailwind colors with CSS variables & utility classes",
           "status": "done",
           "priority": "high"
         }
@@ -894,31 +894,31 @@
       "tasks": [
         {
           "id": "TASK-117",
-          "title": "Refactor ConvoyPage.tsx — replace ~12 hardcoded inline styles + Tailwind colors",
+          "title": "Refactor ConvoyPage.tsx \u2014 replace ~12 hardcoded inline styles + Tailwind colors",
           "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-118",
-          "title": "Refactor ProfilePage.tsx — replace ~13 hardcoded inline styles + Tailwind colors",
+          "title": "Refactor ProfilePage.tsx \u2014 replace ~13 hardcoded inline styles + Tailwind colors",
           "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-119",
-          "title": "Refactor Layout.tsx — replace ~10 hardcoded inline styles + Tailwind colors, use .glass/.glass-strong classes",
+          "title": "Refactor Layout.tsx \u2014 replace ~10 hardcoded inline styles + Tailwind colors, use .glass/.glass-strong classes",
           "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-120",
-          "title": "Refactor VoicePanel.tsx — replace ~10 hardcoded inline styles + Tailwind colors",
+          "title": "Refactor VoicePanel.tsx \u2014 replace ~10 hardcoded inline styles + Tailwind colors",
           "status": "done",
           "priority": "medium"
         },
         {
           "id": "TASK-121",
-          "title": "Refactor ChatPanel.tsx — replace hardcoded Tailwind colors with CSS variables",
+          "title": "Refactor ChatPanel.tsx \u2014 replace hardcoded Tailwind colors with CSS variables",
           "status": "done",
           "priority": "medium"
         },
@@ -930,7 +930,7 @@
         },
         {
           "id": "TASK-123",
-          "title": "Refactor LoginPage.tsx & RegisterPage.tsx — replace inline styles with .input-field class + CSS variables",
+          "title": "Refactor LoginPage.tsx & RegisterPage.tsx \u2014 replace inline styles with .input-field class + CSS variables",
           "status": "done",
           "priority": "medium"
         },
@@ -964,13 +964,13 @@
         {
           "id": "TASK-146",
           "title": "Write unit tests for all services (>85% coverage)",
-          "status": "in-progress",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-147",
           "title": "Write integration tests for API endpoints",
-          "status": "backlog",
+          "status": "in-progress",
           "priority": "high"
         },
         {
