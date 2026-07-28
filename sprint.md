@@ -177,14 +177,14 @@
 ### 📌 Backlog
 
 - [ ] [TASK-094] Test PWA on Chrome, Safari, Firefox, Edge
-- [ ] [TASK-097T] DB schema: add convoy_type to convoys, make license_plate optional, add trekker to vehicle types
-- [ ] [TASK-098T] TypeScript types + VehicleMarker trekker icon (walking person SVG)
-- [ ] [TASK-099T] Convoy creation form - add convoy type selector (Vehicle/Trekker)
-- [ ] [TASK-100T] Join flow - conditionally require vehicle based on convoy type
-- [ ] [TASK-101T] Auto-create synthetic trekker vehicle on join for trekker convoys
-- [ ] [TASK-102T] Convoy list + detail page - trekker-aware display (type badges, no vehicle info for trekkers)
-- [ ] [TASK-103T] ProfilePage - license plate optional when vehicle type is trekker
-- [ ] [TASK-104T] Update setup-collections.sh and setup-collections.py for new schema
+- [x] [TASK-097T] DB schema: add convoy_type to convoys, make license_plate optional, add trekker to vehicle types
+- [x] [TASK-098T] TypeScript types + VehicleMarker trekker icon (walking person SVG)
+- [x] [TASK-099T] Convoy creation form - add convoy type selector (Vehicle/Trekker)
+- [x] [TASK-100T] Join flow - conditionally require vehicle based on convoy type
+- [x] [TASK-101T] Auto-create synthetic trekker vehicle on join for trekker convoys
+- [x] [TASK-102T] Convoy list + detail page - trekker-aware display (type badges, no vehicle info for trekkers)
+- [x] [TASK-103T] ProfilePage - license plate optional when vehicle type is trekker
+- [x] [TASK-104T] Update setup-collections.sh and setup-collections.py for new schema
 
 ### ✅ Done
 

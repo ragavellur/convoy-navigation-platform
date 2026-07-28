@@ -757,49 +757,49 @@
         {
           "id": "TASK-097T",
           "title": "DB schema: add convoy_type to convoys, make license_plate optional, add trekker to vehicle types",
-          "status": "backlog",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-098T",
           "title": "TypeScript types + VehicleMarker trekker icon (walking person SVG)",
-          "status": "backlog",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-099T",
           "title": "Convoy creation form - add convoy type selector (Vehicle/Trekker)",
-          "status": "backlog",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-100T",
           "title": "Join flow - conditionally require vehicle based on convoy type",
-          "status": "backlog",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-101T",
           "title": "Auto-create synthetic trekker vehicle on join for trekker convoys",
-          "status": "backlog",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-102T",
           "title": "Convoy list + detail page - trekker-aware display (type badges, no vehicle info for trekkers)",
-          "status": "backlog",
+          "status": "done",
           "priority": "medium"
         },
         {
           "id": "TASK-103T",
           "title": "ProfilePage - license plate optional when vehicle type is trekker",
-          "status": "backlog",
+          "status": "done",
           "priority": "medium"
         },
         {
           "id": "TASK-104T",
           "title": "Update setup-collections.sh and setup-collections.py for new schema",
-          "status": "backlog",
+          "status": "done",
           "priority": "medium"
         }
       ]
