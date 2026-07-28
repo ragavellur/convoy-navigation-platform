@@ -206,37 +206,30 @@
 
 ---
 
-## Sprint 9: Android Foundation (Week 17-18)
+## Sprint 9: CSS Refactoring - Variables & Utility Classes (Week 17-18)
 
-### 📌 Backlog
+### 🔄 In Progress
 
-- [ ] [TASK-097] Set up React Native / Expo project for Android
-- [ ] [TASK-098] Configure Android build (EAS Build)
-- [ ] [TASK-099] Integrate MapLibre GL Native SDK
-- [ ] [TASK-100] Port authentication flow to React Native
-- [ ] [TASK-101] Port map screen to React Native
-- [ ] [TASK-102] Implement native GPS background service
-- [ ] [TASK-103] Port adaptive polling logic to native
-- [ ] [TASK-104] Port convoy join/create flow to mobile
-- [ ] [TASK-105] Implement deep link handling (Android intent filters)
-- [ ] [TASK-106] Port vehicle roster sidebar to mobile
-- [ ] [TASK-107] Implement turn-by-turn navigation with TTS (FR-MAP-05)
-- [ ] [TASK-108] Port chat UI to React Native
-- [ ] [TASK-109] Implement push notifications (FCM)
+- [ ] [TASK-112] Add missing CSS variables to index.css (info, border-light, subtle-bg, primary-border, primary-faint-bg) — dark + light modes
+- [ ] [TASK-113] Create utility CSS classes: .input-field, .card, .error-banner, .success-banner in index.css
+- [ ] [TASK-114] Refactor ConvoyDetailPage.tsx — replace ~30 hardcoded inline styles + Tailwind colors
+- [ ] [TASK-115] Refactor MapPage.tsx — replace ~25 hardcoded inline styles + Tailwind colors
+- [ ] [TASK-116] Refactor RosterSidebar.tsx — replace ~21 hardcoded inline styles + Tailwind colors
 
 ---
 
-## Sprint 10: iOS Foundation (Week 19-20)
+## Sprint 10: CSS Refactoring - Remaining Files & Component Extraction (Week 19-20)
 
 ### 📌 Backlog
 
-- [ ] [TASK-110] Configure iOS build (EAS Build)
-- [ ] [TASK-111] Implement iOS-specific deep links (Universal Links)
-- [ ] [TASK-112] Implement iOS background location mode
-- [ ] [TASK-113] Implement iOS push notifications (APNs)
-- [ ] [TASK-114] Test iOS-specific UI (safe area, notch, dynamic island)
-- [ ] [TASK-115] iOS App Store submission preparation
-- [ ] [TASK-116] Test iOS WebRTC compatibility
+- [ ] [TASK-117] Refactor ConvoyPage.tsx — replace ~12 hardcoded inline styles + Tailwind colors
+- [ ] [TASK-118] Refactor ProfilePage.tsx — replace ~13 hardcoded inline styles + Tailwind colors
+- [ ] [TASK-119] Refactor Layout.tsx — replace ~10 hardcoded inline styles + Tailwind colors, use .glass/.glass-strong classes
+- [ ] [TASK-120] Refactor VoicePanel.tsx — replace ~10 hardcoded inline styles + Tailwind colors
+- [ ] [TASK-121] Refactor ChatPanel.tsx — replace hardcoded Tailwind colors with CSS variables
+- [ ] [TASK-122] Refactor SearchBar.tsx, LocationPermissionPrompt.tsx, ProtectedRoute.tsx, VehicleTypeSelector.tsx, NotFoundPage.tsx
+- [ ] [TASK-123] Refactor LoginPage.tsx & RegisterPage.tsx — replace inline styles with .input-field class + CSS variables
+- [ ] [TASK-124] Extract shared components: StatusBadge, MemberCard, SimulationControls from large pages
 
 ---
 
@@ -293,11 +286,11 @@
 | Sprint 6  | 14          | 0       | 0           | 14     | Web                |
 | Sprint 7  | 12          | 12      | 0           | 0      | Web Critical Fixes |
 | Sprint 8  | 21          | 10      | 0           | 11     | Web PWA + Trekker  |
-| Sprint 9  | 13          | 13      | 0           | 0      | Android            |
-| Sprint 10 | 7           | 7       | 0           | 0      | iOS                |
+| Sprint 9  | 5           | 0       | 5           | 0      | Web CSS Refactor   |
+| Sprint 10 | 8           | 8       | 0           | 0      | Web CSS Refactor   |
 | Sprint 11 | 13          | 13      | 0           | 0      | All                |
 | Sprint 12 | 14          | 14      | 0           | 0      | All                |
-| **Total** | **169**     | **79**  | **0**       | **90** |                    |
+| **Total** | **163**     | **79**  | **5**       | **79** |                    |
 
 ---
 
@@ -321,8 +314,7 @@
 
 ```
 Sprint 1-8:   [████████████████████████████] Web (PWA) - Full Feature Parity
-Sprint 9:     [████████████] Android Foundation
-Sprint 10:    [████████] iOS Foundation
+Sprint 9-10:  [████████████████] Web CSS Refactoring
 Sprint 11-12: [████████████████] Polish & Deploy (All Platforms)
 ```
 

@@ -807,144 +807,138 @@
           "title": "Complete light & dark theme support across entire application",
           "status": "done",
           "priority": "high"
+        },
+        {
+          "id": "TASK-106T",
+          "title": "Fix convoy detail page role display (Owner/Admin/Member) + roster badge",
+          "status": "done",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-107T",
+          "title": "OSRM trekking profile for walking routes (5 km/h duration calc)",
+          "status": "done",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-108T",
+          "title": "UI cleanup: remove mobile convoy button, map hint panel, add trekker emoji to roster",
+          "status": "done",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-109T",
+          "title": "Containerize frontend: multi-stage Dockerfile + Nginx serve + docker-compose service",
+          "status": "done",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-110T",
+          "title": "Rewrite DEPLOYMENT.md with unified docker compose deployment path",
+          "status": "done",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-111T",
+          "title": "Fix button text (white on colored bg), light mode background less bright, simulation checkbox visibility",
+          "status": "done",
+          "priority": "high"
         }
       ]
     },
     {
       "id": 9,
-      "name": "Sprint 9: Android Foundation",
-      "platform": "Android",
-      "startDate": "2026-11-13",
-      "endDate": "2026-11-27",
+      "name": "Sprint 9: CSS Refactoring - Variables & Utility Classes",
+      "platform": "Web",
+      "startDate": "2026-07-28",
+      "endDate": "2026-08-11",
       "tasks": [
         {
-          "id": "TASK-097",
-          "title": "Set up React Native / Expo project for Android",
-          "status": "backlog",
+          "id": "TASK-112",
+          "title": "Add missing CSS variables to index.css (info, border-light, subtle-bg, primary-border, primary-faint-bg) — dark + light modes",
+          "status": "in-progress",
           "priority": "high"
         },
         {
-          "id": "TASK-098",
-          "title": "Configure Android build (EAS Build)",
-          "status": "backlog",
+          "id": "TASK-113",
+          "title": "Create utility CSS classes: .input-field, .card, .error-banner, .success-banner in index.css",
+          "status": "in-progress",
           "priority": "high"
         },
         {
-          "id": "TASK-099",
-          "title": "Integrate MapLibre GL Native SDK",
-          "status": "backlog",
+          "id": "TASK-114",
+          "title": "Refactor ConvoyDetailPage.tsx — replace ~30 hardcoded inline styles + Tailwind colors with CSS variables & utility classes",
+          "status": "in-progress",
           "priority": "high"
         },
         {
-          "id": "TASK-100",
-          "title": "Port authentication flow to React Native",
-          "status": "backlog",
+          "id": "TASK-115",
+          "title": "Refactor MapPage.tsx — replace ~25 hardcoded inline styles + Tailwind colors with CSS variables & utility classes",
+          "status": "in-progress",
           "priority": "high"
         },
         {
-          "id": "TASK-101",
-          "title": "Port map screen to React Native",
-          "status": "backlog",
-          "priority": "high"
-        },
-        {
-          "id": "TASK-102",
-          "title": "Implement native GPS background service",
-          "status": "backlog",
-          "priority": "high"
-        },
-        {
-          "id": "TASK-103",
-          "title": "Port adaptive polling logic to native",
-          "status": "backlog",
-          "priority": "medium"
-        },
-        {
-          "id": "TASK-104",
-          "title": "Port convoy join/create flow to mobile",
-          "status": "backlog",
-          "priority": "high"
-        },
-        {
-          "id": "TASK-105",
-          "title": "Implement deep link handling (Android intent filters)",
-          "status": "backlog",
-          "priority": "high"
-        },
-        {
-          "id": "TASK-106",
-          "title": "Port vehicle roster sidebar to mobile",
-          "status": "backlog",
-          "priority": "medium"
-        },
-        {
-          "id": "TASK-107",
-          "title": "Implement turn-by-turn navigation with TTS (FR-MAP-05)",
-          "status": "backlog",
-          "priority": "medium"
-        },
-        {
-          "id": "TASK-108",
-          "title": "Port chat UI to React Native",
-          "status": "backlog",
-          "priority": "medium"
-        },
-        {
-          "id": "TASK-109",
-          "title": "Implement push notifications (FCM)",
-          "status": "backlog",
+          "id": "TASK-116",
+          "title": "Refactor RosterSidebar.tsx — replace ~21 hardcoded inline styles + Tailwind colors with CSS variables & utility classes",
+          "status": "in-progress",
           "priority": "high"
         }
       ]
     },
     {
       "id": 10,
-      "name": "Sprint 10: iOS Foundation",
-      "platform": "iOS",
-      "startDate": "2026-11-27",
-      "endDate": "2026-12-11",
+      "name": "Sprint 10: CSS Refactoring - Remaining Files & Component Extraction",
+      "platform": "Web",
+      "startDate": "2026-08-11",
+      "endDate": "2026-08-25",
       "tasks": [
         {
-          "id": "TASK-110",
-          "title": "Configure iOS build (EAS Build)",
+          "id": "TASK-117",
+          "title": "Refactor ConvoyPage.tsx — replace ~12 hardcoded inline styles + Tailwind colors",
           "status": "backlog",
           "priority": "high"
         },
         {
-          "id": "TASK-111",
-          "title": "Implement iOS-specific deep links (Universal Links)",
+          "id": "TASK-118",
+          "title": "Refactor ProfilePage.tsx — replace ~13 hardcoded inline styles + Tailwind colors",
           "status": "backlog",
           "priority": "high"
         },
         {
-          "id": "TASK-112",
-          "title": "Implement iOS background location mode",
+          "id": "TASK-119",
+          "title": "Refactor Layout.tsx — replace ~10 hardcoded inline styles + Tailwind colors, use .glass/.glass-strong classes",
           "status": "backlog",
           "priority": "high"
         },
         {
-          "id": "TASK-113",
-          "title": "Implement iOS push notifications (APNs)",
-          "status": "backlog",
-          "priority": "high"
-        },
-        {
-          "id": "TASK-114",
-          "title": "Test iOS-specific UI (safe area, notch, dynamic island)",
+          "id": "TASK-120",
+          "title": "Refactor VoicePanel.tsx — replace ~10 hardcoded inline styles + Tailwind colors",
           "status": "backlog",
           "priority": "medium"
         },
         {
-          "id": "TASK-115",
-          "title": "iOS App Store submission preparation",
+          "id": "TASK-121",
+          "title": "Refactor ChatPanel.tsx — replace hardcoded Tailwind colors with CSS variables",
           "status": "backlog",
           "priority": "medium"
         },
         {
-          "id": "TASK-116",
-          "title": "Test iOS WebRTC compatibility",
+          "id": "TASK-122",
+          "title": "Refactor SearchBar.tsx, LocationPermissionPrompt.tsx, ProtectedRoute.tsx, VehicleTypeSelector.tsx, NotFoundPage.tsx",
           "status": "backlog",
-          "priority": "high"
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-123",
+          "title": "Refactor LoginPage.tsx & RegisterPage.tsx — replace inline styles with .input-field class + CSS variables",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-124",
+          "title": "Extract shared components: StatusBadge, MemberCard, SimulationControls from large pages",
+          "status": "backlog",
+          "priority": "medium"
         }
       ]
     },
