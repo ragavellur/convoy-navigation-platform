@@ -172,11 +172,19 @@
 
 ---
 
-## Sprint 8: PWA Polish (Week 15-16)
+## Sprint 8: PWA Polish & Trekker Support (Week 15-16)
 
 ### 📌 Backlog
 
 - [ ] [TASK-094] Test PWA on Chrome, Safari, Firefox, Edge
+- [ ] [TASK-097T] DB schema: add convoy_type to convoys, make license_plate optional, add trekker to vehicle types
+- [ ] [TASK-098T] TypeScript types + VehicleMarker trekker icon (walking person SVG)
+- [ ] [TASK-099T] Convoy creation form - add convoy type selector (Vehicle/Trekker)
+- [ ] [TASK-100T] Join flow - conditionally require vehicle based on convoy type
+- [ ] [TASK-101T] Auto-create synthetic trekker vehicle on join for trekker convoys
+- [ ] [TASK-102T] Convoy list + detail page - trekker-aware display (type badges, no vehicle info for trekkers)
+- [ ] [TASK-103T] ProfilePage - license plate optional when vehicle type is trekker
+- [ ] [TASK-104T] Update setup-collections.sh and setup-collections.py for new schema
 
 ### ✅ Done
 
@@ -190,6 +198,7 @@
 - [x] [TASK-093] Optimize PWA Lighthouse score (>90 target)
 - [x] [TASK-095] Implement web app caching for static assets
 - [x] [TASK-096] Add PWA meta tags and Open Graph tags
+- [x] [TASK-096P] Server-side push notification sender with 7 event triggers
 
 ---
 
@@ -279,12 +288,12 @@
 | Sprint 5  | 11          | 0       | 0           | 11     | Web                |
 | Sprint 6  | 14          | 0       | 0           | 14     | Web                |
 | Sprint 7  | 12          | 12      | 0           | 0      | Web Critical Fixes |
-| Sprint 8  | 11          | 11      | 0           | 0      | Web PWA            |
+| Sprint 8  | 21          | 10      | 0           | 11     | Web PWA + Trekker  |
 | Sprint 9  | 13          | 13      | 0           | 0      | Android            |
 | Sprint 10 | 7           | 7       | 0           | 0      | iOS                |
 | Sprint 11 | 13          | 13      | 0           | 0      | All                |
 | Sprint 12 | 14          | 14      | 0           | 0      | All                |
-| **Total** | **159**     | **70**  | **0**       | **89** |                    |
+| **Total** | **169**     | **79**  | **0**       | **90** |                    |
 
 ---
 

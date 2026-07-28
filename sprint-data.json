@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-07-27T00:00:00Z",
+  "lastUpdated": "2026-07-28T00:00:00Z",
   "sprints": [
     {
       "id": 1,
@@ -747,6 +747,60 @@
           "title": "Add PWA meta tags and Open Graph tags",
           "status": "done",
           "priority": "low"
+        },
+        {
+          "id": "TASK-096P",
+          "title": "Server-side push notification sender with 7 event triggers",
+          "status": "done",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-097T",
+          "title": "DB schema: add convoy_type to convoys, make license_plate optional, add trekker to vehicle types",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-098T",
+          "title": "TypeScript types + VehicleMarker trekker icon (walking person SVG)",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-099T",
+          "title": "Convoy creation form - add convoy type selector (Vehicle/Trekker)",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-100T",
+          "title": "Join flow - conditionally require vehicle based on convoy type",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-101T",
+          "title": "Auto-create synthetic trekker vehicle on join for trekker convoys",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-102T",
+          "title": "Convoy list + detail page - trekker-aware display (type badges, no vehicle info for trekkers)",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-103T",
+          "title": "ProfilePage - license plate optional when vehicle type is trekker",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-104T",
+          "title": "Update setup-collections.sh and setup-collections.py for new schema",
+          "status": "backlog",
+          "priority": "medium"
         }
       ]
     },
