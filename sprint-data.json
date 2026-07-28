@@ -895,49 +895,49 @@
         {
           "id": "TASK-117",
           "title": "Refactor ConvoyPage.tsx — replace ~12 hardcoded inline styles + Tailwind colors",
-          "status": "backlog",
+          "status": "in-progress",
           "priority": "high"
         },
         {
           "id": "TASK-118",
           "title": "Refactor ProfilePage.tsx — replace ~13 hardcoded inline styles + Tailwind colors",
-          "status": "backlog",
+          "status": "in-progress",
           "priority": "high"
         },
         {
           "id": "TASK-119",
           "title": "Refactor Layout.tsx — replace ~10 hardcoded inline styles + Tailwind colors, use .glass/.glass-strong classes",
-          "status": "backlog",
+          "status": "in-progress",
           "priority": "high"
         },
         {
           "id": "TASK-120",
           "title": "Refactor VoicePanel.tsx — replace ~10 hardcoded inline styles + Tailwind colors",
-          "status": "backlog",
+          "status": "in-progress",
           "priority": "medium"
         },
         {
           "id": "TASK-121",
           "title": "Refactor ChatPanel.tsx — replace hardcoded Tailwind colors with CSS variables",
-          "status": "backlog",
+          "status": "in-progress",
           "priority": "medium"
         },
         {
           "id": "TASK-122",
           "title": "Refactor SearchBar.tsx, LocationPermissionPrompt.tsx, ProtectedRoute.tsx, VehicleTypeSelector.tsx, NotFoundPage.tsx",
-          "status": "backlog",
+          "status": "in-progress",
           "priority": "medium"
         },
         {
           "id": "TASK-123",
           "title": "Refactor LoginPage.tsx & RegisterPage.tsx — replace inline styles with .input-field class + CSS variables",
-          "status": "backlog",
+          "status": "in-progress",
           "priority": "medium"
         },
         {
           "id": "TASK-124",
           "title": "Extract shared components: StatusBadge, MemberCard, SimulationControls from large pages",
-          "status": "backlog",
+          "status": "in-progress",
           "priority": "medium"
         }
       ]

@@ -220,16 +220,16 @@
 
 ## Sprint 10: CSS Refactoring - Remaining Files & Component Extraction (Week 19-20)
 
-### 📌 Backlog
+### 🔄 In Progress
 
-- [ ] [TASK-117] Refactor ConvoyPage.tsx — replace ~12 hardcoded inline styles + Tailwind colors
-- [ ] [TASK-118] Refactor ProfilePage.tsx — replace ~13 hardcoded inline styles + Tailwind colors
-- [ ] [TASK-119] Refactor Layout.tsx — replace ~10 hardcoded inline styles + Tailwind colors, use .glass/.glass-strong classes
-- [ ] [TASK-120] Refactor VoicePanel.tsx — replace ~10 hardcoded inline styles + Tailwind colors
-- [ ] [TASK-121] Refactor ChatPanel.tsx — replace hardcoded Tailwind colors with CSS variables
-- [ ] [TASK-122] Refactor SearchBar.tsx, LocationPermissionPrompt.tsx, ProtectedRoute.tsx, VehicleTypeSelector.tsx, NotFoundPage.tsx
-- [ ] [TASK-123] Refactor LoginPage.tsx & RegisterPage.tsx — replace inline styles with .input-field class + CSS variables
-- [ ] [TASK-124] Extract shared components: StatusBadge, MemberCard, SimulationControls from large pages
+- [-] [TASK-117] Refactor ConvoyPage.tsx — replace ~12 hardcoded inline styles + Tailwind colors
+- [-] [TASK-118] Refactor ProfilePage.tsx — replace ~13 hardcoded inline styles + Tailwind colors
+- [-] [TASK-119] Refactor Layout.tsx — replace ~10 hardcoded inline styles + Tailwind colors, use .glass/.glass-strong classes
+- [-] [TASK-120] Refactor VoicePanel.tsx — replace ~10 hardcoded inline styles + Tailwind colors
+- [-] [TASK-121] Refactor ChatPanel.tsx — replace hardcoded Tailwind colors with CSS variables
+- [-] [TASK-122] Refactor SearchBar.tsx, LocationPermissionPrompt.tsx, ProtectedRoute.tsx, VehicleTypeSelector.tsx, NotFoundPage.tsx
+- [-] [TASK-123] Refactor LoginPage.tsx & RegisterPage.tsx — replace inline styles with .input-field class + CSS variables
+- [-] [TASK-124] Extract shared components: StatusBadge, MemberCard, SimulationControls from large pages
 
 ---
 
