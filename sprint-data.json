@@ -856,31 +856,31 @@
         {
           "id": "TASK-112",
           "title": "Add missing CSS variables to index.css (info, border-light, subtle-bg, primary-border, primary-faint-bg) — dark + light modes",
-          "status": "in-progress",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-113",
           "title": "Create utility CSS classes: .input-field, .card, .error-banner, .success-banner in index.css",
-          "status": "in-progress",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-114",
           "title": "Refactor ConvoyDetailPage.tsx — replace ~30 hardcoded inline styles + Tailwind colors with CSS variables & utility classes",
-          "status": "in-progress",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-115",
           "title": "Refactor MapPage.tsx — replace ~25 hardcoded inline styles + Tailwind colors with CSS variables & utility classes",
-          "status": "in-progress",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-116",
           "title": "Refactor RosterSidebar.tsx — replace ~21 hardcoded inline styles + Tailwind colors with CSS variables & utility classes",
-          "status": "in-progress",
+          "status": "done",
           "priority": "high"
         }
       ]

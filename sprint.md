@@ -208,13 +208,13 @@
 
 ## Sprint 9: CSS Refactoring - Variables & Utility Classes (Week 17-18)
 
-### 🔄 In Progress
+### ✅ Done
 
-- [ ] [TASK-112] Add missing CSS variables to index.css (info, border-light, subtle-bg, primary-border, primary-faint-bg) — dark + light modes
-- [ ] [TASK-113] Create utility CSS classes: .input-field, .card, .error-banner, .success-banner in index.css
-- [ ] [TASK-114] Refactor ConvoyDetailPage.tsx — replace ~30 hardcoded inline styles + Tailwind colors
-- [ ] [TASK-115] Refactor MapPage.tsx — replace ~25 hardcoded inline styles + Tailwind colors
-- [ ] [TASK-116] Refactor RosterSidebar.tsx — replace ~21 hardcoded inline styles + Tailwind colors
+- [x] [TASK-112] Add missing CSS variables to index.css (info, border-light, subtle-bg, primary-border, primary-faint-bg) — dark + light modes
+- [x] [TASK-113] Create utility CSS classes: .input-field, .card, .error-banner, .success-banner in index.css
+- [x] [TASK-114] Refactor ConvoyDetailPage.tsx — replace ~30 hardcoded inline styles + Tailwind colors
+- [x] [TASK-115] Refactor MapPage.tsx — replace ~25 hardcoded inline styles + Tailwind colors
+- [x] [TASK-116] Refactor RosterSidebar.tsx — replace ~21 hardcoded inline styles + Tailwind colors
 
 ---
 
@@ -286,7 +286,7 @@
 | Sprint 6  | 14          | 0       | 0           | 14     | Web                |
 | Sprint 7  | 12          | 12      | 0           | 0      | Web Critical Fixes |
 | Sprint 8  | 21          | 10      | 0           | 11     | Web PWA + Trekker  |
-| Sprint 9  | 5           | 0       | 5           | 0      | Web CSS Refactor   |
+| Sprint 9  | 5           | 0       | 0           | 5      | Web CSS Refactor   |
 | Sprint 10 | 8           | 8       | 0           | 0      | Web CSS Refactor   |
 | Sprint 11 | 13          | 13      | 0           | 0      | All                |
 | Sprint 12 | 14          | 14      | 0           | 0      | All                |
