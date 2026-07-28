@@ -8,6 +8,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@sentry/react": "^10.68.0",
     "idb": "^7.1.1",
     "maplibre-gl": "^4.1.0",
     "mediasoup-client": "^3.21.0",
