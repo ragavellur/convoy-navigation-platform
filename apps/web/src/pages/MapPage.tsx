@@ -869,12 +869,9 @@ function MapPage() {
     <div className="relative w-full h-[calc(100dvh-80px-56px)] md:h-[calc(100dvh-80px)]">
       <div ref={mapContainer} className="w-full h-full" />
       {!mapLoaded && (
-        <div
-          className="absolute inset-0 flex items-center justify-center"
-          style={{ background: 'var(--bg)' }}
-        >
+        <div className="absolute inset-0 flex items-center justify-center bg-[var(--bg)]">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-400 mx-auto"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary)] mx-auto"></div>
             <p className="mt-4 text-[var(--text2)]">Loading map...</p>
           </div>
         </div>
@@ -889,29 +886,16 @@ function MapPage() {
         </div>
       )}
       {convoyId && simActive && (
-        <div
-          className="absolute top-4 left-4 z-10 flex items-center gap-2 px-3 py-2 rounded-xl"
-          style={{
-            background: 'rgba(245, 158, 11, 0.15)',
-            border: '1px solid rgba(245, 158, 11, 0.3)',
-          }}
-        >
-          <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-          <span className="text-xs font-medium text-amber-400">Simulation Mode</span>
+        <div className="absolute top-4 left-4 z-10 flex items-center gap-2 px-3 py-2 rounded-xl warning-banner">
+          <span className="w-2 h-2 rounded-full bg-[var(--warning)] animate-pulse" />
+          <span className="text-xs font-medium text-[var(--warning-text)]">Simulation Mode</span>
         </div>
       )}
       {isOffRoute && routeData && (
-        <div
-          className="absolute top-20 left-4 right-4 md:left-auto md:right-4 md:w-96 z-20 rounded-xl p-4"
-          style={{
-            background: 'var(--nav-bg)',
-            backdropFilter: 'blur(24px)',
-            border: '1px solid rgba(245, 158, 11, 0.3)',
-          }}
-        >
+        <div className="absolute top-20 left-4 right-4 md:left-auto md:right-4 md:w-96 z-20 rounded-xl p-4 glass border-[var(--warning-border-light)]">
           <div className="flex items-center gap-2 mb-2">
             <svg
-              className="h-5 w-5 text-amber-400"
+              className="h-5 w-5 text-[var(--warning-text)]"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -923,7 +907,7 @@ function MapPage() {
                 d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
               />
             </svg>
-            <h3 className="font-semibold text-amber-400">Off Route</h3>
+            <h3 className="font-semibold text-[var(--warning-text)]">Off Route</h3>
           </div>
           <p className="text-sm text-[var(--text2)] mb-3">
             You have deviated from the planned route.
@@ -935,21 +919,14 @@ function MapPage() {
                 if (dest) recalculateRoute(dest.location)
               }
             }}
-            className="w-full px-3 py-2 bg-amber-500/20 text-amber-400 text-sm font-medium rounded-lg hover:bg-amber-500/30 transition-colors"
+            className="w-full px-3 py-2 bg-[var(--warning-bg)] text-[var(--warning-text)] text-sm font-medium rounded-lg hover:bg-[var(--warning-border-light)] transition-colors"
           >
             Recalculate Route
           </button>
         </div>
       )}
       {routeData && showRoutePanel && (
-        <div
-          className="absolute top-20 left-4 z-10 rounded-xl p-4 max-w-sm max-h-[60vh] overflow-y-auto"
-          style={{
-            background: 'var(--nav-bg)',
-            backdropFilter: 'blur(24px)',
-            border: '1px solid var(--border)',
-          }}
-        >
+        <div className="absolute top-20 left-4 z-10 rounded-xl p-4 max-w-sm max-h-[60vh] overflow-y-auto glass">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-semibold text-[var(--text)]">Route Summary</h3>
             <button
@@ -968,27 +945,21 @@ function MapPage() {
             </button>
           </div>
           <div className="grid grid-cols-2 gap-3 mb-4">
-            <div
-              className="rounded-xl p-3 text-center"
-              style={{ background: 'rgba(99, 102, 241, 0.12)' }}
-            >
-              <div className="text-lg font-bold text-indigo-400">
+            <div className="rounded-xl p-3 text-center bg-[var(--primary-subtle-bg)]">
+              <div className="text-lg font-bold text-[var(--primary)]">
                 {formatDistance(routeData.distance)}
               </div>
-              <div className="text-xs text-indigo-400/70 mt-0.5">Distance</div>
+              <div className="text-xs text-[var(--primary)] opacity-70 mt-0.5">Distance</div>
             </div>
-            <div
-              className="rounded-xl p-3 text-center"
-              style={{ background: 'rgba(99, 102, 241, 0.12)' }}
-            >
-              <div className="text-lg font-bold text-indigo-400">
+            <div className="rounded-xl p-3 text-center bg-[var(--primary-subtle-bg)]">
+              <div className="text-lg font-bold text-[var(--primary)]">
                 {formatDuration(routeData.duration)}
               </div>
-              <div className="text-xs text-indigo-400/70 mt-0.5">Duration</div>
+              <div className="text-xs text-[var(--primary)] opacity-70 mt-0.5">Duration</div>
             </div>
           </div>
           {alternatives.length > 1 && (
-            <div className="mb-3 border-t pt-3" style={{ borderColor: 'var(--border)' }}>
+            <div className="mb-3 border-t border-[var(--border)] pt-3">
               <h4 className="text-xs font-semibold text-[var(--text2)] uppercase tracking-wide mb-2">
                 {alternatives.length} Routes Found
               </h4>
@@ -999,15 +970,14 @@ function MapPage() {
                     onClick={() => selectAlternative(i)}
                     className={`w-full text-left p-2 rounded-xl text-sm border transition-colors ${
                       selectedAltIndex === i
-                        ? 'border-indigo-500/30 bg-indigo-500/10'
-                        : 'hover:bg-[var(--surface)]'
+                        ? 'border-[var(--primary-border)] bg-[var(--primary-subtle-bg)]'
+                        : 'border-[var(--border)] hover:bg-[var(--surface)]'
                     }`}
-                    style={selectedAltIndex !== i ? { borderColor: 'var(--border)' } : undefined}
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-medium text-[var(--text)]">Route {i + 1}</span>
                       {selectedAltIndex === i && (
-                        <span className="text-xs text-indigo-400 font-medium">Selected</span>
+                        <span className="text-xs text-[var(--primary)] font-medium">Selected</span>
                       )}
                     </div>
                     <div className="flex gap-3 text-xs text-[var(--text2)] mt-0.5">
@@ -1019,37 +989,34 @@ function MapPage() {
               </div>
             </div>
           )}
-          <div className="mb-3 border-t pt-3" style={{ borderColor: 'var(--border)' }}>
+          <div className="mb-3 border-t border-[var(--border)] pt-3">
             <h4 className="text-xs font-semibold text-[var(--text2)] uppercase tracking-wide mb-2">
               Traffic
             </h4>
             <div className="flex gap-3 text-xs text-[var(--text2)]">
               <span className="flex items-center gap-1">
-                <span className="w-3 h-1 rounded bg-emerald-500 inline-block"></span> Free
+                <span className="w-3 h-1 rounded bg-[var(--success)] inline-block"></span> Free
               </span>
               <span className="flex items-center gap-1">
                 <span className="w-3 h-1 rounded bg-lime-500 inline-block"></span> Light
               </span>
               <span className="flex items-center gap-1">
-                <span className="w-3 h-1 rounded bg-amber-500 inline-block"></span> Moderate
+                <span className="w-3 h-1 rounded bg-[var(--warning)] inline-block"></span> Moderate
               </span>
               <span className="flex items-center gap-1">
-                <span className="w-3 h-1 rounded bg-red-500 inline-block"></span> Heavy
+                <span className="w-3 h-1 rounded bg-[var(--danger)] inline-block"></span> Heavy
               </span>
             </div>
           </div>
           {firstStep && (
-            <div className="border-t pt-3" style={{ borderColor: 'var(--border)' }}>
+            <div className="border-t border-[var(--border)] pt-3">
               <h4 className="text-xs font-semibold text-[var(--text2)] uppercase tracking-wide mb-2">
                 Next Step
               </h4>
               <div className="flex items-start gap-2">
-                <div
-                  className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center"
-                  style={{ background: 'rgba(99, 102, 241, 0.15)' }}
-                >
+                <div className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center bg-[var(--badge-vehicle-bg)]">
                   <svg
-                    className="h-4 w-4 text-indigo-400"
+                    className="h-4 w-4 text-[var(--primary)]"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -1077,7 +1044,7 @@ function MapPage() {
             </div>
           )}
           {routeData.legs[0]?.steps.length > 2 && (
-            <details className="border-t pt-3 mt-3" style={{ borderColor: 'var(--border)' }}>
+            <details className="border-t border-[var(--border)] pt-3 mt-3">
               <summary className="text-xs font-semibold text-[var(--text2)] uppercase tracking-wide cursor-pointer hover:text-[var(--text)] transition-colors">
                 {routeData.legs[0].steps.length - 1} more steps
               </summary>
@@ -1088,7 +1055,7 @@ function MapPage() {
                     onClick={() => setSelectedStepIndex(selectedStepIndex === i ? null : i)}
                     className={`w-full text-left p-2 rounded-lg text-sm ${
                       selectedStepIndex === i
-                        ? 'bg-indigo-500/10 border border-indigo-500/20'
+                        ? 'bg-[var(--primary-subtle-bg)] border border-[var(--primary-border)]'
                         : 'hover:bg-[var(--surface)]'
                     }`}
                   >
@@ -1109,18 +1076,11 @@ function MapPage() {
         </div>
       )}
       {routeError && (
-        <div
-          className="absolute top-20 left-4 z-10 rounded-xl p-4 max-w-sm"
-          style={{
-            background: 'var(--nav-bg)',
-            backdropFilter: 'blur(24px)',
-            border: '1px solid rgba(239, 68, 68, 0.3)',
-          }}
-        >
-          <p className="text-sm text-red-400">{routeError}</p>
+        <div className="absolute top-20 left-4 z-10 rounded-xl p-4 max-w-sm glass border-[var(--danger-border-light)]">
+          <p className="text-sm text-[var(--error-text)]">{routeError}</p>
           <button
             onClick={() => setRouteError(null)}
-            className="mt-2 text-xs text-red-400 hover:text-red-300 transition-colors"
+            className="mt-2 text-xs text-[var(--error-text)] hover:text-[var(--danger)] transition-colors"
           >
             Dismiss
           </button>
@@ -1129,12 +1089,7 @@ function MapPage() {
       {routeData && !showRoutePanel && (
         <button
           onClick={() => setShowRoutePanel(true)}
-          className="absolute top-20 left-4 z-10 flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium text-indigo-400 transition-colors"
-          style={{
-            background: 'var(--nav-bg)',
-            backdropFilter: 'blur(24px)',
-            border: '1px solid rgba(99, 102, 241, 0.2)',
-          }}
+          className="absolute top-20 left-4 z-10 flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium text-[var(--primary)] transition-colors glass border-[var(--primary-border)]"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
@@ -1171,13 +1126,7 @@ function MapPage() {
             )
           }
         }}
-        className="absolute bottom-20 right-4 z-10 w-10 h-10 flex items-center justify-center rounded-full transition-colors"
-        style={{
-          background: 'var(--nav-bg)',
-          backdropFilter: 'blur(24px)',
-          border: '1px solid var(--border)',
-          color: 'var(--text2)',
-        }}
+        className="absolute bottom-20 right-4 z-10 w-10 h-10 flex items-center justify-center rounded-full transition-colors glass text-[var(--text2)]"
         aria-label="Center on my location"
       >
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

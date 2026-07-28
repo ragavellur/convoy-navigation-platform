@@ -8,9 +8,9 @@ import ChatPanel from './ChatPanel'
 import pb from '../services/pocketbase'
 
 const STATUS_COLORS: Record<string, string> = {
-  'in-transit': 'bg-emerald-500',
-  stopped: 'bg-amber-500',
-  offline: 'bg-slate-500',
+  'in-transit': 'bg-[var(--success)]',
+  stopped: 'bg-[var(--warning)]',
+  offline: 'bg-[var(--toggle-off-bg)]',
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -86,11 +86,8 @@ export default function RosterSidebar({ isExpanded, onToggle }: RosterSidebarPro
   if (!convoyId) {
     return (
       <>
-        <aside
-          className="hidden lg:flex lg:flex-col lg:w-80 overflow-y-auto"
-          style={{ background: 'var(--nav-bg)', borderRight: '1px solid var(--border)' }}
-        >
-          <div className="p-4 border-b" style={{ borderColor: 'var(--border)' }}>
+        <aside className="hidden lg:flex lg:flex-col lg:w-80 overflow-y-auto glass">
+          <div className="p-4 border-b border-[var(--border)]">
             <h2 className="text-sm font-semibold text-[var(--text)]">Convoy Panel</h2>
             <p className="text-xs text-[var(--text2)] mt-1">No convoy active</p>
           </div>
@@ -119,23 +116,19 @@ export default function RosterSidebar({ isExpanded, onToggle }: RosterSidebarPro
         ref={sidebarRef}
         className={`hidden lg:flex lg:flex-col overflow-hidden transition-all duration-300 ${
           isExpanded ? 'lg:w-80' : 'lg:w-12'
-        }`}
-        style={{ background: 'var(--nav-bg)', borderRight: '1px solid var(--border)' }}
+        } glass`}
       >
         {isExpanded ? (
           <>
             {convoyInfo && (
-              <div
-                className="p-4 border-b"
-                style={{ borderColor: 'var(--border)', background: 'rgba(99, 102, 241, 0.08)' }}
-              >
+              <div className="p-4 border-b border-[var(--border)] bg-[var(--primary-faint-bg)]">
                 <h2 className="text-sm font-semibold text-[var(--text)]">{convoyInfo.name}</h2>
                 {convoyInfo.description && (
                   <p className="text-xs text-[var(--text2)] mt-0.5">{convoyInfo.description}</p>
                 )}
                 {(convoyInfo.source_name || convoyInfo.dest_name) && (
                   <div className="flex items-center gap-1.5 mt-1.5 text-xs text-[var(--text2)]">
-                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400">
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[var(--success-bg)] text-[var(--success-text)]">
                       <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                         <circle cx="10" cy="10" r="4" />
                       </svg>
@@ -154,7 +147,7 @@ export default function RosterSidebar({ isExpanded, onToggle }: RosterSidebarPro
                         d="M14 5l7 7m0 0l-7 7m7-7H3"
                       />
                     </svg>
-                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-red-500/15 text-red-400">
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[var(--error-bg)] text-[var(--error-text)]">
                       <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                         <path
                           fillRule="evenodd"
@@ -169,7 +162,7 @@ export default function RosterSidebar({ isExpanded, onToggle }: RosterSidebarPro
               </div>
             )}
 
-            <div className="p-4 border-b" style={{ borderColor: 'var(--border)' }}>
+            <div className="p-4 border-b border-[var(--border)]">
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-sm font-semibold text-[var(--text)]">Convoy Members</h2>
@@ -178,7 +171,7 @@ export default function RosterSidebar({ isExpanded, onToggle }: RosterSidebarPro
                   </p>
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className="inline-flex items-center justify-center w-6 h-6 text-xs font-medium rounded-full bg-indigo-500/20 text-indigo-400">
+                  <span className="inline-flex items-center justify-center w-6 h-6 text-xs font-medium rounded-full bg-[var(--badge-vehicle-bg)] text-[var(--primary)]">
                     {members.length}
                   </span>
                   <button
@@ -221,7 +214,7 @@ export default function RosterSidebar({ isExpanded, onToggle }: RosterSidebarPro
               )}
             </div>
 
-            <div className="p-3 border-t space-y-3" style={{ borderColor: 'var(--border)' }}>
+            <div className="p-3 border-t border-[var(--border)] space-y-3">
               <VoicePanel />
               <ChatPanel />
               <Link
@@ -253,7 +246,7 @@ export default function RosterSidebar({ isExpanded, onToggle }: RosterSidebarPro
             </span>
             {transitCount > 0 && (
               <span
-                className="w-2 h-2 rounded-full bg-emerald-500"
+                className="w-2 h-2 rounded-full bg-[var(--success)]"
                 title={`${transitCount} moving`}
               />
             )}
@@ -265,13 +258,7 @@ export default function RosterSidebar({ isExpanded, onToggle }: RosterSidebarPro
         {!isExpanded && (
           <button
             onClick={onToggle}
-            className="absolute top-0 left-0 m-2 p-2 rounded-full border transition-colors"
-            style={{
-              background: 'var(--nav-bg)',
-              backdropFilter: 'blur(24px)',
-              borderColor: 'var(--border)',
-              color: 'var(--text2)',
-            }}
+            className="absolute top-0 left-0 m-2 p-2 rounded-full border border-[var(--border)] glass text-[var(--text2)] transition-colors"
             aria-label="Open convoy panel"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -284,28 +271,26 @@ export default function RosterSidebar({ isExpanded, onToggle }: RosterSidebarPro
             </svg>
           </button>
         )}
-        {isExpanded && <div className="fixed inset-0 bg-black/60 z-10" onClick={onToggle} />}
+        {isExpanded && (
+          <div className="fixed inset-0 bg-[var(--overlay)] z-10" onClick={onToggle} />
+        )}
         <aside
           ref={sidebarRef}
-          className={`fixed left-0 w-80 shadow-2xl z-20 flex flex-col overflow-hidden transition-transform duration-300 top-0 bottom-14 ${
+          className={`fixed left-0 w-80 shadow-2xl z-20 flex flex-col overflow-hidden transition-transform duration-300 top-0 bottom-14 glass-strong ${
             isExpanded ? 'translate-x-0' : '-translate-x-full'
           }`}
-          style={{ background: 'var(--sidebar-bg)', backdropFilter: 'blur(40px)' }}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >
           {convoyInfo && (
-            <div
-              className="p-4 border-b"
-              style={{ borderColor: 'var(--border)', background: 'rgba(99, 102, 241, 0.08)' }}
-            >
+            <div className="p-4 border-b border-[var(--border)] bg-[var(--primary-faint-bg)]">
               <h2 className="text-sm font-semibold text-[var(--text)]">{convoyInfo.name}</h2>
               {convoyInfo.description && (
                 <p className="text-xs text-[var(--text2)] mt-0.5">{convoyInfo.description}</p>
               )}
               {(convoyInfo.source_name || convoyInfo.dest_name) && (
                 <div className="flex items-center gap-1.5 mt-1.5 text-xs text-[var(--text2)]">
-                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400">
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[var(--success-bg)] text-[var(--success-text)]">
                     <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                       <circle cx="10" cy="10" r="4" />
                     </svg>
@@ -324,7 +309,7 @@ export default function RosterSidebar({ isExpanded, onToggle }: RosterSidebarPro
                       d="M14 5l7 7m0 0l-7 7m7-7H3"
                     />
                   </svg>
-                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-red-500/15 text-red-400">
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[var(--error-bg)] text-[var(--error-text)]">
                     <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                       <path
                         fillRule="evenodd"
@@ -339,7 +324,7 @@ export default function RosterSidebar({ isExpanded, onToggle }: RosterSidebarPro
             </div>
           )}
 
-          <div className="p-4 border-b" style={{ borderColor: 'var(--border)' }}>
+          <div className="p-4 border-b border-[var(--border)]">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-sm font-semibold text-[var(--text)]">Convoy Members</h2>
@@ -348,7 +333,7 @@ export default function RosterSidebar({ isExpanded, onToggle }: RosterSidebarPro
                 </p>
               </div>
               <div className="flex items-center gap-1">
-                <span className="inline-flex items-center justify-center w-6 h-6 text-xs font-medium rounded-full bg-indigo-500/20 text-indigo-400">
+                <span className="inline-flex items-center justify-center w-6 h-6 text-xs font-medium rounded-full bg-[var(--badge-vehicle-bg)] text-[var(--primary)]">
                   {members.length}
                 </span>
                 <button
@@ -391,7 +376,7 @@ export default function RosterSidebar({ isExpanded, onToggle }: RosterSidebarPro
             )}
           </div>
 
-          <div className="p-3 border-t space-y-3" style={{ borderColor: 'var(--border)' }}>
+          <div className="p-3 border-t border-[var(--border)] space-y-3">
             <VoicePanel />
             <ChatPanel />
             <Link
@@ -428,7 +413,7 @@ function MemberCard({
   return (
     <li
       className={`px-4 py-3 cursor-pointer transition-colors ${
-        isFocused ? 'bg-indigo-500/15' : 'hover:bg-[var(--surface)]'
+        isFocused ? 'bg-[var(--primary-subtle-bg)]' : 'hover:bg-[var(--surface)]'
       }`}
       onClick={onFocus}
     >
@@ -441,13 +426,12 @@ function MemberCard({
               className="w-9 h-9 rounded-full object-cover"
             />
           ) : (
-            <div className="w-9 h-9 rounded-full bg-indigo-500/20 flex items-center justify-center text-xs font-semibold text-indigo-400">
+            <div className="w-9 h-9 rounded-full bg-[var(--badge-vehicle-bg)] flex items-center justify-center text-xs font-semibold text-[var(--primary)]">
               {initials}
             </div>
           )}
           <span
-            className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 ${STATUS_COLORS[member.status]}`}
-            style={{ borderColor: 'var(--nav-bg)' }}
+            className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-[var(--nav-bg)] ${STATUS_COLORS[member.status]}`}
             title={STATUS_LABELS[member.status]}
           />
         </div>
@@ -458,12 +442,12 @@ function MemberCard({
               {member.userName}
             </span>
             {isSelf && (
-              <span className="text-[10px] font-medium text-indigo-400 bg-[var(--badge-vehicle-bg)] px-1.5 py-0.5 rounded">
+              <span className="text-[10px] font-medium text-[var(--primary)] bg-[var(--badge-vehicle-bg)] px-1.5 py-0.5 rounded">
                 You
               </span>
             )}
             {member.role === 'owner' && (
-              <span className="text-[10px] font-medium text-amber-400 bg-[var(--badge-host-bg)] px-1.5 py-0.5 rounded">
+              <span className="text-[10px] font-medium text-[var(--warning-text)] bg-[var(--badge-host-bg)] px-1.5 py-0.5 rounded">
                 Host
               </span>
             )}
