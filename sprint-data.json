@@ -805,7 +805,7 @@
         {
           "id": "TASK-105T",
           "title": "Complete light & dark theme support across entire application",
-          "status": "in-progress",
+          "status": "done",
           "priority": "high"
         }
       ]
