@@ -801,6 +801,12 @@
           "title": "Update setup-collections.sh and setup-collections.py for new schema",
           "status": "done",
           "priority": "medium"
+        },
+        {
+          "id": "TASK-105T",
+          "title": "Complete light & dark theme support across entire application",
+          "status": "in-progress",
+          "priority": "high"
         }
       ]
     },

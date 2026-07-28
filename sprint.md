@@ -186,6 +186,10 @@
 - [x] [TASK-103T] ProfilePage - license plate optional when vehicle type is trekker
 - [x] [TASK-104T] Update setup-collections.sh and setup-collections.py for new schema
 
+### 🔄 In Progress
+
+- [ ] [TASK-105T] Complete light & dark theme support across entire application
+
 ### ✅ Done
 
 - [x] [TASK-086] Implement map tile caching strategy (IndexedDB + SW) (FR-WEB-08)
