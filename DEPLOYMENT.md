@@ -4,7 +4,7 @@
 
 ```
 Internet → Cloudflare Tunnel → Nginx (:80)
-  ├── /            → Frontend (rsync'd static files)
+  ├── /            → convoy-frontend :8081 (containerized Nginx + Vite build)
   ├── /api/        → PocketBase :8090 (Auth + DB + Realtime)
   ├── /pb/         → PocketBase Admin UI :8090
   ├── /voice/      → Voice Server :3001 (WebSocket + WebRTC)
@@ -13,6 +13,7 @@ Internet → Cloudflare Tunnel → Nginx (:80)
   └── /geocode/    → Nominatim :8080
 
 Docker Network (convoy-network) — all internal:
+  ├── convoy-frontend     :80    (Vite build served by Nginx, mapped to 8081)
   ├── convoy-pocketbase   :8090  (SQLite + Auth + API + Realtime)
   ├── convoy-osrm         :5000  (OSRM routing engine, mapped to 5001)
   ├── convoy-nominatim    :8080  (Nominatim geocoder)
@@ -21,21 +22,19 @@ Docker Network (convoy-network) — all internal:
   └── convoy-voice        :3001  (mediasoup SFU voice)
 
 Host:
-  └── Nginx (:80) — reverse proxy + static file serving
+  └── Nginx (:80) — reverse proxy to all containers
 ```
 
-## Three Deployment Paths
+## Deployment Paths
 
-The platform has **three distinct deployment paths** depending on what changed:
+| Change Type                                      | Deployment Method                             | Downtime          |
+| ------------------------------------------------ | --------------------------------------------- | ----------------- |
+| **All code changes** (frontend + backend)        | `docker compose up --build` on server         | ~30-60s (rolling) |
+| **Database schema** (collections, fields, rules) | Run setup script against PocketBase Admin API | None (instant)    |
 
-| Change Type                                       | Deployment Method                                  | Downtime              |
-| ------------------------------------------------- | -------------------------------------------------- | --------------------- |
-| **Frontend** (React/Vite/JS/CSS)                  | Build locally → rsync to server → purge Cloudflare | None (instant)        |
-| **Backend** (PocketBase hooks, simulation, voice) | Rebuild Docker container on server                 | ~10-30s per container |
-| **Database schema** (collections, fields, rules)  | Run setup script against PocketBase Admin API      | None (instant)        |
-
-> **Future:** Frontend will be containerized (multi-stage Docker build + Nginx).
-> This eliminates rsync and unifies all deployments to `docker compose up --build`.
+> **All code deployments are unified** — `docker compose up --build` rebuilds only
+> the changed containers and replaces them. Frontend is a multi-stage Docker build
+> (Node.js build → Nginx serve), no more rsync.
 
 ---
 
@@ -47,73 +46,15 @@ The platform has **three distinct deployment paths** depending on what changed:
 | Domain           | `convoy.vellur.in`                                  |
 | SSH              | `bharatradar@192.168.200.11` (password: `raga@098`) |
 | Project path     | `/opt/convoy/`                                      |
-| Frontend path    | `/var/www/convoy/`                                  |
 | Nginx config     | `/etc/nginx/sites-enabled/convoy`                   |
 | PocketBase admin | `raghavan@vellur.in` / `raga!098`                   |
 | Cloudflare       | Dashboard-managed tunnel (token file)               |
 
 ---
 
-## Path 1: Frontend Deployment (rsync)
+## Unified Deployment (docker compose up --build)
 
-This is the most common deployment — theme changes, UI fixes, new components, etc.
-
-### Step 1: Build locally
-
-```bash
-cd apps/web
-npm run build
-```
-
-Verify `.env.production` has correct values before building:
-
-```bash
-cat .env.production
-# VITE_POCKETBASE_URL=https://convoy.vellur.in
-# VITE_VAPID_PUBLIC_KEY=...
-```
-
-### Step 2: rsync to server
-
-```bash
-rsync -avz --delete dist/ bharatradar@192.168.200.11:/tmp/convoy-deploy/
-```
-
-### Step 3: Move files on server (sudo required — files are root-owned)
-
-```bash
-sshpass -p 'raga@098' ssh bharatradar@192.168.200.11 "
-  sudo rm -rf /var/www/convoy/*
-  sudo cp -r /tmp/convoy-deploy/* /var/www/convoy/
-  sudo chown -R root:root /var/www/convoy/
-  rm -rf /tmp/convoy-deploy
-"
-```
-
-> **Why `rm -rf` first?** Old hashed asset filenames (e.g., `index-abc123.js`) would
-> linger if we just copied. `--delete` in rsync handles this too, but the sudo
-> copy step needs the clean approach.
-
-### Step 4: Purge Cloudflare cache
-
-Cloudflare CDN aggressively caches static assets. After deployment:
-
-1. Go to Cloudflare Dashboard → convoy.vellur.in → Caching → Configuration
-2. Click "Purge Everything" (or purge specific URLs)
-3. Hard-refresh the site (`Ctrl+Shift+R`)
-
-### Step 5: Smoke test
-
-- [ ] `https://convoy.vellur.in` loads without blank page
-- [ ] Login/Register works
-- [ ] Console has no 404s for JS/CSS assets
-- [ ] Theme toggle works (light/dark)
-
----
-
-## Path 2: Backend Deployment (Docker rebuild)
-
-When backend code changes — PocketBase hooks, simulation service, voice server.
+All code changes (frontend + backend) use the same deployment command.
 
 ### Step 1: Pull latest code on server
 
@@ -124,23 +65,23 @@ sshpass -p 'raga@098' ssh bharatradar@192.168.200.11 "
 "
 ```
 
-### Step 2: Rebuild the changed service
+### Step 2: Rebuild and restart all containers
 
 ```bash
 sshpass -p 'raga@098' ssh bharatradar@192.168.200.11 "
   cd /opt/convoy
-  sudo docker compose up -d --build <service-name>
+  sudo docker compose up -d --build
 "
 ```
 
-Available service names:
+This rebuilds **only the changed containers** (Docker layer caching):
 
-- `pocketbase` — PocketBase server + custom hooks
-- `simulation-service` — Simulation API + push notifications
-- `voice-server` — WebRTC voice SFU
-- `osrm` — OSRM routing engine (rarely changes)
-- `nominatim` — Nominatim geocoder (rarely changes)
-- `redis` — Redis cache (rarely changes)
+- `convoy-frontend` — multi-stage Node.js build + Nginx serve (rebuilds on any `apps/web/` change)
+- `convoy-simulation` — rebuilds on `apps/simulation-service/` changes
+- `convoy-voice` — rebuilds on `apps/voice-server/` changes
+- `convoy-pocketbase` — rebuilds on `docker/pocketbase/` or `pb_hooks/` changes
+
+Unchanged containers are **not rebuilt** — just left running.
 
 ### Step 3: Verify container health
 
@@ -152,11 +93,27 @@ sshpass -p 'raga@098' ssh bharatradar@192.168.200.11 "
 
 All containers should show `healthy` (except `convoy-voice` which may show `unhealthy` — known issue, voice still works).
 
+### Step 4: Purge Cloudflare cache
+
+Cloudflare CDN aggressively caches static assets. After deployment:
+
+1. Go to Cloudflare Dashboard → convoy.vellur.in → Caching → Configuration
+2. Click "Purge Everything"
+
+### Step 5: Smoke test
+
+- [ ] `https://convoy.vellur.in` loads without blank page
+- [ ] Login/Register works
+- [ ] Console has no 404s for JS/CSS assets
+- [ ] Theme toggle works (light/dark)
+- [ ] Create/join convoy works
+- [ ] Map loads and routes work
+
 ---
 
-## Path 3: Database Schema Deployment (Admin API)
+## Database Schema Deployment (Admin API)
 
-When collections, fields, or rules change.
+When collections, fields, or rules change (separate from code deployment).
 
 ### Step 1: Run setup script locally against server
 
@@ -227,9 +184,13 @@ server {
     server_name convoy.vellur.in;
     client_max_body_size 10M;
 
+    # Frontend (PWA) — containerized Nginx
     location / {
-        root /var/www/convoy;
-        try_files $uri $uri/ /index.html;
+        proxy_pass http://127.0.0.1:8081;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
     }
 
     location /api/ {
@@ -291,16 +252,17 @@ server {
 
 ## Service Ports
 
-| Service     | Container Port | Host Port   | External Access           |
-| ----------- | -------------- | ----------- | ------------------------- |
-| PocketBase  | 8090           | 8090        | Via `/api/` and `/pb/`    |
-| OSRM        | 5000           | 5001        | Via `/routing/`           |
-| Nominatim   | 8080           | 8080        | Via `/geocode/`           |
-| Redis       | 6379           | 6379        | Internal only             |
-| Simulation  | 3002           | 3002        | Via `/simulation/`        |
-| Voice       | 3001           | 3001        | Via `/voice/` (WebSocket) |
-| Voice (UDP) | 20000-20100    | 20000-20100 | Direct (WebRTC)           |
-| Nginx       | 80             | 80          | Via Cloudflare Tunnel     |
+| Service      | Container Port | Host Port   | External Access           |
+| ------------ | -------------- | ----------- | ------------------------- |
+| Frontend     | 80             | 8081        | Via `/` (Nginx proxy)     |
+| PocketBase   | 8090           | 8090        | Via `/api/` and `/pb/`    |
+| OSRM         | 5000           | 5001        | Via `/routing/`           |
+| Nominatim    | 8080           | 8080        | Via `/geocode/`           |
+| Redis        | 6379           | 6379        | Internal only             |
+| Simulation   | 3002           | 3002        | Via `/simulation/`        |
+| Voice        | 3001           | 3001        | Via `/voice/` (WebSocket) |
+| Voice (UDP)  | 20000-20100    | 20000-20100 | Direct (WebRTC)           |
+| Nginx (host) | 80             | 80          | Via Cloudflare Tunnel     |
 
 ---
 
@@ -321,18 +283,14 @@ server {
 
 Before any deployment, run through this:
 
-### Frontend changes
+### All code changes
 
 - [ ] `apps/web/.env.production` has correct `VITE_POCKETBASE_URL` (production domain, NOT localhost)
-- [ ] `npm run build` succeeds
 - [ ] No hardcoded `localhost:8090` in source (grep for it)
 - [ ] No hardcoded credentials in source
-
-### Backend changes
-
 - [ ] Docker Compose file syntax valid: `docker compose config`
 - [ ] Environment variables set in server's `/opt/convoy/.env`
-- [ ] Health checks pass after rebuild
+- [ ] TypeScript compiles: `cd apps/web && npx tsc --noEmit`
 
 ### Database schema changes
 
@@ -347,7 +305,8 @@ Before any deployment, run through this:
 ### Frontend shows blank page after deploy
 
 - Check Cloudflare cache — purge everything
-- Verify `/var/www/convoy/index.html` exists on server
+- Verify frontend container is running: `docker ps | grep frontend`
+- Check frontend container logs: `docker compose logs -f frontend`
 - Check browser console for 404s on JS/CSS assets
 
 ### Container won't start

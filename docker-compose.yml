@@ -1,4 +1,23 @@
 services:
+  frontend:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: convoy-frontend
+    ports:
+      - '${FRONTEND_PORT:-8081}:80'
+    environment:
+      - VITE_POCKETBASE_URL=${VITE_POCKETBASE_URL:-https://convoy.vellur.in}
+      - VITE_VAPID_PUBLIC_KEY=${VITE_VAPID_PUBLIC_KEY:-}
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:80/']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - convoy-network
+
   pocketbase:
     build:
       context: ./docker/pocketbase
