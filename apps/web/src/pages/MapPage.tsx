@@ -807,7 +807,7 @@ function MapPage() {
     if (isAtDefault) {
       map.current.flyTo({
         center: [position.lng, position.lat],
-        zoom: 17,
+        zoom: 18,
         duration: 2000,
       })
       mapViewRestoredRef.current = true

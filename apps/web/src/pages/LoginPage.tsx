@@ -10,7 +10,7 @@ function LoginPage() {
   const { login } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const redirectTo = searchParams.get('redirect') || '/map'
+  const redirectTo = searchParams.get('redirect') || '/'
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

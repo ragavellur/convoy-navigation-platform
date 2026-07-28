@@ -18,6 +18,7 @@ function Layout() {
 
   const handleLogout = () => {
     logout()
+    localStorage.removeItem('convoy-map-view')
     navigate('/login')
     setIsMobileMenuOpen(false)
   }

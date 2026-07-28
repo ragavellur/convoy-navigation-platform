@@ -38,7 +38,7 @@ function RegisterPage() {
 
     try {
       await register(email, password, name.trim())
-      navigate('/map')
+      navigate('/')
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : 'Registration failed. Email may already be in use.'
