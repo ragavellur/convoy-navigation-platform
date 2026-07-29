@@ -246,9 +246,10 @@
 
 - [x] [TASK-146] Write unit tests for all services (>85% coverage)
 
-### 📌 Backlog
+### 🔄 In Progress
 
-- [ ] [TASK-145] Implement location update batching
+- [-] [TASK-145] Implement telemetry aggregation + location update batching
+- [-] [TASK-156] API documentation (OpenAPI/Swagger)
 
 ### ✅ Done
 
@@ -261,7 +262,6 @@
 - [ ] [TASK-152] Implement analytics tracking
 - [ ] [TASK-153] Accessibility audit (WCAG 2.1 AA) - web
 - [ ] [TASK-155] Load testing for PocketBase Realtime
-- [ ] [TASK-156] API documentation (OpenAPI/Swagger)
 
 ---
 
