@@ -26,7 +26,8 @@ import pb from '../services/pocketbase'
 import { useConvoyRoster, haversineDistance } from '../stores/ConvoyRosterContext'
 import { useTheme, getMapStyleUrl } from '../stores/ThemeContext'
 import { notifyOffRoute } from '../services/pushSender'
-import { transitionPhase, autoCalculateAssemblyPoint } from '../services/sessionState'
+import { clearAssemblyPoint } from '../services/sessionState'
+import { calculateAssemblyPoint } from '../services/simulation'
 import { useAssemblyRoutes } from '../hooks/useAssemblyRoutes'
 import type { AssemblyRoute } from '../services/assemblyRoutes'
 import type { SearchResult, RouteResponse, RouteGeometry } from '../types'
@@ -63,10 +64,11 @@ function MapPage() {
   const markersRef = useRef<maplibregl.Marker[]>([])
   const previewMarkerRef = useRef<maplibregl.Marker | null>(null)
   const convoyMarkersRef = useRef<Map<string, maplibregl.Marker>>(new Map())
+  const joinMarkersRef = useRef<Map<string, maplibregl.Marker>>(new Map())
   const offRouteTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const routeRef = useRef<RouteResponse['routes'][0] | null>(null)
   const animatorRef = useRef<MarkerAnimator | null>(null)
-  const convoyRouteLoadedRef = useRef(false)
+
   const offRoutePushSentRef = useRef(false)
   const [mapLoaded, setMapLoaded] = useState(false)
   const [mapBounds, setMapBounds] = useState<[number, number, number, number] | undefined>()
@@ -85,7 +87,6 @@ function MapPage() {
   const [convoyPhase, setConvoyPhase] = useState<string>('forming')
   const [convoyOwner, setConvoyOwner] = useState<string | null>(null)
   const [assembledMembers, setAssembledMembers] = useState<string[]>([])
-  const [isAutoMode, setIsAutoMode] = useState(false)
   const [assemblyPoint, setAssemblyPoint] = useState<{ lat: number; lng: number } | null>(null)
 
   const { position } = useGeolocation()
@@ -94,7 +95,6 @@ function MapPage() {
   const computedAssemblyPoint: { lat: number; lng: number } | null = useMemo(() => {
     if (assemblyPoint) return assemblyPoint
     const points = members
-      .filter((m) => m.userId !== convoyOwner)
       .map((m) => {
         if (m.joinLat != null && m.joinLng != null) return { lat: m.joinLat, lng: m.joinLng }
         if (m.position) return { lat: m.position.lat, lng: m.position.lng }
@@ -106,7 +106,7 @@ function MapPage() {
       lat: points.reduce((s, p) => s + p.lat, 0) / points.length,
       lng: points.reduce((s, p) => s + p.lng, 0) / points.length,
     }
-  }, [assemblyPoint, members, convoyOwner])
+  }, [assemblyPoint, members])
   const { theme } = useTheme()
 
   const memberVehicleMap = useRef<Map<string, { type: string; name: string; color?: string }>>(
@@ -117,20 +117,25 @@ function MapPage() {
   const MAP_VIEW_KEY = 'convoy-map-view'
 
   function clearAllRouteLayers() {
-    if (!map.current) return
-    for (let i = 0; i < 20; i++) {
-      const trafficId = `${TRAFFIC_LAYER_PREFIX}${i}`
-      if (map.current.getLayer(trafficId)) map.current.removeLayer(trafficId)
+    const m = map.current
+    if (!m) return
+    const allLayers = m.getStyle().layers || []
+    for (const layer of allLayers) {
+      if (
+        layer.id.startsWith(TRAFFIC_LAYER_PREFIX) ||
+        layer.id.startsWith(ALT_LAYER_PREFIX) ||
+        layer.id === ROUTE_LAYER_ID
+      ) {
+        if (m.getLayer(layer.id)) m.removeLayer(layer.id)
+      }
     }
-    if (map.current.getSource(TRAFFIC_SOURCE_ID)) map.current.removeSource(TRAFFIC_SOURCE_ID)
-    for (let i = 0; i < 5; i++) {
-      const altLayerId = `${ALT_LAYER_PREFIX}${i}`
-      const altSourceId = `${ALT_SOURCE_PREFIX}${i}`
-      if (map.current.getLayer(altLayerId)) map.current.removeLayer(altLayerId)
-      if (map.current.getSource(altSourceId)) map.current.removeSource(altSourceId)
-    }
-    if (map.current.getLayer(ROUTE_LAYER_ID)) map.current.removeLayer(ROUTE_LAYER_ID)
-    if (map.current.getSource(ROUTE_SOURCE_ID)) map.current.removeSource(ROUTE_SOURCE_ID)
+    ;[TRAFFIC_SOURCE_ID, ROUTE_SOURCE_ID].forEach((sid) => {
+      for (let i = 0; i < 5; i++) {
+        const altId = `${ALT_SOURCE_PREFIX}${i}`
+        if (m.getSource(altId)) m.removeSource(altId)
+      }
+      if (m.getSource(sid)) m.removeSource(sid)
+    })
   }
 
   function renderRouteOnMap(route: RouteResponse['routes'][0], index: number) {
@@ -153,6 +158,17 @@ function MapPage() {
         geometry: { type: 'LineString' as const, coordinates: seg.coordinates },
       }))
 
+      const curLayers = map.current.getStyle().layers || []
+      for (const layer of curLayers) {
+        if (
+          'source' in layer &&
+          (layer as { source: string }).source === TRAFFIC_SOURCE_ID &&
+          map.current.getLayer(layer.id)
+        ) {
+          map.current.removeLayer(layer.id)
+        }
+      }
+      if (map.current.getSource(TRAFFIC_SOURCE_ID)) map.current.removeSource(TRAFFIC_SOURCE_ID)
       map.current.addSource(TRAFFIC_SOURCE_ID, {
         type: 'geojson',
         data: { type: 'FeatureCollection', features: trafficFeatures },
@@ -619,7 +635,6 @@ function MapPage() {
         setConvoyPhase(convoy.phase || 'forming')
         setConvoyOwner(convoy.owner)
         setAssembledMembers(convoy.assembled_members || [])
-        setIsAutoMode(!convoy.source_lat || !convoy.source_lng)
         if (convoy.source_lat && convoy.source_lng) {
           setAssemblyPoint({ lat: convoy.source_lat, lng: convoy.source_lng })
         }
@@ -637,7 +652,6 @@ function MapPage() {
         setConvoyPhase(r.phase || 'forming')
         setConvoyOwner(r.owner)
         setAssembledMembers(r.assembled_members || [])
-        setIsAutoMode(!r.source_lat || !r.source_lng)
         if (r.source_lat && r.source_lng) {
           setAssemblyPoint({ lat: r.source_lat, lng: r.source_lng })
         }
@@ -725,7 +739,6 @@ function MapPage() {
     convoyMarkersRef.current.clear()
     animatorRef.current?.destroy()
     animatorRef.current = null
-    convoyRouteLoadedRef.current = false
     // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional reset when convoyId changes
     setConvoyPositions(new Map())
 
@@ -876,6 +889,8 @@ function MapPage() {
       unsubscribePositions()
       convoyMarkersRef.current.forEach((m) => m.remove())
       convoyMarkersRef.current.clear()
+      joinMarkersRef.current.forEach((m) => m.remove())
+      joinMarkersRef.current.clear()
     }
   }, [])
 
@@ -989,25 +1004,31 @@ function MapPage() {
 
   useEffect(() => {
     if (!convoyId || !mapLoaded || !map.current) return
-    if (convoyRouteLoadedRef.current) return
 
     let cancelled = false
 
     const loadConvoyRoute = async () => {
       try {
-        convoyRouteLoadedRef.current = true
         const convoy = await pb.collection('convoys').getOne(convoyId)
         if (cancelled) return
-        if (!convoy.source_lat || !convoy.source_lng || !convoy.dest_lat || !convoy.dest_lng) return
+        if (
+          convoy.source_lat == null ||
+          convoy.source_lng == null ||
+          convoy.dest_lat == null ||
+          convoy.dest_lng == null
+        )
+          return
 
-        const origin: [number, number] = [convoy.source_lng, convoy.source_lat]
+        clearAllRouteLayers()
+
+        const meetingPoint: [number, number] = [convoy.source_lng, convoy.source_lat]
         const destination: [number, number] = [convoy.dest_lng, convoy.dest_lat]
 
         const sourceMarker = new maplibregl.Marker({ color: '#22c55e' })
-          .setLngLat(origin)
+          .setLngLat(meetingPoint)
           .setPopup(
             new maplibregl.Popup({ offset: 25 }).setHTML(
-              `<div class="p-2 text-sm font-medium">${convoy.source_name || 'Source'}</div>`,
+              `<div class="p-2 text-sm font-medium">${convoy.source_name || 'Meeting point'}</div>`,
             ),
           )
         sourceMarker.addTo(map.current!)
@@ -1022,6 +1043,21 @@ function MapPage() {
           )
         destMarker.addTo(map.current!)
         markersRef.current.push(destMarker)
+
+        let origin = meetingPoint
+        const userId = pb.authStore.record?.id
+        if (userId) {
+          try {
+            const member = await pb
+              .collection('convoy_members')
+              .getFirstListItem(`convoy = "${convoyId}" && user = "${userId}" && status = "active"`)
+            if (member.join_lat != null && member.join_lng != null) {
+              origin = [member.join_lng, member.join_lat]
+            }
+          } catch {
+            // Member fetch failed — fallback to meeting point
+          }
+        }
 
         const response = await getRoute({
           origin,
@@ -1042,7 +1078,7 @@ function MapPage() {
         })
 
         const coords = (route.geometry as RouteGeometry).coordinates as [number, number][]
-        if (coords.length > 0) {
+        if (coords.length > 0 && routeData === null) {
           const bounds = coords.reduce(
             (b, c) => b.extend(c),
             new maplibregl.LngLatBounds(coords[0], coords[0]),
@@ -1057,9 +1093,8 @@ function MapPage() {
     loadConvoyRoute()
     return () => {
       cancelled = true
-      convoyRouteLoadedRef.current = false
     }
-  }, [convoyId, mapLoaded])
+  }, [convoyId, mapLoaded, convoyPhase])
 
   const ownerUserId = convoyOwner
   const { routes: assemblyRoutes } = useAssemblyRoutes({
@@ -1071,12 +1106,14 @@ function MapPage() {
   })
 
   useEffect(() => {
-    if (!map.current || !mapLoaded || convoyPhase !== 'assembling') {
+    if (!map.current || !mapLoaded) {
       clearAssemblyRouteLayers()
       return
     }
 
     clearAssemblyRouteLayers()
+    if (assemblyRoutes.length === 0) return
+
     assemblyRoutes.forEach((ar, i) => {
       const color = ar.vehicleColor || ASSEMBLY_ROUTE_COLORS[i % ASSEMBLY_ROUTE_COLORS.length]
       renderAssemblyRouteOnMap(ar.route, color, i)
@@ -1118,30 +1155,72 @@ function MapPage() {
   }, [convoyPhase, members, computedAssemblyPoint, convoyOwner, assembledMembers, convoyId])
 
   useEffect(() => {
-    if (convoyPhase !== 'forming' || !isAutoMode || !convoyId) return
+    if (!convoyId) return
 
-    const allActiveNonOwnerWithVehicle = members.filter(
-      (m) => m.userId !== convoyOwner && m.vehicleId,
-    )
+    const ownerId = convoyOwner
+    if (!ownerId) return
 
-    if (allActiveNonOwnerWithVehicle.length === 0) return
+    if (convoyPhase === 'assembling') {
+      const startingPoints = members
+        .filter((m) => m.joinLat != null && m.joinLng != null)
+        .map((m) => m.userId)
+      if (startingPoints.length < 2) {
+        clearAssemblyPoint(convoyId).catch(() => {})
+      }
+      return
+    }
 
-    const hasJoinOrPosition = members.filter(
-      (m) => m.userId !== convoyOwner && ((m.joinLat != null && m.joinLng != null) || m.position),
-    )
-
-    if (hasJoinOrPosition.length < allActiveNonOwnerWithVehicle.length) return
+    if (convoyPhase !== 'forming') return
 
     const timer = setTimeout(async () => {
       try {
-        await autoCalculateAssemblyPoint(convoyId, members, convoyOwner!)
+        await calculateAssemblyPoint(convoyId)
       } catch (err) {
         console.error('[MapPage] auto-start failed:', err)
       }
     }, 3000)
 
     return () => clearTimeout(timer)
-  }, [convoyPhase, isAutoMode, convoyId, members, convoyOwner])
+  }, [convoyPhase, convoyId, members, convoyOwner])
+
+  useEffect(() => {
+    if (!map.current || !mapLoaded) return
+
+    joinMarkersRef.current.forEach((m) => m.remove())
+    joinMarkersRef.current.clear()
+
+    if (convoyPhase !== 'assembling' && convoyPhase !== 'forming') return
+
+    for (const m of members) {
+      if (!m.userId) continue
+      if (m.joinLat == null || m.joinLng == null) continue
+
+      const color = m.userId === convoyOwner ? '#22c55e' : getDistinctColor(m.userId, '#8b5cf6')
+      const el = document.createElement('div')
+      el.style.width = '16px'
+      el.style.height = '16px'
+      el.style.borderRadius = '50%'
+      el.style.background = color
+      el.style.border = '3px solid white'
+      el.style.boxShadow = '0 1px 4px rgba(0,0,0,0.3)'
+      el.style.cursor = 'pointer'
+
+      const marker = new maplibregl.Marker({ element: el })
+        .setLngLat([m.joinLng, m.joinLat])
+        .setPopup(
+          new maplibregl.Popup({ offset: 25 }).setHTML(
+            `<div class="p-2 text-sm font-medium">${m.joinName || m.userName || 'Starting Point'}</div>`,
+          ),
+        )
+        .addTo(map.current)
+
+      el.addEventListener('click', () => {
+        map.current?.flyTo({ center: [m.joinLng!, m.joinLat!], zoom: 16, duration: 800 })
+      })
+
+      joinMarkersRef.current.set(m.userId, marker)
+    }
+  }, [convoyPhase, members, mapLoaded, convoyOwner])
 
   const firstStep = routeData?.legs[0]?.steps[0]
   const alternatives = routeResponse?.routes || []
@@ -1172,131 +1251,20 @@ function MapPage() {
           <span className="text-xs font-medium text-[var(--warning-text)]">Simulation Mode</span>
         </div>
       )}
-      {convoyId &&
-        (convoyPhase === 'forming' ||
-          convoyPhase === 'assembling' ||
-          convoyPhase === 'in_transit' ||
-          convoyPhase === 'completed') && (
-          <div className="absolute top-4 right-4 z-20 rounded-xl p-3 glass max-w-xs w-72 shadow-lg">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-semibold text-[var(--text)]">Assembly</h3>
-              {convoyPhase === 'assembling' && (
-                <span className="text-xs text-[var(--text2)]">
-                  {assembledMembers.length}/{members.filter((m) => m.userId !== convoyOwner).length}{' '}
-                  arrived
-                </span>
-              )}
+      {convoyId && (
+        <div className="absolute top-4 right-4 z-20 rounded-xl p-3 glass max-w-xs w-72 shadow-lg">
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center gap-2">
+              <span
+                className={`w-2 h-2 rounded-full ${convoyPhase === 'completed' ? 'bg-[var(--success)]' : convoyPhase === 'in_transit' ? 'bg-[var(--primary)]' : 'bg-[var(--warning)]'} animate-pulse`}
+              />
+              <span className="text-sm font-semibold text-[var(--text)] capitalize">
+                {convoyPhase}
+              </span>
             </div>
-
-            {convoyPhase === 'assembling' && (
-              <>
-                <div className="w-full h-1.5 rounded-full bg-[var(--surface)] mb-2 overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-[var(--success)] transition-all duration-500"
-                    style={{
-                      width: `${
-                        members.filter((m) => m.userId !== convoyOwner).length > 0
-                          ? (assembledMembers.length /
-                              members.filter((m) => m.userId !== convoyOwner).length) *
-                            100
-                          : 0
-                      }%`,
-                    }}
-                  />
-                </div>
-                <div className="space-y-1 max-h-40 overflow-y-auto mb-2">
-                  {members.map((m, i) => {
-                    const route = assemblyRoutes.find((ar) => ar.userId === m.userId)
-                    const color =
-                      m.vehicleColor || ASSEMBLY_ROUTE_COLORS[i % ASSEMBLY_ROUTE_COLORS.length]
-                    const isOwner = m.userId === convoyOwner
-                    const hasArrived = assembledMembers.includes(m.userId)
-                    return (
-                      <div key={m.id} className="flex items-center gap-2 text-xs">
-                        <span
-                          className="w-2 h-2 rounded-full flex-shrink-0"
-                          style={{ backgroundColor: isOwner ? '#22c55e' : color }}
-                        />
-                        <span className="flex-1 truncate text-[var(--text)]">{m.userName}</span>
-                        {isOwner ? (
-                          <span className="text-[var(--success)] font-medium whitespace-nowrap">
-                            Assembly Point
-                          </span>
-                        ) : hasArrived ? (
-                          <span className="text-[var(--success)] font-medium whitespace-nowrap">
-                            Arrived
-                          </span>
-                        ) : route ? (
-                          <span className="text-[var(--text2)] whitespace-nowrap">
-                            {formatDistance(route.distance)}
-                          </span>
-                        ) : m.position ? (
-                          <span className="text-[var(--warning-text)] whitespace-nowrap">
-                            En route
-                          </span>
-                        ) : (
-                          <span className="text-[var(--text2)] whitespace-nowrap">Waiting...</span>
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
-              </>
-            )}
-
-            {convoyPhase === 'completed' && (
-              <p className="text-xs text-[var(--success)] font-medium">Convoy completed</p>
-            )}
-
-            {convoyPhase === 'in_transit' && (
-              <p className="text-xs text-[var(--text2)]">
-                All members assembled — en route to destination
-              </p>
-            )}
-
-            {convoyPhase === 'forming' && (
-              <p className="text-xs text-[var(--text2)]">
-                {isAutoMode
-                  ? 'Waiting for location from all members...'
-                  : 'Waiting for host to start assembly'}
-              </p>
-            )}
-
-            {(convoyPhase === 'forming' ||
-              convoyPhase === 'assembling' ||
-              convoyPhase === 'in_transit') &&
-              pb.authStore.record?.id === convoyOwner && (
-                <div className="flex gap-2 mt-2 pt-2 border-t border-[var(--border)]">
-                  {convoyPhase === 'forming' && !isAutoMode && (
-                    <button
-                      onClick={() => transitionPhase(convoyId, 'assembling')}
-                      className="flex-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-[var(--primary)] text-white hover:opacity-90 transition-opacity"
-                    >
-                      Start Assembly
-                    </button>
-                  )}
-                  {convoyPhase === 'assembling' && (
-                    <button
-                      onClick={() => transitionPhase(convoyId, 'in_transit')}
-                      className="flex-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-[var(--primary)] text-white hover:opacity-90 transition-opacity"
-                      disabled={assembledMembers.length === 0}
-                    >
-                      Depart
-                      {assembledMembers.length > 0 ? ` (${assembledMembers.length} assembled)` : ''}
-                    </button>
-                  )}
-                  {convoyPhase === 'in_transit' && (
-                    <button
-                      onClick={() => transitionPhase(convoyId, 'completed')}
-                      className="flex-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-[var(--success)] text-white hover:opacity-90 transition-opacity"
-                    >
-                      Complete Convoy
-                    </button>
-                  )}
-                </div>
-              )}
           </div>
-        )}
+        </div>
+      )}
       {isOffRoute && routeData && (
         <div className="absolute top-20 left-4 right-4 md:left-auto md:right-4 md:w-96 z-20 rounded-xl p-4 glass border-[var(--warning-border-light)]">
           <div className="flex items-center gap-2 mb-2">

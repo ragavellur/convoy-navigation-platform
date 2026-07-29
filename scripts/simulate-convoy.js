@@ -1,24 +1,5 @@
 const POCKETBASE_URL = process.env.POCKETBASE_URL || 'http://convoy-pocketbase:8090'
 
-const EARTH_M = 40075000
-
-function offsetFrom(lat, lng, bearingDeg, distM) {
-  const bearingRad = (bearingDeg * Math.PI) / 180
-  const latRad = (lat * Math.PI) / 180
-  const lngRad = (lng * Math.PI) / 180
-  const d = distM / EARTH_M
-  const newLat = Math.asin(
-    Math.sin(latRad) * Math.cos(d) + Math.cos(latRad) * Math.sin(d) * Math.cos(bearingRad),
-  )
-  const newLng =
-    lngRad +
-    Math.atan2(
-      Math.sin(bearingRad) * Math.sin(d) * Math.cos(latRad),
-      Math.cos(d) - Math.sin(latRad) * Math.sin(newLat),
-    )
-  return { lat: (newLat * 180) / Math.PI, lng: (newLng * 180) / Math.PI }
-}
-
 function interpolate(from, to, t) {
   return {
     lat: from.lat + (to.lat - from.lat) * t,
@@ -139,54 +120,53 @@ async function main() {
     `/api/collections/convoy_members/records?perPage=50&filter=${encodeURIComponent(`convoy="${convoyId}" && status="active"`)}&expand=vehicle`,
   )
   const members = membersData.items || []
+
+  // Build vehicle list with route_geometry from each member's record
   const vehicles = members
     .filter((m) => m.vehicle)
-    .map((m) => ({ memberId: m.id, userId: m.user, vehicleId: m.vehicle }))
+    .map((m) => {
+      let geometry = null
+      if (m.route_geometry) {
+        try {
+          geometry =
+            typeof m.route_geometry === 'string' ? JSON.parse(m.route_geometry) : m.route_geometry
+        } catch {}
+      }
+      return {
+        memberId: m.id,
+        userId: m.user,
+        vehicleId: m.vehicle,
+        geometry,
+      }
+    })
 
   if (vehicles.length === 0) {
     console.error('No vehicles found in convoy')
     process.exit(0)
   }
 
-  let assemblyPt = { lat: 0, lng: 0 }
-  if (convoy.source_lat && convoy.source_lng) {
-    assemblyPt = { lat: convoy.source_lat, lng: convoy.source_lng }
-  } else {
-    const positionsData = await pbGet(
-      token,
-      `/api/collections/positions/records?perPage=50&filter=${encodeURIComponent(`convoy="${convoyId}"`)}`,
-    )
-    const positions = positionsData.items || []
-    const vehiclePositions = positions.reduce((map, p) => {
-      map.set(p.vehicle, { lat: p.lat, lng: p.lng })
-      return map
-    }, new Map())
-    const pts = vehicles.map((v) => vehiclePositions.get(v.vehicleId)).filter(Boolean)
-    if (pts.length > 0) {
-      assemblyPt = {
-        lat: pts.reduce((s, p) => s + p.lat, 0) / pts.length,
-        lng: pts.reduce((s, p) => s + p.lng, 0) / pts.length,
-      }
-    } else {
-      console.error('No vehicle positions found for centroid calculation')
-      process.exit(1)
-    }
+  // Filter to only vehicles with route geometry
+  const activeVehicles = vehicles.filter((v) => v.geometry && v.geometry.length > 1)
+  if (activeVehicles.length === 0) {
+    console.error('No vehicles with route_geometry found. Calculate meeting point first.')
+    process.exit(0)
   }
-  const destPt = { lat: convoy.dest_lat, lng: convoy.dest_lng }
 
-  const scatterPositions = vehicles.map((_, i) => {
-    const angle = (i / vehicles.length) * 360
-    const dist = 100 + (i % 5) * 50
-    return offsetFrom(assemblyPt.lat, assemblyPt.lng, angle, dist)
-  })
+  const meetingPt =
+    convoy.source_lat && convoy.source_lng
+      ? { lat: convoy.source_lat, lng: convoy.source_lng }
+      : null
 
-  let assemblyProgress = new Array(vehicles.length).fill(0)
-  let transitProgress = 0
+  // Convert meeting point to 4dp hash for detecting arrival
+  const meetingHash = meetingPt
+    ? `${Math.round(meetingPt.lat * 10000)},${Math.round(meetingPt.lng * 10000)}`
+    : null
+
+  // Each vehicle has its own coord index into its geometry
+  let coordIdxs = new Array(activeVehicles.length).fill(0)
   const VEHICLE_SPEED_VARIANCE = 0.3
 
-  console.log(
-    `[simulate-convoy] ${vehicles.length} vehicles, assembly at ${assemblyPt.lat},${assemblyPt.lng}`,
-  )
+  console.log(`[simulate-convoy] ${activeVehicles.length} vehicles with route geometries`)
 
   while (true) {
     const fresh = await pbGet(token, `/api/collections/convoys/records/${convoyId}`)
@@ -198,63 +178,62 @@ async function main() {
       continue
     }
 
-    const assembledMembers = fresh.assembled_members || []
+    let assembledMembers = fresh.assembled_members || []
+    let allDone = true
 
-    if (phase === 'assembling') {
-      for (let i = 0; i < vehicles.length; i++) {
-        if (assembledMembers.includes(vehicles[i].userId)) continue
+    for (let i = 0; i < activeVehicles.length; i++) {
+      const v = activeVehicles[i]
+      const geo = v.geometry
+      const speedVar = 1 + (i % 3) * VEHICLE_SPEED_VARIANCE
+      const step = 3 * speedFactor * speedVar
 
-        const speedVar = 1 + (i % 3) * VEHICLE_SPEED_VARIANCE
-        assemblyProgress[i] += (0.02 * speedFactor * speedVar) / (interval * 10)
-        assemblyProgress[i] = Math.min(assemblyProgress[i], 1)
+      coordIdxs[i] = Math.min(coordIdxs[i] + step, geo.length - 1)
+      const idx = Math.floor(coordIdxs[i])
+      const frac = coordIdxs[i] - idx
 
-        const pos = interpolate(scatterPositions[i], assemblyPt, assemblyProgress[i])
-        const speed = assemblyProgress[i] < 1 ? 5 * speedFactor * speedVar : 0
-        const bearing =
-          assemblyProgress[i] < 1
-            ? (Math.atan2(assemblyPt.lng - pos.lng, assemblyPt.lat - pos.lat) * 180) / Math.PI
-            : 0
-
-        await pbUpsertPosition(
-          token,
-          vehicles[i].vehicleId,
-          convoyId,
-          pos.lat,
-          pos.lng,
-          speed,
-          bearing,
-        )
+      let pos
+      if (idx < geo.length - 1) {
+        pos = {
+          lat: geo[idx][1] + (geo[idx + 1][1] - geo[idx][1]) * frac,
+          lng: geo[idx][0] + (geo[idx + 1][0] - geo[idx][0]) * frac,
+        }
+      } else {
+        pos = { lat: geo[geo.length - 1][1], lng: geo[geo.length - 1][0] }
       }
-      console.log(
-        `[simulate-convoy] Assembly: ${assembledMembers.length}/${vehicles.length} arrived, progress=[${assemblyProgress.map((p) => p.toFixed(2)).join(', ')}]`,
-      )
+
+      const arrived = coordIdxs[i] >= geo.length - 1
+      const speed = arrived ? 0 : 15 * speedFactor * speedVar
+
+      await pbUpsertPosition(token, v.vehicleId, convoyId, pos.lat, pos.lng, speed, 0)
+
+      if (!arrived) allDone = false
+
+      // Auto-mark as arrived when crossing the meeting point (or at route end)
+      if (!assembledMembers.includes(v.userId) && meetingHash) {
+        const currentHash = `${Math.round(pos.lat * 10000)},${Math.round(pos.lng * 10000)}`
+        if (currentHash === meetingHash || arrived) {
+          assembledMembers = [...assembledMembers, v.userId]
+          await pbUpdate(token, 'convoys', convoyId, { assembled_members: assembledMembers })
+          console.log(`[simulate-convoy] ${v.vehicleId} arrived at meeting point`)
+        }
+      }
     }
 
-    if (phase === 'in_transit') {
-      const delta = (0.01 * speedFactor) / (interval * 10)
-      transitProgress += delta
-      transitProgress = Math.min(transitProgress, 1)
+    // Auto-transition based on phase
+    if (phase === 'assembling' && assembledMembers.length >= activeVehicles.length) {
+      console.log('[simulate-convoy] All assembled — transitioning to in_transit')
+      await pbUpdate(token, 'convoys', convoyId, { phase: 'in_transit', assembled_members: [] })
+      assembledMembers = []
+    }
 
-      for (let i = 0; i < vehicles.length; i++) {
-        const offset = i % 2 === 0 ? 0.00005 : -0.00005
-        const lat =
-          destPt.lat * transitProgress + assemblyPt.lat * (1 - transitProgress) + offset * (i % 3)
-        const lng =
-          destPt.lng * transitProgress +
-          assemblyPt.lng * (1 - transitProgress) +
-          offset * ((i + 1) % 3)
-        const speed = transitProgress < 1 ? 10 * speedFactor : 0
-        const bearing = transitProgress < 1 ? 45 : 0
+    console.log(
+      `[simulate-convoy] Phase=${phase} ${assembledMembers.length}/${activeVehicles.length} assembled, progress=${coordIdxs.map((c, i) => `${((c / (activeVehicles[i].geometry.length - 1)) * 100).toFixed(0)}%`).join(' ')}`,
+    )
 
-        await pbUpsertPosition(token, vehicles[i].vehicleId, convoyId, lat, lng, speed, bearing)
-      }
-      console.log(`[simulate-convoy] Transit: ${(transitProgress * 100).toFixed(1)}%`)
-
-      if (transitProgress >= 1) {
-        console.log('[simulate-convoy] Destination reached — setting phase to completed')
-        await pbUpdate(token, 'convoys', convoyId, { phase: 'completed' })
-        process.exit(0)
-      }
+    if (allDone && phase === 'in_transit') {
+      console.log('[simulate-convoy] All vehicles at destination — setting phase to completed')
+      await pbUpdate(token, 'convoys', convoyId, { phase: 'completed' })
+      process.exit(0)
     }
 
     await sleep(interval * 1000)

@@ -10,7 +10,13 @@ interface UseAssemblyRoutesOptions {
   assembledMembers?: string[]
 }
 
-const REROUTE_DEBOUNCE_MS = 5000
+const REROUTE_DEBOUNCE_MS = 500
+
+function sourcePoint(m: RosterMember): { lat: number; lng: number } | null {
+  if (m.joinLat != null && m.joinLng != null) return { lat: m.joinLat, lng: m.joinLng }
+  if (m.position) return m.position
+  return null
+}
 
 export function useAssemblyRoutes(options: UseAssemblyRoutesOptions) {
   const [routes, setRoutes] = useState<AssemblyRoute[]>([])
@@ -25,15 +31,15 @@ export function useAssemblyRoutes(options: UseAssemblyRoutesOptions) {
   })
 
   const compute = useCallback(async () => {
-    const { members, ownerUserId, assemblyPoint, phase, assembledMembers } = optionsRef.current
+    const { members, ownerUserId, assemblyPoint, assembledMembers } = optionsRef.current
 
-    if (!ownerUserId || !assemblyPoint || phase !== 'assembling') {
+    if (!ownerUserId || !assemblyPoint) {
       setRoutes([])
       return
     }
 
     const targetMembers = members.filter(
-      (m) => m.userId !== ownerUserId && m.position && !assembledMembers?.includes(m.userId),
+      (m) => sourcePoint(m) && !assembledMembers?.includes(m.userId),
     )
 
     if (targetMembers.length === 0) {
@@ -42,14 +48,17 @@ export function useAssemblyRoutes(options: UseAssemblyRoutesOptions) {
     }
 
     const posKey = targetMembers
-      .map((m) => `${m.userId}:${m.position!.lat.toFixed(4)},${m.position!.lng.toFixed(4)}`)
+      .map((m) => {
+        const sp = sourcePoint(m)!
+        return `${m.userId}:${sp.lat.toFixed(4)},${sp.lng.toFixed(4)}`
+      })
       .join('|')
     if (posKey === prevPositionsRef.current) return
     prevPositionsRef.current = posKey
 
     setIsComputing(true)
     try {
-      const computed = await computeAssemblyRoutes(targetMembers, ownerUserId, assemblyPoint)
+      const computed = await computeAssemblyRoutes(targetMembers, assemblyPoint)
       setRoutes(computed)
     } catch (err) {
       console.error('[useAssemblyRoutes] compute failed:', err)

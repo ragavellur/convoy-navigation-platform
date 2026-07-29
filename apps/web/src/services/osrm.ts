@@ -1,8 +1,7 @@
 import type { RouteResponse, RouteSummary } from '../types'
 
-const LOCAL_OSRM_URL = import.meta.env.VITE_OSRM_URL || 'http://localhost:5001'
 const PUBLIC_OSRM_URL = 'https://router.project-osrm.org'
-const FETCH_TIMEOUT_MS = 10_000
+const FETCH_TIMEOUT_MS = 15_000
 
 interface OSRMRouteParams {
   origin: [number, number]
@@ -67,20 +66,6 @@ export async function getRoute(params: OSRMRouteParams): Promise<RouteResponse> 
     geometries,
     alternatives: String(alternatives),
   })
-
-  try {
-    const data = await fetchOSRM(LOCAL_OSRM_URL, coordinates, searchParams)
-    const route = data.routes[0]
-    if (route && route.distance > 0) {
-      if (profile === 'foot') {
-        adjustForWalking(data)
-      }
-      return data
-    }
-    console.warn('Local OSRM returned 0 distance, trying public...')
-  } catch (e) {
-    console.warn('Local OSRM failed, trying public:', e)
-  }
 
   const data = await fetchOSRM(PUBLIC_OSRM_URL, coordinates, searchParams)
   if (profile === 'foot') {

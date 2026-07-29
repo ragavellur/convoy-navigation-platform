@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-07-29T00:00:00Z",
+  "lastUpdated": "2026-07-29T17:45:00Z",
   "sprints": [
     {
       "id": 1,
@@ -1083,6 +1083,20 @@
           "title": "Phase 7: real-time assembly updates via PocketBase Realtime subscriptions",
           "status": "backlog",
           "priority": "medium"
+        },
+        {
+          "id": "TASK-166",
+          "title": "Option A: Process India PBF inside Docker OSRM (v5.26.0) — match container version",
+          "status": "backlog",
+          "priority": "medium",
+          "description": "Run osrm-extract/osrm-partition/osrm-customize steps inside Docker with amd64 emulation. Update docker-compose.yml line 51 to point to india-260728.osrm. Provides self-hosted routing matching the container image version."
+        },
+        {
+          "id": "TASK-167",
+          "title": "Option B: Run OSRM natively via Homebrew (v26.7.3) — use pre-processed data",
+          "status": "backlog",
+          "priority": "medium",
+          "description": "Start osrm-routed natively from /Users/Shared/OSM/osrm_extract on port 5001. Add OSRM_URL=http://host.docker.internal:5001 to simulation-service env. Faster on ARM Mac, runs outside Docker."
         }
       ]
     },

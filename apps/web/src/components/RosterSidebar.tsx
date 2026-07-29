@@ -109,6 +109,8 @@ export default function RosterSidebar({ isExpanded, onToggle }: RosterSidebarPro
 
   const activeCount = members.filter((m) => m.status !== 'offline').length
   const transitCount = members.filter((m) => m.status === 'in-transit').length
+  const myMembership = members.find((m) => m.userId === user?.id)
+  const mySourceName = myMembership?.joinName || convoyInfo?.source_name
 
   return (
     <>
@@ -126,13 +128,13 @@ export default function RosterSidebar({ isExpanded, onToggle }: RosterSidebarPro
                 {convoyInfo.description && (
                   <p className="text-xs text-[var(--text2)] mt-0.5">{convoyInfo.description}</p>
                 )}
-                {(convoyInfo.source_name || convoyInfo.dest_name) && (
+                {(mySourceName || convoyInfo.dest_name) && (
                   <div className="flex items-center gap-1.5 mt-1.5 text-xs text-[var(--text2)]">
                     <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[var(--success-bg)] text-[var(--success-text)]">
                       <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                         <circle cx="10" cy="10" r="4" />
                       </svg>
-                      {convoyInfo.source_name || '?'}
+                      {mySourceName || '?'}
                     </span>
                     <svg
                       className="w-3 h-3 text-[var(--text2)] opacity-70 flex-shrink-0"
@@ -288,13 +290,13 @@ export default function RosterSidebar({ isExpanded, onToggle }: RosterSidebarPro
               {convoyInfo.description && (
                 <p className="text-xs text-[var(--text2)] mt-0.5">{convoyInfo.description}</p>
               )}
-              {(convoyInfo.source_name || convoyInfo.dest_name) && (
+              {(mySourceName || convoyInfo.dest_name) && (
                 <div className="flex items-center gap-1.5 mt-1.5 text-xs text-[var(--text2)]">
                   <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[var(--success-bg)] text-[var(--success-text)]">
                     <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                       <circle cx="10" cy="10" r="4" />
                     </svg>
-                    {convoyInfo.source_name || '?'}
+                    {mySourceName || '?'}
                   </span>
                   <svg
                     className="w-3 h-3 text-[var(--text2)] opacity-70 flex-shrink-0"

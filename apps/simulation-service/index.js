@@ -422,6 +422,146 @@ app.post('/api/simulation/cleanup', async (req, res) => {
   }
 })
 
+function haversineKm(lat1, lng1, lat2, lng2) {
+  const R = 6371
+  const dLat = ((lat2 - lat1) * Math.PI) / 180
+  const dLng = ((lng2 - lng1) * Math.PI) / 180
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+}
+
+async function fetchOsrmRoute(from, to) {
+  const PUBLIC_OSRM = 'https://router.project-osrm.org'
+  const urls = [OSRM_URL, PUBLIC_OSRM]
+  for (const baseUrl of urls) {
+    try {
+      const res = await fetch(
+        `${baseUrl}/route/v1/driving/${from.lng},${from.lat};${to.lng},${to.lat}?overview=full&geometries=geojson&steps=false&alternatives=false`,
+        { signal: AbortSignal.timeout(8000) },
+      )
+      if (!res.ok) continue
+      const data = await res.json()
+      const coords = data?.routes?.[0]?.geometry?.coordinates
+      if (!coords || coords.length < 2) continue
+      if (haversineKm(from.lat, from.lng, coords[0][1], coords[0][0]) > 10) continue
+      return coords
+    } catch {
+      continue
+    }
+  }
+  return null
+}
+
+function coord4dp(coords) {
+  return `${Math.round(coords[1] * 10000)},${Math.round(coords[0] * 10000)}`
+}
+
+app.post('/api/assembly/calculate', async (req, res) => {
+  const { convoyId } = req.body
+  if (!convoyId) return res.status(400).json({ error: 'convoyId is required' })
+
+  try {
+    const convoy = await pbRequest('GET', `/api/collections/convoys/records/${convoyId}`)
+    const destLat = convoy.dest_lat
+    const destLng = convoy.dest_lng
+    if (destLat == null || destLng == null) {
+      return res.status(400).json({ error: 'Convoy has no destination' })
+    }
+
+    const membersData = await pbRequest(
+      'GET',
+      `/api/collections/convoy_members/records?perPage=200&filter=${encodeURIComponent(`convoy="${convoyId}" && status="active"`)}`,
+    )
+    const items = membersData.items || []
+    const activeMembers = items.filter((m) => m.join_lat != null && m.join_lng != null)
+
+    if (activeMembers.length < 2) {
+      return res.status(400).json({ error: 'Need at least 2 members with starting points' })
+    }
+
+    const owner = items.find((m) => m.role === 'owner')
+    if (!owner || owner.join_lat == null || owner.join_lng == null) {
+      return res.status(400).json({ error: 'Owner has no starting point' })
+    }
+
+    const destPt = { lat: destLat, lng: destLng }
+
+    // Fetch OSRM route for EVERY active member (start → destination)
+    const allGeometries = []
+    for (const m of activeMembers) {
+      const from = { lat: m.join_lat, lng: m.join_lng }
+      const coords = await fetchOsrmRoute(from, destPt)
+      allGeometries.push({ memberId: m.id, coords })
+      // Store route_geometry on member record for simulation to use later
+      try {
+        await pbRequest('PATCH', `/api/collections/convoy_members/records/${m.id}`, {
+          route_geometry: coords || [],
+        })
+      } catch {}
+    }
+
+    // Find owner's geometry index
+    const ownerIdx = activeMembers.findIndex((m) => m.id === owner.id)
+    const ownerCoords = allGeometries[ownerIdx]?.coords
+
+    if (!ownerCoords || ownerCoords.length < 2) {
+      // Fallback: use destination as meeting point
+      await pbRequest('PATCH', `/api/collections/convoys/records/${convoyId}`, {
+        source_lat: destLat,
+        source_lng: destLng,
+        source_name: 'Destination',
+        phase: 'assembling',
+        assembled_members: [],
+      })
+      return res.json({ success: true, meetingPoint: { lat: destLat, lng: destLng } })
+    }
+
+    // Build spatial hash sets for all non-owner members (4dp precision, ~11m)
+    const memberSets = []
+    for (let i = 0; i < allGeometries.length; i++) {
+      if (i === ownerIdx || !allGeometries[i].coords) continue
+      const set = new Set()
+      for (const c of allGeometries[i].coords) {
+        set.add(coord4dp(c))
+      }
+      memberSets.push(set)
+    }
+
+    // Walk owner's route FORWARD from start, find first coord present in ALL member sets
+    let meetingPoint = null
+    for (const c of ownerCoords) {
+      const h = coord4dp(c)
+      if (memberSets.every((s) => s.has(h))) {
+        meetingPoint = { lat: c[1], lng: c[0] }
+        break
+      }
+    }
+
+    // Fallback: use destination
+    if (!meetingPoint) {
+      meetingPoint = { lat: destLat, lng: destLng }
+    }
+
+    await pbRequest('PATCH', `/api/collections/convoys/records/${convoyId}`, {
+      source_lat: meetingPoint.lat,
+      source_lng: meetingPoint.lng,
+      source_name:
+        meetingPoint.lat === destLat && meetingPoint.lng === destLng
+          ? 'Destination'
+          : 'Merging point',
+      phase: 'assembling',
+      assembled_members: [],
+    })
+
+    res.json({ success: true, meetingPoint })
+  } catch (err) {
+    console.error('[assembly/calculate] Error:', err.message)
+    res.status(500).json({ error: err.message })
+  }
+})
+
 app.get('/api/simulation/logs/:convoyId', (req, res) => {
   const { convoyId } = req.params
   const sim = runningSimulations.get(convoyId)

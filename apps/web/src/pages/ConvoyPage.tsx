@@ -74,9 +74,6 @@ function ConvoyPage() {
   const [joinCode, setJoinCode] = useState('')
   const [newConvoyName, setNewConvoyName] = useState('')
   const [newConvoyDesc, setNewConvoyDesc] = useState('')
-  const [sourceName, setSourceName] = useState('')
-  const [sourceLat, setSourceLat] = useState<number | null>(null)
-  const [sourceLng, setSourceLng] = useState<number | null>(null)
   const [destName, setDestName] = useState('')
   const [destLat, setDestLat] = useState<number | null>(null)
   const [destLng, setDestLng] = useState<number | null>(null)
@@ -87,14 +84,20 @@ function ConvoyPage() {
   const [vehicles, setVehicles] = useState<VehicleOption[]>([])
   const [selectedVehicleId, setSelectedVehicleId] = useState('')
   const [enableSimulation, setEnableSimulation] = useState(false)
-  const [autoCalcSource, setAutoCalcSource] = useState(false)
   const [newConvoyType, setNewConvoyType] = useState<'vehicle' | 'trekker'>('vehicle')
   const [creatorVehicleId, setCreatorVehicleId] = useState('')
+  const [creatorSourceLat, setCreatorSourceLat] = useState<number | null>(null)
+  const [creatorSourceLng, setCreatorSourceLng] = useState<number | null>(null)
+  const [creatorSourceName, setCreatorSourceName] = useState('')
+  const [creatorSourceVia, setCreatorSourceVia] = useState<'geo' | 'search' | null>(null)
+  const [showCreatorSearch, setShowCreatorSearch] = useState(false)
+  const [gettingCreatorLocation, setGettingCreatorLocation] = useState(false)
   const [joinConvoyLookup, setJoinConvoyLookup] = useState<ConvoyRecord | null>(null)
   const [lookingUp, setLookingUp] = useState(false)
   const [joinSourceLat, setJoinSourceLat] = useState<number | null>(null)
   const [joinSourceLng, setJoinSourceLng] = useState<number | null>(null)
   const [joinSourceName, setJoinSourceName] = useState('')
+  const [joinSourceVia, setJoinSourceVia] = useState<'geo' | 'search' | null>(null)
   const [showJoinSearch, setShowJoinSearch] = useState(false)
   const [gettingJoinLocation, setGettingJoinLocation] = useState(false)
 
@@ -158,6 +161,10 @@ function ConvoyPage() {
 
   const handleCreate = async () => {
     if (!newConvoyName.trim()) return
+    if (!destName || destLat === null || destLng === null) {
+      setError('Please select a destination for the convoy')
+      return
+    }
     setCreating(true)
     setError('')
     try {
@@ -174,11 +181,6 @@ function ConvoyPage() {
         phase: 'forming',
         trip_id: tripId,
         security_token: securityToken,
-      }
-      if (!autoCalcSource && sourceName && sourceLat !== null && sourceLng !== null) {
-        data.source_name = sourceName
-        data.source_lat = sourceLat
-        data.source_lng = sourceLng
       }
       if (destName && destLat !== null && destLng !== null) {
         data.dest_name = destName
@@ -211,17 +213,21 @@ function ConvoyPage() {
         role: 'owner',
         status: 'active',
         joined_at: new Date().toISOString(),
+        join_lat: creatorSourceLat,
+        join_lng: creatorSourceLng,
+        join_name: creatorSourceName || undefined,
       })
       setNewConvoyName('')
       setNewConvoyDesc('')
-      setSourceName('')
-      setSourceLat(null)
-      setSourceLng(null)
       setDestName('')
       setDestLat(null)
       setDestLng(null)
       setEnableSimulation(false)
-      setAutoCalcSource(false)
+      setCreatorSourceLat(null)
+      setCreatorSourceLng(null)
+      setCreatorSourceName('')
+      setCreatorSourceVia(null)
+      setShowCreatorSearch(false)
       setNewConvoyType('vehicle')
       setShowCreateForm(false)
       const memberships = await pb.collection('convoy_members').getFullList({
@@ -335,6 +341,7 @@ function ConvoyPage() {
       setJoinSourceLat(null)
       setJoinSourceLng(null)
       setJoinSourceName('')
+      setJoinSourceVia(null)
       setShowJoinSearch(false)
       setSuccess(`Joined "${convoy.name}" successfully!`)
       const memberships = await pb.collection('convoy_members').getFullList({
@@ -349,9 +356,6 @@ function ConvoyPage() {
         })
         setConvoys(records)
       }
-      setTimeout(() => {
-        navigate(`/map?convoy=${convoy.id}`)
-      }, 1500)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to join convoy')
     } finally {
@@ -436,29 +440,6 @@ function ConvoyPage() {
               onChange={(e) => setNewConvoyDesc(e.target.value)}
               className="input-field w-full rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
             />
-            <div className="flex items-center gap-2 p-3 rounded-xl bg-[var(--surface-hover)] border border-[var(--border)]">
-              <input
-                type="checkbox"
-                id="auto-calc-source"
-                checked={autoCalcSource}
-                onChange={(e) => {
-                  setAutoCalcSource(e.target.checked)
-                  if (e.target.checked) {
-                    setSourceName('')
-                    setSourceLat(null)
-                    setSourceLng(null)
-                  }
-                }}
-                className="h-4 w-4 text-indigo-500 focus:ring-indigo-500/50 rounded"
-                style={{ accentColor: '#6366f1' }}
-              />
-              <label htmlFor="auto-calc-source" className="text-sm text-[var(--text)]">
-                Auto-calculate meeting point
-                <span className="block text-xs text-[var(--text2)] mt-0.5">
-                  Assembly point will be computed from member locations instead of a fixed start
-                </span>
-              </label>
-            </div>
             {newConvoyType === 'vehicle' && (
               <div>
                 <label className="block text-xs font-medium text-[var(--text2)] mb-1">
@@ -490,35 +471,90 @@ function ConvoyPage() {
                 )}
               </div>
             )}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {!autoCalcSource && (
-                <div>
-                  <label className="block text-xs font-medium text-[var(--text2)] mb-1">
-                    Starting Point
-                  </label>
+            <div>
+              <label className="block text-xs font-medium text-[var(--text2)] mb-1">
+                Your Starting Point *
+              </label>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    setGettingCreatorLocation(true)
+                    navigator.geolocation.getCurrentPosition(
+                      async (pos) => {
+                        const lat = pos.coords.latitude
+                        const lng = pos.coords.longitude
+                        setCreatorSourceLat(lat)
+                        setCreatorSourceLng(lng)
+                        setCreatorSourceVia('geo')
+                        setShowCreatorSearch(false)
+                        const { reverseGeocode } = await import('../services/geocode')
+                        const name = await reverseGeocode(lat, lng)
+                        setCreatorSourceName(name || 'Current location')
+                        setGettingCreatorLocation(false)
+                      },
+                      () => {
+                        setGettingCreatorLocation(false)
+                      },
+                      { enableHighAccuracy: true, timeout: 10000 },
+                    )
+                  }}
+                  disabled={gettingCreatorLocation}
+                  className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
+                    creatorSourceVia === 'geo'
+                      ? 'bg-[var(--primary)] text-white border-[var(--primary)]'
+                      : 'border-[var(--border)] text-[var(--text)] hover:bg-[var(--surface-hover)]'
+                  }`}
+                >
+                  {gettingCreatorLocation ? 'Getting location...' : '📍 Use my location'}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowCreatorSearch(!showCreatorSearch)
+                    if (!showCreatorSearch) {
+                      setCreatorSourceLat(null)
+                      setCreatorSourceLng(null)
+                      setCreatorSourceName('')
+                      setCreatorSourceVia(null)
+                    }
+                  }}
+                  className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
+                    showCreatorSearch || creatorSourceVia === 'search'
+                      ? 'bg-[var(--primary)] text-white border-[var(--primary)]'
+                      : 'border-[var(--border)] text-[var(--text)] hover:bg-[var(--surface-hover)]'
+                  }`}
+                >
+                  🔍 Search location
+                </button>
+              </div>
+              {showCreatorSearch && (
+                <div className="mt-2">
                   <SearchBar
                     onResultSelect={(result: SearchResult) => {
-                      setSourceName(result.displayName)
-                      setSourceLat(result.lat)
-                      setSourceLng(result.lng)
+                      setCreatorSourceLat(result.lat)
+                      setCreatorSourceLng(result.lng)
+                      setCreatorSourceName(result.displayName)
+                      setCreatorSourceVia('search')
+                      setShowCreatorSearch(false)
                     }}
                   />
-                  {sourceName && <p className="text-xs text-[var(--text2)] mt-1">{sourceName}</p>}
                 </div>
               )}
-              <div className={autoCalcSource ? 'col-span-2' : ''}>
-                <label className="block text-xs font-medium text-[var(--text2)] mb-1">
-                  Destination
-                </label>
-                <SearchBar
-                  onResultSelect={(result: SearchResult) => {
-                    setDestName(result.displayName)
-                    setDestLat(result.lat)
-                    setDestLng(result.lng)
-                  }}
-                />
-                {destName && <p className="text-xs text-[var(--text2)] mt-1">{destName}</p>}
-              </div>
+              {creatorSourceName && !showCreatorSearch && (
+                <p className="text-xs text-[var(--text2)] mt-1">{creatorSourceName}</p>
+              )}
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-[var(--text2)] mb-1">
+                Destination
+              </label>
+              <SearchBar
+                onResultSelect={(result: SearchResult) => {
+                  setDestName(result.displayName)
+                  setDestLat(result.lat)
+                  setDestLng(result.lng)
+                }}
+              />
+              {destName && <p className="text-xs text-[var(--text2)] mt-1">{destName}</p>}
             </div>
             <div className="flex items-center gap-2 p-3 rounded-xl bg-[var(--surface-hover)] border border-[var(--border)]">
               <input
@@ -541,6 +577,8 @@ function ConvoyPage() {
               disabled={
                 creating ||
                 !newConvoyName.trim() ||
+                !creatorSourceLat ||
+                !creatorSourceLng ||
                 (newConvoyType === 'vehicle' && !creatorVehicleId)
               }
               className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
@@ -654,11 +692,16 @@ function ConvoyPage() {
                       onClick={() => {
                         setGettingJoinLocation(true)
                         navigator.geolocation.getCurrentPosition(
-                          (pos) => {
-                            setJoinSourceLat(pos.coords.latitude)
-                            setJoinSourceLng(pos.coords.longitude)
-                            setJoinSourceName('Current location')
+                          async (pos) => {
+                            const lat = pos.coords.latitude
+                            const lng = pos.coords.longitude
+                            setJoinSourceLat(lat)
+                            setJoinSourceLng(lng)
+                            setJoinSourceVia('geo')
                             setShowJoinSearch(false)
+                            const { reverseGeocode } = await import('../services/geocode')
+                            const name = await reverseGeocode(lat, lng)
+                            setJoinSourceName(name || 'Current location')
                             setGettingJoinLocation(false)
                           },
                           () => {
@@ -669,7 +712,7 @@ function ConvoyPage() {
                       }}
                       disabled={gettingJoinLocation}
                       className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
-                        !showJoinSearch && joinSourceLat
+                        joinSourceVia === 'geo'
                           ? 'bg-[var(--primary)] text-white border-[var(--primary)]'
                           : 'border-[var(--border)] text-[var(--text)] hover:bg-[var(--surface-hover)]'
                       }`}
@@ -686,7 +729,7 @@ function ConvoyPage() {
                         }
                       }}
                       className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
-                        showJoinSearch
+                        showJoinSearch || joinSourceVia === 'search'
                           ? 'bg-[var(--primary)] text-white border-[var(--primary)]'
                           : 'border-[var(--border)] text-[var(--text)] hover:bg-[var(--surface-hover)]'
                       }`}
@@ -701,6 +744,7 @@ function ConvoyPage() {
                           setJoinSourceLat(result.lat)
                           setJoinSourceLng(result.lng)
                           setJoinSourceName(result.displayName)
+                          setJoinSourceVia('search')
                           setShowJoinSearch(false)
                         }}
                       />

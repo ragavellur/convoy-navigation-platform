@@ -88,6 +88,21 @@ export async function getSimulationLogs(convoyId: string): Promise<SimulationLog
   return res.json()
 }
 
+export async function calculateAssemblyPoint(
+  convoyId: string,
+): Promise<{ success: boolean; meetingPoint?: { lat: number; lng: number } }> {
+  const res = await fetch(`${SIMULATION_API_URL}/api/assembly/calculate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ convoyId }),
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Unknown error' }))
+    throw new Error(err.error || `Failed to calculate assembly point: ${res.status}`)
+  }
+  return res.json()
+}
+
 export async function cleanupPositions(
   convoyId: string,
 ): Promise<{ success: boolean; deleted: number; kept: number }> {

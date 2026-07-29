@@ -12,18 +12,24 @@ export interface AssemblyRoute {
   duration: number
 }
 
+function sourcePoint(m: RosterMember): { lat: number; lng: number } | null {
+  if (m.joinLat != null && m.joinLng != null) return { lat: m.joinLat, lng: m.joinLng }
+  if (m.position) return m.position
+  return null
+}
+
 export async function computeAssemblyRoutes(
   members: RosterMember[],
-  ownerUserId: string,
   assemblyPoint: { lat: number; lng: number },
 ): Promise<AssemblyRoute[]> {
-  const nonOwnerMembers = members.filter((m) => m.userId !== ownerUserId && m.position)
+  const withSource = members.filter((m) => sourcePoint(m))
 
-  if (nonOwnerMembers.length === 0) return []
+  if (withSource.length === 0) return []
 
   const results = await Promise.allSettled(
-    nonOwnerMembers.map(async (member) => {
-      const origin: [number, number] = [member.position!.lng, member.position!.lat]
+    withSource.map(async (member) => {
+      const sp = sourcePoint(member)!
+      const origin: [number, number] = [sp.lng, sp.lat]
       const dest: [number, number] = [assemblyPoint.lng, assemblyPoint.lat]
       const response = await getRoute({
         origin,

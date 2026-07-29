@@ -23,6 +23,7 @@ function JoinPage() {
   const [joinSourceLat, setJoinSourceLat] = useState<number | null>(null)
   const [joinSourceLng, setJoinSourceLng] = useState<number | null>(null)
   const [joinSourceName, setJoinSourceName] = useState('')
+  const [joinSourceVia, setJoinSourceVia] = useState<'geo' | 'search' | null>(null)
   const [showJoinSearch, setShowJoinSearch] = useState(false)
   const [gettingJoinLocation, setGettingJoinLocation] = useState(false)
   const [convoyId, setConvoyId] = useState<string | null>(null)
@@ -65,7 +66,7 @@ function JoinPage() {
         })
 
         if (existing.length > 0) {
-          navigate(`/map?convoy=${convoy.id}`)
+          navigate(`/convoy`)
           return
         }
 
@@ -152,7 +153,7 @@ function JoinPage() {
         join_lng: joinSourceLng,
         join_name: joinSourceName || undefined,
       })
-      navigate(`/map?convoy=${convoyId}`)
+      navigate(`/convoy`)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to join convoy')
       setJoinState('vehicle-select')
@@ -233,11 +234,16 @@ function JoinPage() {
                 onClick={() => {
                   setGettingJoinLocation(true)
                   navigator.geolocation.getCurrentPosition(
-                    (pos) => {
-                      setJoinSourceLat(pos.coords.latitude)
-                      setJoinSourceLng(pos.coords.longitude)
-                      setJoinSourceName('Current location')
+                    async (pos) => {
+                      const lat = pos.coords.latitude
+                      const lng = pos.coords.longitude
+                      setJoinSourceLat(lat)
+                      setJoinSourceLng(lng)
+                      setJoinSourceVia('geo')
                       setShowJoinSearch(false)
+                      const { reverseGeocode } = await import('../services/geocode')
+                      const name = await reverseGeocode(lat, lng)
+                      setJoinSourceName(name || 'Current location')
                       setGettingJoinLocation(false)
                     },
                     () => {
@@ -248,7 +254,7 @@ function JoinPage() {
                 }}
                 disabled={gettingJoinLocation}
                 className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
-                  !showJoinSearch && joinSourceLat
+                  joinSourceVia === 'geo'
                     ? 'bg-[var(--primary)] text-white border-[var(--primary)]'
                     : 'border-[var(--border)] text-[var(--text)] hover:bg-[var(--surface-hover)]'
                 }`}
@@ -262,10 +268,11 @@ function JoinPage() {
                     setJoinSourceLat(null)
                     setJoinSourceLng(null)
                     setJoinSourceName('')
+                    setJoinSourceVia(null)
                   }
                 }}
                 className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
-                  showJoinSearch
+                  showJoinSearch || joinSourceVia === 'search'
                     ? 'bg-[var(--primary)] text-white border-[var(--primary)]'
                     : 'border-[var(--border)] text-[var(--text)] hover:bg-[var(--surface-hover)]'
                 }`}
@@ -280,6 +287,7 @@ function JoinPage() {
                     setJoinSourceLat(result.lat)
                     setJoinSourceLng(result.lng)
                     setJoinSourceName(result.displayName)
+                    setJoinSourceVia('search')
                     setShowJoinSearch(false)
                   }}
                 />
@@ -291,7 +299,7 @@ function JoinPage() {
           </div>
           <button
             onClick={handleJoin}
-            disabled={!isTrekker && !selectedVehicleId}
+            disabled={!joinSourceLat || !joinSourceLng || (!isTrekker && !selectedVehicleId)}
             className="mt-4 w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isTrekker ? 'Join as Trekker' : 'Join with Selected Vehicle'}

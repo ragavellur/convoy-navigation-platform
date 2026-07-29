@@ -52,6 +52,7 @@ interface MemberRecord {
   status: 'active' | 'inactive' | 'removed'
   vehicle?: string
   joined_at: string
+  join_name?: string
   expand?: {
     user?: { id: string; name: string; email: string }
     vehicle?: { id: string; name: string; type: string; color?: string }
@@ -604,8 +605,11 @@ function ConvoyDetailPage() {
               {(convoy.source_name || convoy.dest_name) && (
                 <div className="flex justify-between">
                   <dt className="text-[var(--text2)]">Route</dt>
-                  <dd className="text-[var(--text)] text-right max-w-[200px] truncate">
-                    {convoy.source_name || '?'} → {convoy.dest_name || '?'}
+                  <dd className="text-[var(--text)] text-right">
+                    {members.find((m) => m.user === user?.id)?.join_name ||
+                      convoy.source_name ||
+                      '?'}{' '}
+                    → {convoy.dest_name || '?'}
                   </dd>
                 </div>
               )}

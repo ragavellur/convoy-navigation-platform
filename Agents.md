@@ -366,3 +366,57 @@ REQUIRED: Update test plan + test data → Commit/push → Then start new sprint
 ssh bharatradar@192.168.200.11
 # Password: raga@098
 ```
+
+---
+
+# 🗺️ LOCAL OSRM SETUP OPTIONS
+
+The simulation service fetches OSRM routes via `fetchOsrmRoute()` with a fallback chain: `OSRM_URL` env var → `https://router.project-osrm.org` (public). Currently the public API is used. For offline/resilient setup, process India PBF locally.
+
+## Option A: Process India PBF inside Docker (v5.26.0 — matches container)
+
+Runs via amd64 emulation on ARM Mac (slow, ~30-60 min). Run once, works forever.
+
+```bash
+# 1. Copy PBF into OSRM data volume
+docker cp /path/to/india-260728.osm.pbf convoy-osrm:/data/india-260728.osm.pbf
+
+# 2. Process all 3 steps
+docker run --rm -v real-time_convoy_navigation__communication_platform_osrm_data:/data \
+  osrm/osrm-backend:latest osrm-extract -p /opt/car.lua /data/india-260728.osm.pbf
+
+docker run --rm -v real-time_convoy_navigation__communication_platform_osrm_data:/data \
+  osrm/osrm-backend:latest osrm-partition /data/india-260728.osrm
+
+docker run --rm -v real-time_convoy_navigation__communication_platform_osrm_data:/data \
+  osrm/osrm-backend:latest osrm-customize /data/india-260728.osrm
+
+# 3. Update docker-compose.yml line 51
+#    Change: command: osrm-routed --algorithm mld /data/monaco-latest.osrm
+#    To:     command: osrm-routed --algorithm mld /data/india-260728.osrm
+
+# 4. Restart OSRM + simulation
+docker compose up -d osrm simulation-service
+```
+
+## Option B: Run OSRM natively via Homebrew (v26.7.3 — native ARM)
+
+Already processed at `/Users/Shared/OSM/osrm_extract`. Run natively (faster, no emulation).
+
+```bash
+# 1. Start OSRM routing server in background
+nohup osrm-routed --algorithm mld \
+  /Users/Shared/OSM/osrm_extract/india-260728.osrm \
+  --port 5001 &
+
+# 2. Update docker-compose simulation-service env to use host OSRM
+#    Add: OSRM_URL=http://host.docker.internal:5001
+
+# 3. Restart simulation
+docker compose up -d simulation-service
+
+# 4. Verify
+curl -s 'http://localhost:5001/route/v1/driving/73.9,18.5;73.5,19.0?overview=false'
+```
+
+**Note:** If the `.osrm` base file is missing (common with v26 extraction), the Docker OSRM (v5) can't read v26 data. Option A processes with matching v5 tools. Option B runs natively and skips Docker entirely for OSRM.

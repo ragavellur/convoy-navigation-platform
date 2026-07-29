@@ -168,7 +168,7 @@ create_or_get("vehicles", [
     {"name": "license_plate", "type": "text", "required": False},
     {"name": "image", "type": "file", "required": False, "options": {"maxSelect": 1, "maxSize": 5242880, "mimeTypes": ["image/jpeg", "image/png", "image/webp"]}},
     {"name": "telemetry_config", "type": "json", "required": False, "options": {"maxSize": 2000000}},
-    {"name": "status", "type": "select", "required": True, "options": {"values": ["active", "inactive", "maintenance"], "maxSelect": 1}},
+    {"name": "status", "type": "select", "required": True, "options": {"values": ["active", "inactive", "maintenance", "retired"], "maxSelect": 1}},
 ], [
     "CREATE INDEX idx_vehicles_owner ON vehicles (owner)",
 ])

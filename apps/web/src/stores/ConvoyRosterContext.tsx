@@ -119,6 +119,19 @@ export function ConvoyRosterProvider({ children }: { children: ReactNode }) {
       try {
         unsubRef.current?.()
         unsubRef.current = await subscribeToConvoyPositions(id, handlePositionUpdate)
+        pb.collection('convoy_members')
+          .subscribe?.('*', (e) => {
+            if (e.record?.convoy === id || e.record?.convoy?.id === id) {
+              fetchMembers(id)
+            }
+          })
+          .then((unsub) => {
+            const prev = unsubRef.current
+            unsubRef.current = () => {
+              prev?.()
+              unsub()
+            }
+          })
         await fetchMembers(id)
         intervalRef.current = setInterval(() => fetchMembers(id), 60_000)
       } catch (err) {

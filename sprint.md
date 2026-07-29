@@ -274,6 +274,8 @@
 - [x] [TASK-163] Phase 4: phase management — host controls + phase transitions
 - [ ] [TASK-164] Phase 5: 2-phase simulation — assemble (scatter) then transit
 - [ ] [TASK-165] Phase 7: real-time assembly updates via Realtime subscriptions
+- [ ] [TASK-166] Option A: Process India PBF inside Docker OSRM (v5.26.0) — match container version
+- [ ] [TASK-167] Option B: Run OSRM natively via Homebrew (v26.7.3) — use pre-processed data at /Users/Shared/OSM/osrm_extract
 
 ---
 
@@ -312,9 +314,9 @@
 | Sprint 8  | 21          | 10      | 0           | 11     | Web PWA + Trekker  |
 | Sprint 9  | 5           | 0       | 0           | 5      | Web CSS Refactor   |
 | Sprint 10 | 8           | 8       | 0           | 0      | Web CSS Refactor   |
-| Sprint 11 | 22          | 9       | 0           | 13     | All                |
+| Sprint 11 | 24          | 11      | 0           | 13     | All                |
 | Sprint 12 | 14          | 14      | 0           | 0      | All                |
-| **Total** | **172**     | **79**  | **4**       | **86** |                    |
+| **Total** | **174**     | **81**  | **4**       | **86** |                    |
 
 ---
 
