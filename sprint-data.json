@@ -1040,6 +1040,13 @@
           "status": "backlog",
           "priority": "low",
           "description": "Change PBF_URL in docker-compose.yml to india-latest.osm.pbf from https://download.geofabrik.de/asia/india.html and re-import. Requires ~16GB RAM, 30-60GB disk, 4-8 hour import."
+        },
+        {
+          "id": "TASK-159",
+          "title": "Phase 6: fix OSRM URL + nginx proxy (recalculateRoute in production)",
+          "status": "done",
+          "priority": "high",
+          "description": "Replace hardcoded localhost:5001 in osrm.ts with VITE_OSRM_URL env var. Add /routing to .env.production. Remove /routing/ from frontend nginx.conf (host nginx handles it). Fixes 'Could not recalculate route' in production."
         }
       ]
     },

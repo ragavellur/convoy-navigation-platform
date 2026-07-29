@@ -255,6 +255,10 @@
 
 - [x] [TASK-147] Write integration tests for API endpoints
 
+### ✅ Done
+
+- [x] [TASK-159] Phase 6: fix OSRM URL + nginx proxy (recalculateRoute in production)
+
 ### 📌 Backlog
 
 - [ ] [TASK-149] Write E2E tests for Android (Detox)
@@ -302,9 +306,9 @@
 | Sprint 8  | 21          | 10      | 0           | 11     | Web PWA + Trekker  |
 | Sprint 9  | 5           | 0       | 0           | 5      | Web CSS Refactor   |
 | Sprint 10 | 8           | 8       | 0           | 0      | Web CSS Refactor   |
-| Sprint 11 | 15          | 7       | 0           | 8      | All                |
+| Sprint 11 | 16          | 7       | 0           | 9      | All                |
 | Sprint 12 | 14          | 14      | 0           | 0      | All                |
-| **Total** | **165**     | **73**  | **4**       | **85** |                    |
+| **Total** | **166**     | **73**  | **4**       | **86** |                    |
 
 ---
 
