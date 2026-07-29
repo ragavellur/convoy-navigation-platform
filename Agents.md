@@ -282,17 +282,27 @@ For any new project, initialize the sprint tracking system:
 - **IN-PROGRESS** → Agent is actively working on the task
 - **DONE** → Task completed AND **user-authorized** (never mark done without approval)
 
+### Opencode Sidebar Todo List
+
+The opencode app has a sidebar Todo list managed via the `todowrite` tool. You MUST sync it:
+
+1. **At session start**: Create todos with `todowrite` for the current sprint's tasks
+2. **After completing any task**: Update its status to `completed` in the opencode sidebar via `todowrite`
+3. **Before commit/push**: Verify all completed tasks are marked `completed` in the sidebar
+4. **Never leave stale todos**: If a task is done, mark it completed immediately — don't batch at the end
+
 ### Mandatory Update Protocol
 
-1. **Before starting work**: Update task status to `in-progress` in `sprint-data.json` AND `sprint.md`, then **commit and push** so the sprint board reflects real-time status
-2. **After completing work**: Present results to user for review
-3. **Only after user says "LGTM" / "approved"**: Update task status to `done` in `sprint-data.json` AND `sprint.md`
-4. **Always sync**: Keep `sprint.md` in sync with `sprint-data.json`
+1. **Before starting work**: Sync opencode sidebar todos via `todowrite`, update task status to `in-progress` in `sprint-data.json` AND `sprint.md`, then **commit and push** so the sprint board reflects real-time status
+2. **After completing work**: Update opencode sidebar todos via `todowrite`, then present results to user for review
+3. **Only after user says "LGTM" / "approved"**: Update task status to `done` in `sprint-data.json` AND `sprint.md`, and mark `completed` in opencode sidebar
+4. **Always sync**: Keep `sprint.md` in sync with `sprint-data.json`, and `todowrite` in sync with actual progress
 5. **Commit on completion**: Commit and push all changes after user approval
 
 ```
-FLOW: Update sprint files to in-progress → Commit/push → Execute task → Present for review → Wait for "LGTM" → Update to done → Commit/push
+FLOW: Sync opencode todos → Update sprint files to in-progress → Commit/push → Execute task → Update todos → Present for review → Wait for "LGTM" → Update sprint files to done + mark todos completed → Commit/push
 DENIED: Marking in-progress without committing sprint files to git.
+DENIED: Leaving stale todos in the opencode sidebar after task completion.
 ```
 
 ### Never Mark Done Without Authorization
