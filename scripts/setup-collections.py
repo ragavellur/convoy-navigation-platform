@@ -80,7 +80,7 @@ def create_or_get(name, schema, indexes=None):
 
 
 def patch_rules(name, list_rule=None, view_rule=None, create_rule=None, update_rule=None, delete_rule=None):
-    cid = ids.get(name)
+    cid = name if name == "_pb_users_auth_" else ids.get(name)
     if not cid:
         print(f"  SKIP rules for {name} (not created)")
         return
@@ -346,14 +346,14 @@ patch_rules("audit_log",
     delete_rule=None,
 )
 
-# Users collection needs open list/view rules for expand=user to work
+# Users collection needs open rules for registration and expand=user to work
 # (convoy_members expand needs to resolve other users' names)
 patch_rules("_pb_users_auth_",
     list_rule="",
     view_rule="",
-    create_rule=None,
-    update_rule=None,
-    delete_rule=None,
+    create_rule="",
+    update_rule="",
+    delete_rule="",
 )
 
 # ============================================
