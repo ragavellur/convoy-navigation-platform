@@ -69,9 +69,12 @@ function MapPage() {
   const routeRef = useRef<RouteResponse['routes'][0] | null>(null)
   const animatorRef = useRef<MarkerAnimator | null>(null)
 
+  const routeResponseRef = useRef<RouteResponse | null>(null)
+  const assemblyRoutesDataRef = useRef<AssemblyRoute[]>([])
+  const vectorFeaturesRef = useRef<GeoJSON.Feature[]>([])
+
   const offRoutePushSentRef = useRef(false)
   const [mapLoaded, setMapLoaded] = useState(false)
-  const [styleLoadKey, setStyleLoadKey] = useState(0)
   const [mapBounds, setMapBounds] = useState<[number, number, number, number] | undefined>()
   const [routeData, setRouteData] = useState<RouteResponse['routes'][0] | null>(null)
   const [routeResponse, setRouteResponse] = useState<RouteResponse | null>(null)
@@ -102,6 +105,11 @@ function MapPage() {
     new Map(),
   )
   const mapViewRestoredRef = useRef(false)
+  const selectedAltIndexRef = useRef(selectedAltIndex)
+
+  useEffect(() => {
+    selectedAltIndexRef.current = selectedAltIndex
+  }, [selectedAltIndex])
 
   const MAP_VIEW_KEY = 'convoy-map-view'
 
@@ -142,12 +150,16 @@ function MapPage() {
     })
   }
 
-  function renderRouteOnMap(route: RouteResponse['routes'][0], index: number) {
+  function renderRouteOnMap(
+    route: RouteResponse['routes'][0],
+    index: number,
+    activeIndex?: number,
+  ) {
     if (!map.current) return
     const sourceId = index === 0 ? ROUTE_SOURCE_ID : `${ALT_SOURCE_PREFIX}${index}`
     const layerId = index === 0 ? ROUTE_LAYER_ID : `${ALT_LAYER_PREFIX}${index}`
     const geometry = route.geometry as RouteGeometry
-    const isActive = index === selectedAltIndex
+    const isActive = index === (activeIndex ?? selectedAltIndex)
 
     safeRemoveSource(map.current, sourceId)
     map.current.addSource(sourceId, {
@@ -874,6 +886,8 @@ function MapPage() {
       }
     })
 
+    vectorFeaturesRef.current = vectorFeatures
+
     const source = map.current?.getSource(VELOCITY_SOURCE_ID)
     if (!source || !('setData' in source)) {
       safeRemoveSource(map.current!, VELOCITY_SOURCE_ID)
@@ -895,7 +909,7 @@ function MapPage() {
         features: vectorFeatures,
       })
     }
-  }, [convoyPositions, mapLoaded, styleLoadKey])
+  }, [convoyPositions, mapLoaded])
 
   useEffect(() => {
     return () => {
@@ -981,6 +995,37 @@ function MapPage() {
         localStorage.setItem(MAP_VIEW_KEY, JSON.stringify({ lat: c.lat, lng: c.lng, zoom: z }))
       }
     })
+    map.current.on('style.load', () => {
+      const m = map.current
+      if (!m) return
+
+      safeRemoveSource(m, VELOCITY_SOURCE_ID)
+      safeRemoveLayer(m, VELOCITY_LAYER_ID)
+      m.addSource(VELOCITY_SOURCE_ID, {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: vectorFeaturesRef.current },
+      })
+      m.addLayer({
+        id: VELOCITY_LAYER_ID,
+        type: 'line',
+        source: VELOCITY_SOURCE_ID,
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: { 'line-color': '#6366f1', 'line-width': 2, 'line-opacity': 0.7 },
+      })
+
+      if (routeResponseRef.current) {
+        clearAllRouteLayers()
+        routeResponseRef.current.routes.forEach((r, i) =>
+          renderRouteOnMap(r, i, selectedAltIndexRef.current),
+        )
+      }
+
+      clearAssemblyRouteLayers()
+      assemblyRoutesDataRef.current.forEach((ar, i) => {
+        const color = ar.vehicleColor || ASSEMBLY_ROUTE_COLORS[i % ASSEMBLY_ROUTE_COLORS.length]
+        renderAssemblyRouteOnMap(ar.route, color, i)
+      })
+    })
     return () => {
       console.warn = origWarn
       map.current?.remove()
@@ -1004,7 +1049,6 @@ function MapPage() {
         } catch {
           /* setStyle may not preserve transform */
         }
-        setStyleLoadKey((k) => k + 1)
       })
     }
   }, [theme, mapLoaded])
@@ -1069,20 +1113,7 @@ function MapPage() {
         destMarker.addTo(map.current!)
         markersRef.current.push(destMarker)
 
-        let origin = meetingPoint
-        const userId = pb.authStore.record?.id
-        if (userId) {
-          try {
-            const member = await pb
-              .collection('convoy_members')
-              .getFirstListItem(`convoy = "${convoyId}" && user = "${userId}" && status = "active"`)
-            if (member.join_lat != null && member.join_lng != null) {
-              origin = [member.join_lng, member.join_lat]
-            }
-          } catch {
-            // Member fetch failed — fallback to meeting point
-          }
-        }
+        const origin = meetingPoint
 
         const response = await getRoute({
           origin,
@@ -1095,6 +1126,7 @@ function MapPage() {
         const route = response.routes[0]
         setRouteData(route)
         setRouteResponse(response)
+        routeResponseRef.current = response
         routeRef.current = route
         setSelectedAltIndex(0)
 
@@ -1119,7 +1151,7 @@ function MapPage() {
     return () => {
       cancelled = true
     }
-  }, [convoyId, mapLoaded, convoyPhase, styleLoadKey])
+  }, [convoyId, mapLoaded, convoyPhase])
 
   const ownerUserId = convoyOwner
   const { routes: assemblyRoutes } = useAssemblyRoutes({
@@ -1134,6 +1166,8 @@ function MapPage() {
       return
     }
 
+    assemblyRoutesDataRef.current = assemblyRoutes
+
     clearAssemblyRouteLayers()
     if (assemblyRoutes.length === 0) return
 
@@ -1145,7 +1179,7 @@ function MapPage() {
     return () => {
       clearAssemblyRouteLayers()
     }
-  }, [assemblyRoutes, mapLoaded, styleLoadKey])
+  }, [assemblyRoutes, mapLoaded])
 
   useEffect(() => {
     if (convoyPhase !== 'assembling' || !computedAssemblyPoint || !convoyId) return
