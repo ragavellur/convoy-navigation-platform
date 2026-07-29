@@ -199,6 +199,8 @@ app.post('/api/simulation/start', async (req, res) => {
     return res.status(500).json({ error: 'Simulation script not found', path: SCRIPT_PATH })
   }
 
+  await clearPositions(convoyId)
+
   const args = [
     SCRIPT_PATH,
     convoyId,
@@ -683,8 +685,8 @@ async function clearPositions(convoyId) {
           try {
             await pbRequest('DELETE', `/api/collections/positions/records/${id}`)
             totalDeleted++
-          } catch {
-            // skip individual failures
+          } catch (indErr) {
+            console.error(`[clearPositions] Individual delete failed for ${id}:`, indErr.message)
           }
         }
       }
@@ -693,8 +695,8 @@ async function clearPositions(convoyId) {
         try {
           await pbRequest('DELETE', `/api/collections/positions/records/${id}`)
           totalDeleted++
-        } catch {
-          // skip
+        } catch (indErr) {
+          console.error(`[clearPositions] Individual delete failed for ${id}:`, indErr.message)
         }
       }
     }
@@ -765,8 +767,8 @@ async function cleanupKeepLatest(convoyId) {
         try {
           await pbRequest('DELETE', `/api/collections/positions/records/${id}`)
           totalDeleted++
-        } catch {
-          // skip individual failures
+        } catch (indErr) {
+          console.error(`[cleanupKeepLatest] Individual delete failed:`, indErr.message)
         }
       }
     }

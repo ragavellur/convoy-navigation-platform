@@ -298,7 +298,11 @@ async function main() {
     const fresh = await pbGet(token, `/api/collections/convoys/records/${convoyId}`)
     const phase = fresh.phase || 'forming'
 
-    if (phase === 'completed' || phase === 'forming') {
+    if (phase === 'completed') {
+      console.log('[simulate-convoy] Phase=completed — nothing to simulate, exiting')
+      process.exit(0)
+    }
+    if (phase === 'forming') {
       console.log(`[simulate-convoy] Phase=${phase} — waiting...`)
       await sleep(interval * 1000)
       continue
