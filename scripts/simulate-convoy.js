@@ -387,24 +387,12 @@ async function main() {
       v._arrived = arrived
     }
 
-    // Second pass: detect convergence at meeting point
+    // Second pass: detect convergence — vehicle reached or passed its meeting index
     const converged = new Set()
     if (isAssembling) {
       for (let i = 0; i < activeVehicles.length; i++) {
-        const a = activeVehicles[i]
-        if (a._arrived) {
-          converged.add(a.userId)
-          continue
-        }
-        const meetingIdx = meetingIdxs[i]
-        if (meetingIdx < 0) continue
-        const geo = activeVehicles[i].geometry
-        const meetingCoord = geo[meetingIdx]
-        const dLat = a._pos.lat - meetingCoord[1]
-        const dLng = a._pos.lng - meetingCoord[0]
-        const dist = Math.sqrt(dLat * dLat + dLng * dLng) * 111320
-        if (dist < ASSEMBLY_DISTANCE_M) {
-          converged.add(a.userId)
+        if (coordIdxs[i] >= meetingIdxs[i] || activeVehicles[i]._arrived) {
+          converged.add(activeVehicles[i].userId)
         }
       }
     }
