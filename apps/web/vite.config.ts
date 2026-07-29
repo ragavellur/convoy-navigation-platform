@@ -4,6 +4,9 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  build: {
+    cssMinify: false,
+  },
   server: {
     proxy: {
       '/simulation': {

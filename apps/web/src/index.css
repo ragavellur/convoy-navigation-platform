@@ -28,7 +28,7 @@
   --scrollbar-hover: rgba(255, 255, 255, 0.25);
   --glass-bg: rgba(255, 255, 255, 0.05);
   --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-bg-strong: rgba(255, 255, 255, 0.08);
+  --glass-bg-strong: rgba(7, 19, 32, 0.85);
   --glass-border-strong: rgba(255, 255, 255, 0.12);
   --skeleton-from: rgba(255, 255, 255, 0.04);
   --skeleton-via: rgba(255, 255, 255, 0.08);
@@ -135,15 +135,15 @@ body.light {
 
 .glass {
   background: var(--glass-bg);
-  backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(24px);
   border: 1px solid var(--glass-border);
 }
 
 .glass-strong {
   background: var(--glass-bg-strong);
-  backdrop-filter: blur(40px);
   -webkit-backdrop-filter: blur(40px);
+  backdrop-filter: blur(40px);
   border: 1px solid var(--glass-border-strong);
 }
 
