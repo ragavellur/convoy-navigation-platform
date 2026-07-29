@@ -178,7 +178,7 @@ create_or_get("convoy_members", [
     {"name": "user", "type": "relation", "required": True, "options": {"collectionId": "_pb_users_auth_", "cascadeDelete": True, "maxSelect": 1}},
     {"name": "role", "type": "select", "required": True, "options": {"values": ["owner", "admin", "member"], "maxSelect": 1}},
     {"name": "vehicle", "type": "relation", "required": False, "options": {"collectionId": ids.get("vehicles", "_"), "cascadeDelete": False, "maxSelect": 1}},
-    {"name": "status", "type": "select", "required": True, "options": {"values": ["active", "kicked", "left"], "maxSelect": 1}},
+    {"name": "status", "type": "select", "required": True, "options": {"values": ["active", "inactive", "kicked", "left", "removed"], "maxSelect": 1}},
     {"name": "joined_at", "type": "date", "required": False},
     {"name": "join_lat", "type": "number", "required": False},
     {"name": "join_lng", "type": "number", "required": False},

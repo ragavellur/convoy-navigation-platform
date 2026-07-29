@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import pb from '../services/pocketbase'
+import SearchBar from '../components/SearchBar'
 import { parseDeepLink, validateConvoyCode } from '../services/deepLink'
+import type { SearchResult } from '../types'
 
 interface VehicleOption {
   id: string
@@ -18,6 +20,11 @@ function JoinPage() {
   const [vehicles, setVehicles] = useState<VehicleOption[]>([])
   const [selectedVehicleId, setSelectedVehicleId] = useState('')
   const [joinState, setJoinState] = useState<'loading' | 'vehicle-select' | 'joining'>('loading')
+  const [joinSourceLat, setJoinSourceLat] = useState<number | null>(null)
+  const [joinSourceLng, setJoinSourceLng] = useState<number | null>(null)
+  const [joinSourceName, setJoinSourceName] = useState('')
+  const [showJoinSearch, setShowJoinSearch] = useState(false)
+  const [gettingJoinLocation, setGettingJoinLocation] = useState(false)
   const [convoyId, setConvoyId] = useState<string | null>(null)
   const [convoyType, setConvoyType] = useState<'vehicle' | 'trekker' | null>(null)
   const [convoyName, setConvoyName] = useState('')
@@ -141,6 +148,9 @@ function JoinPage() {
         role: 'member',
         status: 'active',
         joined_at: new Date().toISOString(),
+        join_lat: joinSourceLat,
+        join_lng: joinSourceLng,
+        join_name: joinSourceName || undefined,
       })
       navigate(`/map?convoy=${convoyId}`)
     } catch (err) {
@@ -214,6 +224,71 @@ function JoinPage() {
               </div>
             </div>
           )}
+          <div>
+            <label className="block text-xs font-medium text-[var(--text2)] mb-1">
+              Your Starting Point
+            </label>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  setGettingJoinLocation(true)
+                  navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                      setJoinSourceLat(pos.coords.latitude)
+                      setJoinSourceLng(pos.coords.longitude)
+                      setJoinSourceName('Current location')
+                      setShowJoinSearch(false)
+                      setGettingJoinLocation(false)
+                    },
+                    () => {
+                      setGettingJoinLocation(false)
+                    },
+                    { enableHighAccuracy: true, timeout: 10000 },
+                  )
+                }}
+                disabled={gettingJoinLocation}
+                className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
+                  !showJoinSearch && joinSourceLat
+                    ? 'bg-[var(--primary)] text-white border-[var(--primary)]'
+                    : 'border-[var(--border)] text-[var(--text)] hover:bg-[var(--surface-hover)]'
+                }`}
+              >
+                {gettingJoinLocation ? 'Getting location...' : '📍 Use my location'}
+              </button>
+              <button
+                onClick={() => {
+                  setShowJoinSearch(!showJoinSearch)
+                  if (!showJoinSearch) {
+                    setJoinSourceLat(null)
+                    setJoinSourceLng(null)
+                    setJoinSourceName('')
+                  }
+                }}
+                className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
+                  showJoinSearch
+                    ? 'bg-[var(--primary)] text-white border-[var(--primary)]'
+                    : 'border-[var(--border)] text-[var(--text)] hover:bg-[var(--surface-hover)]'
+                }`}
+              >
+                🔍 Search location
+              </button>
+            </div>
+            {showJoinSearch && (
+              <div className="mt-2">
+                <SearchBar
+                  onResultSelect={(result: SearchResult) => {
+                    setJoinSourceLat(result.lat)
+                    setJoinSourceLng(result.lng)
+                    setJoinSourceName(result.displayName)
+                    setShowJoinSearch(false)
+                  }}
+                />
+              </div>
+            )}
+            {joinSourceName && !showJoinSearch && (
+              <p className="text-xs text-[var(--text2)] mt-1">{joinSourceName}</p>
+            )}
+          </div>
           <button
             onClick={handleJoin}
             disabled={!isTrekker && !selectedVehicleId}
