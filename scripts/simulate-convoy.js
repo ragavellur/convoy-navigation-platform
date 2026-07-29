@@ -293,6 +293,29 @@ async function main() {
 
   const ASSEMBLY_DISTANCE_M = 80
 
+  // For each vehicle, find the route index nearest the meeting point
+  const meetingIdxs = new Array(activeVehicles.length).fill(-1)
+  if (waitAtMeeting && convoy.source_lat && convoy.source_lng) {
+    for (let i = 0; i < activeVehicles.length; i++) {
+      const geo = activeVehicles[i].geometry
+      let bestIdx = -1
+      let bestDist = Infinity
+      for (let j = 0; j < geo.length; j++) {
+        const dLat = geo[j][1] - convoy.source_lat
+        const dLng = geo[j][0] - convoy.source_lng
+        const dist = Math.sqrt(dLat * dLat + dLng * dLng)
+        if (dist < bestDist) {
+          bestDist = dist
+          bestIdx = j
+        }
+      }
+      meetingIdxs[i] = bestIdx
+      console.log(
+        `[simulate-convoy] ${activeVehicles[i].vehicleId}: meeting idx=${bestIdx}/${geo.length - 1} (dist=${(bestDist * 111320).toFixed(0)}m)`,
+      )
+    }
+  }
+
   // Each vehicle has its own coord index into its geometry
   let coordIdxs = new Array(activeVehicles.length).fill(0)
   const VEHICLE_SPEED_VARIANCE = 0.3
@@ -329,11 +352,12 @@ async function main() {
 
     const isAssembling = phase === 'assembling' && waitAtMeeting
 
-    // First pass: advance all vehicles toward destination
+    // First pass: advance all vehicles toward destination (or meeting point during assembling)
     for (let i = 0; i < activeVehicles.length; i++) {
       const v = activeVehicles[i]
       const geo = v.geometry
-      const target = geo.length - 1
+      const capIdx = isAssembling && meetingIdxs[i] >= 0 ? meetingIdxs[i] : geo.length - 1
+      const target = capIdx
       const speedVar = 1 + (i % 3) * VEHICLE_SPEED_VARIANCE
       const step = 3 * speedFactor * speedVar
 
@@ -361,8 +385,7 @@ async function main() {
       v._arrived = arrived
     }
 
-    // Second pass: detect convergence — vehicles sharing the same coordinate
-    // stop and get marked assembled, regardless of predefined meeting point
+    // Second pass: detect convergence at meeting point
     const converged = new Set()
     if (isAssembling) {
       for (let i = 0; i < activeVehicles.length; i++) {
@@ -371,15 +394,15 @@ async function main() {
           converged.add(a.userId)
           continue
         }
-        for (let j = i + 1; j < activeVehicles.length; j++) {
-          const b = activeVehicles[j]
-          const dLat = a._pos.lat - b._pos.lat
-          const dLng = a._pos.lng - b._pos.lng
-          const dist = Math.sqrt(dLat * dLat + dLng * dLng) * 111320
-          if (dist < ASSEMBLY_DISTANCE_M) {
-            converged.add(a.userId)
-            converged.add(b.userId)
-          }
+        const meetingIdx = meetingIdxs[i]
+        if (meetingIdx < 0) continue
+        const geo = activeVehicles[i].geometry
+        const meetingCoord = geo[meetingIdx]
+        const dLat = a._pos.lat - meetingCoord[1]
+        const dLng = a._pos.lng - meetingCoord[0]
+        const dist = Math.sqrt(dLat * dLat + dLng * dLng) * 111320
+        if (dist < ASSEMBLY_DISTANCE_M) {
+          converged.add(a.userId)
         }
       }
     }
