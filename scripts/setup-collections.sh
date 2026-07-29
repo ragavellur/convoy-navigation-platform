@@ -184,6 +184,10 @@ create_or_get("convoy_members", [
     {"name": "vehicle", "type": "relation", "required": False, "options": {"collectionId": ids.get("vehicles", "_"), "cascadeDelete": False, "maxSelect": 1}},
     {"name": "status", "type": "select", "required": True, "options": {"values": ["active", "kicked", "left"], "maxSelect": 1}},
     {"name": "joined_at", "type": "date", "required": False},
+    {"name": "join_lat", "type": "number", "required": False},
+    {"name": "join_lng", "type": "number", "required": False},
+    {"name": "join_name", "type": "text", "required": False},
+    {"name": "route_geometry", "type": "json", "required": False, "options": {"maxSize": 2000000}},
 ], [
     "CREATE INDEX idx_convoy_members_convoy ON convoy_members (convoy)",
     "CREATE INDEX idx_convoy_members_user ON convoy_members (user)",

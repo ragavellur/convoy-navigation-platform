@@ -1,10 +1,43 @@
 const POCKETBASE_URL = process.env.POCKETBASE_URL || 'http://convoy-pocketbase:8090'
+const OSRM_URL = process.env.OSRM_URL || 'https://router.project-osrm.org'
 
 function interpolate(from, to, t) {
   return {
     lat: from.lat + (to.lat - from.lat) * t,
     lng: from.lng + (to.lng - from.lng) * t,
   }
+}
+
+function haversineKm(lat1, lng1, lat2, lng2) {
+  const R = 6371
+  const dLat = ((lat2 - lat1) * Math.PI) / 180
+  const dLng = ((lng2 - lng1) * Math.PI) / 180
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+}
+
+async function fetchOsrmRoute(from, to) {
+  const PUBLIC_OSRM = 'https://router.project-osrm.org'
+  const urls = [OSRM_URL, PUBLIC_OSRM]
+  for (const baseUrl of urls) {
+    try {
+      const res = await fetch(
+        `${baseUrl}/route/v1/driving/${from.lng},${from.lat};${to.lng},${to.lat}?overview=full&geometries=geojson&steps=false&alternatives=false`,
+        { signal: AbortSignal.timeout(15000) },
+      )
+      if (!res.ok) continue
+      const data = await res.json()
+      const coords = data?.routes?.[0]?.geometry?.coordinates
+      if (!coords || coords.length < 2) continue
+      if (haversineKm(from.lat, from.lng, coords[0][1], coords[0][0]) > 10) continue
+      return coords
+    } catch {
+      continue
+    }
+  }
+  return null
 }
 
 async function pbAuth() {
@@ -158,10 +191,50 @@ async function main() {
     process.exit(0)
   }
 
+  // Auto-calc routes for members without route_geometry
+  let needsCalc = false
+  for (const v of vehicles) {
+    if (!v.geometry || v.geometry.length < 2) {
+      const member = members.find((m) => m.id === v.memberId)
+      if (member && member.join_lat != null && member.join_lng != null) {
+        needsCalc = true
+      }
+    }
+  }
+
+  if (needsCalc) {
+    console.log(`[simulate-convoy] ${vehicles.length} vehicles, calculating OSRM routes...`)
+    const destPt = { lat: convoy.dest_lat, lng: convoy.dest_lng }
+    for (const v of vehicles) {
+      if (v.geometry && v.geometry.length > 1) continue
+      const member = members.find((m) => m.id === v.memberId)
+      if (!member || member.join_lat == null || member.join_lng == null) {
+        console.log(`[simulate-convoy] ${v.vehicleId}: no start location, skipping`)
+        continue
+      }
+      const from = { lat: member.join_lat, lng: member.join_lng }
+      const coords = await fetchOsrmRoute(from, destPt)
+      if (coords && coords.length > 1) {
+        v.geometry = coords
+        await pbUpdate(token, 'convoy_members', v.memberId, { route_geometry: coords })
+        console.log(`[simulate-convoy] ${v.vehicleId}: route fetched (${coords.length} points)`)
+      } else {
+        // Fallback: straight line
+        const line = [
+          [from.lng, from.lat],
+          [destPt.lng, destPt.lat],
+        ]
+        v.geometry = line
+        await pbUpdate(token, 'convoy_members', v.memberId, { route_geometry: line })
+        console.log(`[simulate-convoy] ${v.vehicleId}: OSRM failed, using straight line`)
+      }
+    }
+  }
+
   // Filter to only vehicles with route geometry
   const activeVehicles = vehicles.filter((v) => v.geometry && v.geometry.length > 1)
   if (activeVehicles.length === 0) {
-    console.error('No vehicles with route_geometry found. Calculate meeting point first.')
+    console.error('No vehicles with route_geometry found.')
     process.exit(0)
   }
 
@@ -189,6 +262,29 @@ async function main() {
   // Each vehicle has its own coord index into its geometry
   let coordIdxs = new Array(activeVehicles.length).fill(0)
   const VEHICLE_SPEED_VARIANCE = 0.3
+
+  // Set source_lat/lng as meeting point if not set
+  if (!convoy.source_lat || !convoy.source_lng) {
+    const first = members.find((m) => m.join_lat != null && m.join_lng != null)
+    if (first) {
+      convoy.source_lat = first.join_lat
+      convoy.source_lng = first.join_lng
+    } else {
+      convoy.source_lat = convoy.dest_lat
+      convoy.source_lng = convoy.dest_lng
+    }
+    await pbUpdate(token, 'convoys', convoyId, {
+      source_lat: convoy.source_lat,
+      source_lng: convoy.source_lng,
+      source_name: 'Starting point',
+    })
+  }
+
+  // Set phase to assembling if still forming
+  if (!convoy.phase || convoy.phase === 'forming') {
+    console.log('[simulate-convoy] Setting phase to assembling')
+    await pbUpdate(token, 'convoys', convoyId, { phase: 'assembling', assembled_members: [] })
+  }
 
   console.log(`[simulate-convoy] ${activeVehicles.length} vehicles with route geometries`)
   if (waitAtMeeting) {
@@ -258,20 +354,22 @@ async function main() {
     }
 
     // Auto-transition based on phase
-    if (phase === 'assembling' && assembledMembers.length >= activeVehicles.length) {
-      const nextPhase = waitAtMeeting ? 'in_transit' : 'in_transit'
-      console.log(
-        `[simulate-convoy] All ${assembledMembers.length} assembled — transitioning to ${nextPhase}`,
-      )
-      await pbUpdate(token, 'convoys', convoyId, { phase: nextPhase, assembled_members: [] })
-      assembledMembers = []
+    if (phase === 'assembling') {
+      if (!meetingHash || assembledMembers.length >= activeVehicles.length) {
+        const nextPhase = 'in_transit'
+        console.log(
+          `[simulate-convoy] ${assembledMembers.length}/${activeVehicles.length} assembled — transitioning to ${nextPhase}`,
+        )
+        await pbUpdate(token, 'convoys', convoyId, { phase: nextPhase, assembled_members: [] })
+        assembledMembers = []
+      }
     }
 
     console.log(
       `[simulate-convoy] Phase=${phase} ${assembledMembers.length}/${activeVehicles.length} assembled, progress=${coordIdxs.map((c, i) => `${((c / (activeVehicles[i].geometry.length - 1)) * 100).toFixed(0)}%`).join(' ')}`,
     )
 
-    if (allDone && phase === 'in_transit') {
+    if (allDone) {
       console.log('[simulate-convoy] All vehicles at destination — setting phase to completed')
       await pbUpdate(token, 'convoys', convoyId, { phase: 'completed' })
       process.exit(0)

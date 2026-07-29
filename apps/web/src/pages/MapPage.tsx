@@ -1252,16 +1252,14 @@ function MapPage() {
         </div>
       )}
       {convoyId && (
-        <div className="absolute top-4 right-4 z-20 rounded-xl p-3 glass max-w-xs w-72 shadow-lg">
-          <div className="flex items-center justify-between mb-1">
-            <div className="flex items-center gap-2">
-              <span
-                className={`w-2 h-2 rounded-full ${convoyPhase === 'completed' ? 'bg-[var(--success)]' : convoyPhase === 'in_transit' ? 'bg-[var(--primary)]' : 'bg-[var(--warning)]'} animate-pulse`}
-              />
-              <span className="text-sm font-semibold text-[var(--text)] capitalize">
-                {convoyPhase}
-              </span>
-            </div>
+        <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
+          <div className="rounded-xl px-3 py-2 glass shadow-lg flex items-center gap-2">
+            <span
+              className={`w-2 h-2 rounded-full ${convoyPhase === 'completed' ? 'bg-[var(--success)]' : convoyPhase === 'in_transit' ? 'bg-[var(--primary)]' : 'bg-[var(--warning)]'} animate-pulse`}
+            />
+            <span className="text-xs font-semibold text-[var(--text)] capitalize">
+              {convoyPhase}
+            </span>
           </div>
         </div>
       )}
