@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-07-28T00:00:00Z",
+  "lastUpdated": "2026-07-29T00:00:00Z",
   "sprints": [
     {
       "id": 1,
@@ -1051,25 +1051,25 @@
         {
           "id": "TASK-160",
           "title": "Phase 1: data model — add phase field + assembled_members to convoys collection + TypeScript types",
-          "status": "backlog",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-161",
           "title": "Phase 2: assembly route engine — per-member OSRM routes from position to assembly point",
-          "status": "backlog",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-162",
           "title": "Phase 3: map visualization — colored dashed assembly routes + progress HUD + arrival detection",
-          "status": "backlog",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-163",
           "title": "Phase 4: phase management — host controls (Assemble/Depart/Complete) + phase transitions",
-          "status": "backlog",
+          "status": "done",
           "priority": "high"
         },
         {

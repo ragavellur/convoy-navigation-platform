@@ -23,6 +23,12 @@ export interface Convoy {
   phase: ConvoyPhase
   assembled_members?: string[]
   max_members?: number
+  source_lat?: number
+  source_lng?: number
+  source_name?: string
+  dest_lat?: number
+  dest_lng?: number
+  dest_name?: string
   settings?: ConvoySettings
   created: string
   updated: string

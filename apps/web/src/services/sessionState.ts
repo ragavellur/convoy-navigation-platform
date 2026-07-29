@@ -19,8 +19,16 @@ export async function resumeConvoy(convoyId: string): Promise<void> {
   await pb.collection('convoys').update(convoyId, { status: 'active' })
 }
 
+export async function transitionPhase(convoyId: string, phase: string): Promise<void> {
+  const data: Record<string, unknown> = { phase }
+  if (phase === 'assembling') {
+    data.assembled_members = []
+  }
+  await pb.collection('convoys').update(convoyId, data)
+}
+
 export async function endConvoy(convoyId: string): Promise<void> {
-  await pb.collection('convoys').update(convoyId, { status: 'ended' })
+  await pb.collection('convoys').update(convoyId, { status: 'ended', phase: 'completed' })
   const members = await pb.collection('convoy_members').getFullList({
     filter: `convoy = "${convoyId}" && status = "active"`,
   })

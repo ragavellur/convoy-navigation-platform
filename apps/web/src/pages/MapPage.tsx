@@ -21,9 +21,12 @@ import {
 import { MarkerAnimator } from '../services/markerAnimation'
 import { createVehicleMarkerElement, getDistinctColor } from '../components/VehicleMarker'
 import pb from '../services/pocketbase'
-import { useConvoyRoster } from '../stores/ConvoyRosterContext'
+import { useConvoyRoster, haversineDistance } from '../stores/ConvoyRosterContext'
 import { useTheme, getMapStyleUrl } from '../stores/ThemeContext'
 import { notifyOffRoute } from '../services/pushSender'
+import { transitionPhase } from '../services/sessionState'
+import { useAssemblyRoutes } from '../hooks/useAssemblyRoutes'
+import type { AssemblyRoute } from '../services/assemblyRoutes'
 import type { SearchResult, RouteResponse, RouteGeometry } from '../types'
 
 const ROUTE_SOURCE_ID = 'route'
@@ -34,6 +37,21 @@ const TRAFFIC_SOURCE_ID = 'traffic'
 const TRAFFIC_LAYER_PREFIX = 'traffic-segment-'
 const VELOCITY_SOURCE_ID = 'velocity-vectors'
 const VELOCITY_LAYER_ID = 'velocity-line'
+const ASSEMBLY_SOURCE_PREFIX = 'assembly-route-'
+const ASSEMBLY_LAYER_PREFIX = 'assembly-route-line-'
+
+const ASSEMBLY_THRESHOLD_M = 100
+
+const ASSEMBLY_ROUTE_COLORS = [
+  '#f59e0b',
+  '#10b981',
+  '#8b5cf6',
+  '#ec4899',
+  '#06b6d4',
+  '#f97316',
+  '#84cc16',
+  '#a855f7',
+]
 
 function MapPage() {
   const [searchParams] = useSearchParams()
@@ -62,6 +80,10 @@ function MapPage() {
   >(new Map())
   const [simActive, setSimActive] = useState(false)
   const [convoyType, setConvoyType] = useState<'vehicle' | 'trekker'>('vehicle')
+  const [convoyPhase, setConvoyPhase] = useState<string>('forming')
+  const [convoyOwner, setConvoyOwner] = useState<string | null>(null)
+  const [assembledMembers, setAssembledMembers] = useState<string[]>([])
+  const [assemblyPoint, setAssemblyPoint] = useState<{ lat: number; lng: number } | null>(null)
   const { position } = useGeolocation()
   const geoStream = useGeolocationStream({ isInConvoy: !!convoyId })
   const { members, focusMemberId, joinConvoy, leaveConvoy } = useConvoyRoster()
@@ -143,6 +165,44 @@ function MapPage() {
         paint: { 'line-color': '#94a3b8', 'line-width': 3, 'line-opacity': 0.5 },
       })
     }
+  }
+
+  function clearAssemblyRouteLayers() {
+    if (!map.current) return
+    for (let i = 0; i < 20; i++) {
+      const layerId = `${ASSEMBLY_LAYER_PREFIX}${i}`
+      const sourceId = `${ASSEMBLY_SOURCE_PREFIX}${i}`
+      if (map.current.getLayer(layerId)) map.current.removeLayer(layerId)
+      if (map.current.getSource(sourceId)) map.current.removeSource(sourceId)
+    }
+  }
+
+  function renderAssemblyRouteOnMap(route: AssemblyRoute['route'], color: string, index: number) {
+    if (!map.current) return
+    const sourceId = `${ASSEMBLY_SOURCE_PREFIX}${index}`
+    const layerId = `${ASSEMBLY_LAYER_PREFIX}${index}`
+    const geometry = route.geometry as RouteGeometry
+
+    map.current.addSource(sourceId, {
+      type: 'geojson',
+      data: { type: 'Feature', properties: {}, geometry },
+    })
+
+    map.current.addLayer({
+      id: layerId,
+      type: 'line',
+      source: sourceId,
+      layout: {
+        'line-join': 'round',
+        'line-cap': 'round',
+      },
+      paint: {
+        'line-color': color,
+        'line-width': 3,
+        'line-opacity': 0.7,
+        'line-dasharray': [3, 2],
+      },
+    })
   }
 
   function updateBounds() {
@@ -475,6 +535,45 @@ function MapPage() {
     return () => {
       unsub()
       unsubSim.then?.((fn: (() => void) | undefined) => fn?.())
+    }
+  }, [convoyId])
+
+  useEffect(() => {
+    if (!convoyId) return
+
+    const fetchConvoy = async () => {
+      try {
+        const convoy = await pb.collection('convoys').getOne(convoyId)
+        setConvoyPhase(convoy.phase || 'forming')
+        setConvoyOwner(convoy.owner)
+        setAssembledMembers(convoy.assembled_members || [])
+        if (convoy.source_lat && convoy.source_lng) {
+          setAssemblyPoint({ lat: convoy.source_lat, lng: convoy.source_lng })
+        }
+      } catch {
+        /* ignore */
+      }
+    }
+
+    fetchConvoy()
+
+    let unsubFn: (() => void) | null = null
+    pb.collection('convoys')
+      .subscribe(convoyId, (event) => {
+        const r = event.record
+        setConvoyPhase(r.phase || 'forming')
+        setConvoyOwner(r.owner)
+        setAssembledMembers(r.assembled_members || [])
+        if (r.source_lat && r.source_lng) {
+          setAssemblyPoint({ lat: r.source_lat, lng: r.source_lng })
+        }
+      })
+      .then((fn) => {
+        unsubFn = fn
+      })
+
+    return () => {
+      unsubFn?.()
     }
   }, [convoyId])
 
@@ -888,6 +987,62 @@ function MapPage() {
     }
   }, [convoyId, mapLoaded])
 
+  const ownerUserId = convoyOwner
+  const { routes: assemblyRoutes } = useAssemblyRoutes({
+    members,
+    ownerUserId,
+    assemblyPoint,
+    phase: convoyPhase,
+    assembledMembers,
+  })
+
+  useEffect(() => {
+    if (!map.current || !mapLoaded || convoyPhase !== 'assembling') {
+      clearAssemblyRouteLayers()
+      return
+    }
+
+    clearAssemblyRouteLayers()
+    assemblyRoutes.forEach((ar, i) => {
+      const color = ar.vehicleColor || ASSEMBLY_ROUTE_COLORS[i % ASSEMBLY_ROUTE_COLORS.length]
+      renderAssemblyRouteOnMap(ar.route, color, i)
+    })
+
+    return () => {
+      clearAssemblyRouteLayers()
+    }
+  }, [assemblyRoutes, convoyPhase, mapLoaded])
+
+  useEffect(() => {
+    if (convoyPhase !== 'assembling' || !assemblyPoint || !convoyId) return
+
+    const arrivedIds: string[] = []
+    for (const m of members) {
+      if (m.userId === convoyOwner || assembledMembers.includes(m.userId)) continue
+      if (!m.position) continue
+      const d = haversineDistance(
+        m.position.lat,
+        m.position.lng,
+        assemblyPoint.lat,
+        assemblyPoint.lng,
+      )
+      if (d <= ASSEMBLY_THRESHOLD_M) {
+        arrivedIds.push(m.userId)
+      }
+    }
+
+    if (arrivedIds.length === 0) return
+
+    const updated = [...new Set([...assembledMembers, ...arrivedIds])]
+    const timer = setTimeout(() => {
+      setAssembledMembers(updated)
+    }, 0)
+    pb.collection('convoys')
+      .update(convoyId, { assembled_members: updated })
+      .catch(() => {})
+    return () => clearTimeout(timer)
+  }, [convoyPhase, members, assemblyPoint, convoyOwner, assembledMembers, convoyId])
+
   const firstStep = routeData?.legs[0]?.steps[0]
   const alternatives = routeResponse?.routes || []
 
@@ -917,6 +1072,127 @@ function MapPage() {
           <span className="text-xs font-medium text-[var(--warning-text)]">Simulation Mode</span>
         </div>
       )}
+      {convoyId &&
+        (convoyPhase === 'forming' ||
+          convoyPhase === 'assembling' ||
+          convoyPhase === 'in_transit' ||
+          convoyPhase === 'completed') && (
+          <div className="absolute top-4 right-4 z-20 rounded-xl p-3 glass max-w-xs w-72 shadow-lg">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-semibold text-[var(--text)]">Assembly</h3>
+              {convoyPhase === 'assembling' && (
+                <span className="text-xs text-[var(--text2)]">
+                  {assembledMembers.length}/{members.filter((m) => m.userId !== convoyOwner).length}{' '}
+                  arrived
+                </span>
+              )}
+            </div>
+
+            {convoyPhase === 'assembling' && (
+              <>
+                <div className="w-full h-1.5 rounded-full bg-[var(--surface)] mb-2 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-[var(--success)] transition-all duration-500"
+                    style={{
+                      width: `${
+                        members.filter((m) => m.userId !== convoyOwner).length > 0
+                          ? (assembledMembers.length /
+                              members.filter((m) => m.userId !== convoyOwner).length) *
+                            100
+                          : 0
+                      }%`,
+                    }}
+                  />
+                </div>
+                <div className="space-y-1 max-h-40 overflow-y-auto mb-2">
+                  {members.map((m, i) => {
+                    const route = assemblyRoutes.find((ar) => ar.userId === m.userId)
+                    const color =
+                      m.vehicleColor || ASSEMBLY_ROUTE_COLORS[i % ASSEMBLY_ROUTE_COLORS.length]
+                    const isOwner = m.userId === convoyOwner
+                    const hasArrived = assembledMembers.includes(m.userId)
+                    return (
+                      <div key={m.id} className="flex items-center gap-2 text-xs">
+                        <span
+                          className="w-2 h-2 rounded-full flex-shrink-0"
+                          style={{ backgroundColor: isOwner ? '#22c55e' : color }}
+                        />
+                        <span className="flex-1 truncate text-[var(--text)]">{m.userName}</span>
+                        {isOwner ? (
+                          <span className="text-[var(--success)] font-medium whitespace-nowrap">
+                            Assembly Point
+                          </span>
+                        ) : hasArrived ? (
+                          <span className="text-[var(--success)] font-medium whitespace-nowrap">
+                            Arrived
+                          </span>
+                        ) : route ? (
+                          <span className="text-[var(--text2)] whitespace-nowrap">
+                            {formatDistance(route.distance)}
+                          </span>
+                        ) : m.position ? (
+                          <span className="text-[var(--warning-text)] whitespace-nowrap">
+                            En route
+                          </span>
+                        ) : (
+                          <span className="text-[var(--text2)] whitespace-nowrap">Waiting...</span>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </>
+            )}
+
+            {convoyPhase === 'completed' && (
+              <p className="text-xs text-[var(--success)] font-medium">Convoy completed</p>
+            )}
+
+            {convoyPhase === 'in_transit' && (
+              <p className="text-xs text-[var(--text2)]">
+                All members assembled — en route to destination
+              </p>
+            )}
+
+            {convoyPhase === 'forming' && (
+              <p className="text-xs text-[var(--text2)]">Waiting for host to start assembly</p>
+            )}
+
+            {(convoyPhase === 'forming' ||
+              convoyPhase === 'assembling' ||
+              convoyPhase === 'in_transit') &&
+              pb.authStore.record?.id === convoyOwner && (
+                <div className="flex gap-2 mt-2 pt-2 border-t border-[var(--border)]">
+                  {convoyPhase === 'forming' && (
+                    <button
+                      onClick={() => transitionPhase(convoyId, 'assembling')}
+                      className="flex-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-[var(--primary)] text-white hover:opacity-90 transition-opacity"
+                    >
+                      Start Assembly
+                    </button>
+                  )}
+                  {convoyPhase === 'assembling' && (
+                    <button
+                      onClick={() => transitionPhase(convoyId, 'in_transit')}
+                      className="flex-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-[var(--primary)] text-white hover:opacity-90 transition-opacity"
+                      disabled={assembledMembers.length === 0}
+                    >
+                      Depart
+                      {assembledMembers.length > 0 ? ` (${assembledMembers.length} assembled)` : ''}
+                    </button>
+                  )}
+                  {convoyPhase === 'in_transit' && (
+                    <button
+                      onClick={() => transitionPhase(convoyId, 'completed')}
+                      className="flex-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-[var(--success)] text-white hover:opacity-90 transition-opacity"
+                    >
+                      Complete Convoy
+                    </button>
+                  )}
+                </div>
+              )}
+          </div>
+        )}
       {isOffRoute && routeData && (
         <div className="absolute top-20 left-4 right-4 md:left-auto md:right-4 md:w-96 z-20 rounded-xl p-4 glass border-[var(--warning-border-light)]">
           <div className="flex items-center gap-2 mb-2">

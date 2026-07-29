@@ -13,13 +13,14 @@ vi.mock('../pocketbase', () => ({
 }))
 
 import {
+  endConvoy,
   pauseConvoy,
   resumeConvoy,
-  endConvoy,
   markMemberInactive,
   cleanupStaleConvoys,
   startSessionCleanup,
   stopSessionCleanup,
+  transitionPhase,
 } from '../sessionState'
 
 beforeEach(() => {
@@ -50,7 +51,7 @@ describe('sessionState', () => {
     mockGetFullList.mockResolvedValueOnce([{ id: 'm1' }, { id: 'm2' }])
     mockUpdate.mockResolvedValue({})
     await endConvoy('c1')
-    expect(mockUpdate).toHaveBeenCalledWith('c1', { status: 'ended' })
+    expect(mockUpdate).toHaveBeenCalledWith('c1', { status: 'ended', phase: 'completed' })
     expect(mockGetFullList).toHaveBeenCalled()
     expect(mockUpdate).toHaveBeenCalledWith('m1', { status: 'inactive' })
     expect(mockUpdate).toHaveBeenCalledWith('m2', { status: 'inactive' })
@@ -60,6 +61,15 @@ describe('sessionState', () => {
     mockUpdate.mockResolvedValueOnce({})
     await markMemberInactive('m1')
     expect(mockUpdate).toHaveBeenCalledWith('m1', { status: 'inactive' })
+  })
+
+  it('transitionPhase updates phase and resets assembled_members for assembling', async () => {
+    mockUpdate.mockResolvedValueOnce({})
+    await transitionPhase('c1', 'assembling')
+    expect(mockUpdate).toHaveBeenCalledWith('c1', { phase: 'assembling', assembled_members: [] })
+    mockUpdate.mockResolvedValueOnce({})
+    await transitionPhase('c1', 'in_transit')
+    expect(mockUpdate).toHaveBeenCalledWith('c1', { phase: 'in_transit' })
   })
 
   it('cleanupStaleConvoys finds and ends stale convoys', async () => {
