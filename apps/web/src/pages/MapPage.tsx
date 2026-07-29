@@ -258,7 +258,7 @@ function MapPage() {
             source: dasSourceId,
             layout: { 'line-join': 'round', 'line-cap': 'round' },
             paint: {
-              'line-color': '#6366f1',
+              'line-color': theme === 'dark' ? '#a5b4fc' : '#6366f1',
               'line-width': 4,
               'line-opacity': 0.7,
               'line-dasharray': [3, 2],
@@ -590,6 +590,7 @@ function MapPage() {
   )
 
   useEffect(() => {
+    if (simActiveRef.current) return
     const effectivePos =
       simActiveRef.current && userVehicleIdRef.current
         ? (convoyPositions.get(userVehicleIdRef.current) ?? null)
@@ -610,6 +611,7 @@ function MapPage() {
     if (!routeData || !position) return
     if (offRouteTimerRef.current) clearInterval(offRouteTimerRef.current)
     offRouteTimerRef.current = setInterval(() => {
+      if (simActiveRef.current) return
       const effectivePos =
         simActiveRef.current && userVehicleIdRef.current
           ? (convoyPositions.get(userVehicleIdRef.current) ?? null)
@@ -827,7 +829,7 @@ function MapPage() {
     convoyMarkersRef.current.clear()
     animatorRef.current?.destroy()
     animatorRef.current = null
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional reset when convoyId changes
+
     setConvoyPositions(new Map())
 
     let cancelled = false
@@ -1115,7 +1117,11 @@ function MapPage() {
       const pitch = map.current.getPitch()
       const bearing = map.current.getBearing()
       map.current.setStyle(getMapStyleUrl(theme))
-      map.current.once('style.load', () => {
+
+      let styleApplied = false
+      const rerenderAll = () => {
+        if (styleApplied) return
+        styleApplied = true
         try {
           map.current?.setCenter(center)
           map.current?.setZoom(zoom)
@@ -1123,6 +1129,40 @@ function MapPage() {
           map.current?.setBearing(bearing)
         } catch {
           /* setStyle may not preserve transform */
+        }
+        const m = map.current
+        if (!m) return
+        safeRemoveSource(m, VELOCITY_SOURCE_ID)
+        safeRemoveLayer(m, VELOCITY_LAYER_ID)
+        m.addSource(VELOCITY_SOURCE_ID, {
+          type: 'geojson',
+          data: { type: 'FeatureCollection', features: vectorFeaturesRef.current },
+        })
+        m.addLayer({
+          id: VELOCITY_LAYER_ID,
+          type: 'line',
+          source: VELOCITY_SOURCE_ID,
+          layout: { 'line-cap': 'round', 'line-join': 'round' },
+          paint: { 'line-color': '#818cf8', 'line-width': 2, 'line-opacity': 0.7 },
+        })
+        if (routeResponseRef.current) {
+          clearAllRouteLayers()
+          routeResponseRef.current.routes.forEach((r, i) =>
+            renderRouteOnMap(r, i, selectedAltIndexRef.current),
+          )
+        }
+        clearAssemblyRouteLayers()
+        assemblyRoutesDataRef.current.forEach((ar, i) => {
+          const color = ar.vehicleColor || ASSEMBLY_ROUTE_COLORS[i % ASSEMBLY_ROUTE_COLORS.length]
+          renderAssemblyRouteOnMap(ar.route, color, i)
+        })
+      }
+
+      map.current.once('style.load', rerenderAll)
+      map.current.on('styledata', function styledataFallback(e) {
+        if (!styleApplied && e.dataType === 'style') {
+          rerenderAll()
+          map.current?.off('styledata', styledataFallback)
         }
       })
     }
@@ -1271,6 +1311,7 @@ function MapPage() {
 
   useEffect(() => {
     if (convoyPhase !== 'assembling' || !computedAssemblyPoint || !convoyId) return
+    if (simActiveRef.current) return
 
     const arrivedIds: string[] = []
     for (const m of members) {

@@ -238,31 +238,6 @@ async function main() {
     process.exit(0)
   }
 
-  const meetingPt =
-    convoy.source_lat && convoy.source_lng
-      ? { lat: convoy.source_lat, lng: convoy.source_lng }
-      : null
-
-  // Convert meeting point to 4dp hash for detecting arrival
-  const meetingHash = meetingPt
-    ? `${Math.round(meetingPt.lat * 10000)},${Math.round(meetingPt.lng * 10000)}`
-    : null
-
-  // Find meeting point index in each vehicle's geometry (first matching coord)
-  const meetingIdxs = meetingHash
-    ? activeVehicles.map((v) => {
-        if (!v.geometry) return -1
-        for (let i = 0; i < v.geometry.length; i++) {
-          if (coord4dp(v.geometry[i]) === meetingHash) return i
-        }
-        return -1
-      })
-    : new Array(activeVehicles.length).fill(-1)
-
-  // Each vehicle has its own coord index into its geometry
-  let coordIdxs = new Array(activeVehicles.length).fill(0)
-  const VEHICLE_SPEED_VARIANCE = 0.3
-
   // Set source_lat/lng as meeting point if not set
   if (!convoy.source_lat || !convoy.source_lng) {
     const first = members.find((m) => m.join_lat != null && m.join_lng != null)
@@ -279,6 +254,35 @@ async function main() {
       source_name: 'Starting point',
     })
   }
+
+  // Build meeting hash from converged source_lat/lng (guaranteed non-null now)
+  const meetingPt = { lat: convoy.source_lat, lng: convoy.source_lng }
+  const meetingHash = `${Math.round(meetingPt.lat * 10000)},${Math.round(meetingPt.lng * 10000)}`
+
+  // Find meeting point index in each vehicle's geometry
+  // First try exact 4dp hash match; fall back to nearest point within ~55m
+  const meetingIdxs = activeVehicles.map((v) => {
+    if (!v.geometry) return -1
+    for (let i = 0; i < v.geometry.length; i++) {
+      if (coord4dp(v.geometry[i]) === meetingHash) return i
+    }
+    // Fallback: find nearest point within ~0.0005 deg (~55m)
+    let bestIdx = -1
+    let bestDist = Infinity
+    for (let i = 0; i < v.geometry.length; i++) {
+      const d =
+        Math.abs(v.geometry[i][0] - meetingPt.lng) + Math.abs(v.geometry[i][1] - meetingPt.lat)
+      if (d < bestDist) {
+        bestDist = d
+        bestIdx = i
+      }
+    }
+    return bestDist < 0.0005 ? bestIdx : -1
+  })
+
+  // Each vehicle has its own coord index into its geometry
+  let coordIdxs = new Array(activeVehicles.length).fill(0)
+  const VEHICLE_SPEED_VARIANCE = 0.3
 
   // Set phase to assembling if forming or completed (restart)
   if (!convoy.phase || convoy.phase === 'forming' || convoy.phase === 'completed') {
