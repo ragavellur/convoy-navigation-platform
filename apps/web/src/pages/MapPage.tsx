@@ -73,6 +73,8 @@ function MapPage() {
   const assemblyRoutesDataRef = useRef<AssemblyRoute[]>([])
   const vectorFeaturesRef = useRef<GeoJSON.Feature[]>([])
   const meetingPointRef = useRef<{ lat: number; lng: number } | null>(null)
+  const simActiveRef = useRef(false)
+  const userVehicleIdRef = useRef<string | null>(null)
 
   const offRoutePushSentRef = useRef(false)
   const [mapLoaded, setMapLoaded] = useState(false)
@@ -115,6 +117,10 @@ function MapPage() {
   useEffect(() => {
     meetingPointRef.current = computedAssemblyPoint
   }, [computedAssemblyPoint])
+
+  useEffect(() => {
+    simActiveRef.current = simActive
+  }, [simActive])
 
   const MAP_VIEW_KEY = 'convoy-map-view'
 
@@ -584,24 +590,34 @@ function MapPage() {
   )
 
   useEffect(() => {
-    if (!position || !routeRef.current) return
+    const effectivePos =
+      simActiveRef.current && userVehicleIdRef.current
+        ? (convoyPositions.get(userVehicleIdRef.current) ?? null)
+        : null
+    const pos = effectivePos ?? position
+    if (!pos || !routeRef.current) return
     const geometry = routeRef.current.geometry as RouteGeometry
-    const offNow = checkOffRoute(position.lat, position.lng, geometry)
+    const offNow = checkOffRoute(pos.lat, pos.lng, geometry)
     setIsOffRoute(offNow)
     if (offNow && convoyId && !offRoutePushSentRef.current) {
       offRoutePushSentRef.current = true
       notifyOffRoute(convoyId, pb.authStore.model?.name || 'A member')
     }
     if (!offNow) offRoutePushSentRef.current = false
-  }, [position, convoyId])
+  }, [position, convoyId, simActive, convoyPositions, routeRef])
 
   useEffect(() => {
     if (!routeData || !position) return
     if (offRouteTimerRef.current) clearInterval(offRouteTimerRef.current)
     offRouteTimerRef.current = setInterval(() => {
-      if (!routeRef.current || !position) return
+      const effectivePos =
+        simActiveRef.current && userVehicleIdRef.current
+          ? (convoyPositions.get(userVehicleIdRef.current) ?? null)
+          : null
+      const pos = effectivePos ?? position
+      if (!routeRef.current || !pos) return
       const geometry = routeRef.current.geometry as RouteGeometry
-      const offNow = checkOffRoute(position.lat, position.lng, geometry)
+      const offNow = checkOffRoute(pos.lat, pos.lng, geometry)
       setIsOffRoute(offNow)
       if (offNow && convoyId && !offRoutePushSentRef.current) {
         offRoutePushSentRef.current = true
@@ -612,7 +628,7 @@ function MapPage() {
     return () => {
       if (offRouteTimerRef.current) clearInterval(offRouteTimerRef.current)
     }
-  }, [routeData, position, convoyId])
+  }, [routeData, position, convoyId, simActive, convoyPositions])
 
   useEffect(() => {
     if (!convoyId) return
@@ -623,15 +639,21 @@ function MapPage() {
     const resolveVehicleId = async () => {
       try {
         const userId = pb.authStore.record?.id
-        if (!userId) return
+        if (!userId) {
+          vehicleId = null
+          userVehicleIdRef.current = null
+          return
+        }
         const memberRecord = await pb
           .collection('convoy_members')
           .getFirstListItem(`convoy = "${convoyId}" && user = "${userId}" && status = "active"`, {
             expand: 'vehicle',
           })
         vehicleId = memberRecord.vehicle || null
+        userVehicleIdRef.current = vehicleId
       } catch {
         vehicleId = null
+        userVehicleIdRef.current = null
       }
     }
 
