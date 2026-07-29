@@ -258,9 +258,9 @@ function MapPage() {
             source: dasSourceId,
             layout: { 'line-join': 'round', 'line-cap': 'round' },
             paint: {
-              'line-color': theme === 'dark' ? '#a5b4fc' : '#6366f1',
+              'line-color': theme === 'dark' ? '#ffffff' : '#6366f1',
               'line-width': 4,
-              'line-opacity': 0.7,
+              'line-opacity': 0.8,
               'line-dasharray': [3, 2],
             },
           })
