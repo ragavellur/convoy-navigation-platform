@@ -13,13 +13,20 @@ interface UseAssemblyRoutesOptions {
 const REROUTE_DEBOUNCE_MS = 5000
 
 export function useAssemblyRoutes(options: UseAssemblyRoutesOptions) {
-  const { members, ownerUserId, assemblyPoint, phase, assembledMembers } = options
   const [routes, setRoutes] = useState<AssemblyRoute[]>([])
   const [isComputing, setIsComputing] = useState(false)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const prevPositionsRef = useRef<string>('')
 
+  const optionsRef = useRef(options)
+
+  useEffect(() => {
+    optionsRef.current = options
+  })
+
   const compute = useCallback(async () => {
+    const { members, ownerUserId, assemblyPoint, phase, assembledMembers } = optionsRef.current
+
     if (!ownerUserId || !assemblyPoint || phase !== 'assembling') {
       setRoutes([])
       return
@@ -49,22 +56,22 @@ export function useAssemblyRoutes(options: UseAssemblyRoutesOptions) {
     } finally {
       setIsComputing(false)
     }
-  }, [members, ownerUserId, assemblyPoint, phase, assembledMembers])
+  }, [])
+
+  const { ownerUserId, assemblyPoint, phase, assembledMembers, members } = options
+  const stableKey = `${ownerUserId}|${assemblyPoint?.lat},${assemblyPoint?.lng}|${phase}|${assembledMembers?.join(',')}`
 
   useEffect(() => {
     if (timerRef.current) {
       clearTimeout(timerRef.current)
     }
-    timerRef.current = setTimeout(() => {
-      compute()
-    }, REROUTE_DEBOUNCE_MS)
-
+    timerRef.current = setTimeout(compute, REROUTE_DEBOUNCE_MS)
     return () => {
       if (timerRef.current) {
         clearTimeout(timerRef.current)
       }
     }
-  }, [compute])
+  }, [stableKey, members.length, compute])
 
   useEffect(() => {
     return () => {
