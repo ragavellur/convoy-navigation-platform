@@ -262,6 +262,8 @@
 - [ ] [TASK-152] Implement analytics tracking
 - [ ] [TASK-153] Accessibility audit (WCAG 2.1 AA) - web
 - [ ] [TASK-155] Load testing for PocketBase Realtime
+- [ ] [TASK-157] Load India OSM data into OSRM for self-hosted routing (GeoFabrik)
+- [ ] [TASK-158] Load India OSM data into Nominatim for self-hosted geocoding (GeoFabrik)
 
 ---
 
@@ -300,9 +302,9 @@
 | Sprint 8  | 21          | 10      | 0           | 11     | Web PWA + Trekker  |
 | Sprint 9  | 5           | 0       | 0           | 5      | Web CSS Refactor   |
 | Sprint 10 | 8           | 8       | 0           | 0      | Web CSS Refactor   |
-| Sprint 11 | 13          | 5       | 0           | 8      | All                |
+| Sprint 11 | 15          | 7       | 0           | 8      | All                |
 | Sprint 12 | 14          | 14      | 0           | 0      | All                |
-| **Total** | **163**     | **71**  | **4**       | **85** |                    |
+| **Total** | **165**     | **73**  | **4**       | **85** |                    |
 
 ---
 

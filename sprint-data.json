@@ -1026,6 +1026,20 @@
           "title": "API documentation (OpenAPI/Swagger)",
           "status": "done",
           "priority": "medium"
+        },
+        {
+          "id": "TASK-157",
+          "title": "Load India OSM data into OSRM for self-hosted routing (GeoFabrik)",
+          "status": "backlog",
+          "priority": "medium",
+          "description": "Download india-latest.osm.pbf from https://download.geofabrik.de/asia/india.html, run osrm-extract/osrm-partition/osrm-customize, update docker-compose.yml to point to india-latest.osrm. Enables self-hosted routing for all India roads."
+        },
+        {
+          "id": "TASK-158",
+          "title": "Load India OSM data into Nominatim for self-hosted geocoding (GeoFabrik)",
+          "status": "backlog",
+          "priority": "low",
+          "description": "Change PBF_URL in docker-compose.yml to india-latest.osm.pbf from https://download.geofabrik.de/asia/india.html and re-import. Requires ~16GB RAM, 30-60GB disk, 4-8 hour import."
         }
       ]
     },
