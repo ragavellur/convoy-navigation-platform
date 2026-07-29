@@ -89,6 +89,7 @@ function ConvoyPage() {
   const [enableSimulation, setEnableSimulation] = useState(false)
   const [autoCalcSource, setAutoCalcSource] = useState(false)
   const [newConvoyType, setNewConvoyType] = useState<'vehicle' | 'trekker'>('vehicle')
+  const [creatorVehicleId, setCreatorVehicleId] = useState('')
   const [joinConvoyLookup, setJoinConvoyLookup] = useState<ConvoyRecord | null>(null)
   const [lookingUp, setLookingUp] = useState(false)
   const [joinSourceLat, setJoinSourceLat] = useState<number | null>(null)
@@ -189,7 +190,7 @@ function ConvoyPage() {
       }
       const newConvoy = await pb.collection('convoys').create<ConvoyRecord>(data)
 
-      let creatorVehicleId: string | undefined
+      let memberVehicleId: string | undefined
       if (newConvoyType === 'trekker') {
         const trekkerName = user?.name || user?.email?.split('@')[0] || 'Trekker'
         const trekker = await pb.collection('vehicles').create({
@@ -198,13 +199,15 @@ function ConvoyPage() {
           type: 'trekker',
           status: 'active',
         })
-        creatorVehicleId = trekker.id
+        memberVehicleId = trekker.id
+      } else if (creatorVehicleId) {
+        memberVehicleId = creatorVehicleId
       }
 
       await pb.collection('convoy_members').create({
         convoy: newConvoy.id,
         user: user?.id,
-        vehicle: creatorVehicleId || undefined,
+        vehicle: memberVehicleId || undefined,
         role: 'owner',
         status: 'active',
         joined_at: new Date().toISOString(),
@@ -456,6 +459,37 @@ function ConvoyPage() {
                 </span>
               </label>
             </div>
+            {newConvoyType === 'vehicle' && (
+              <div>
+                <label className="block text-xs font-medium text-[var(--text2)] mb-1">
+                  Your Vehicle
+                </label>
+                {vehicles.length > 0 ? (
+                  <select
+                    value={creatorVehicleId}
+                    onChange={(e) => setCreatorVehicleId(e.target.value)}
+                    className="input-field w-full rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
+                  >
+                    <option value="">-- Select your vehicle --</option>
+                    {vehicles.map((v) => (
+                      <option key={v.id} value={v.id}>
+                        {v.name} ({v.type}) {v.color ? `· ${v.color}` : ''} [{v.license_plate}]
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <p className="text-xs text-[var(--text2)] opacity-70">
+                    You have no vehicles registered.{' '}
+                    <button
+                      onClick={() => navigate('/profile')}
+                      className="text-indigo-400 hover:text-indigo-300 underline"
+                    >
+                      Add a vehicle
+                    </button>
+                  </p>
+                )}
+              </div>
+            )}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {!autoCalcSource && (
                 <div>
@@ -504,7 +538,11 @@ function ConvoyPage() {
             </div>
             <button
               onClick={handleCreate}
-              disabled={creating || !newConvoyName.trim()}
+              disabled={
+                creating ||
+                !newConvoyName.trim() ||
+                (newConvoyType === 'vehicle' && !creatorVehicleId)
+              }
               className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {creating ? 'Creating...' : 'Create'}
