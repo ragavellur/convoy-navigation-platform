@@ -34,6 +34,8 @@ import type { SearchResult, RouteResponse, RouteGeometry } from '../types'
 
 const ROUTE_SOURCE_ID = 'route'
 const ROUTE_LAYER_ID = 'route-line'
+const ROUTE_OUTLINE_LAYER_ID = 'route-line-outline'
+const ROUTE_ARROW_LAYER_ID = 'route-arrows'
 const ALT_SOURCE_PREFIX = 'alt-route-'
 const ALT_LAYER_PREFIX = 'alt-route-line-'
 const TRAFFIC_SOURCE_ID = 'traffic'
@@ -42,6 +44,7 @@ const VELOCITY_SOURCE_ID = 'velocity-vectors'
 const VELOCITY_LAYER_ID = 'velocity-line'
 const ASSEMBLY_SOURCE_PREFIX = 'assembly-route-'
 const ASSEMBLY_LAYER_PREFIX = 'assembly-route-line-'
+const ASSEMBLY_OUTLINE_PREFIX = 'assembly-route-outline-'
 
 const ASSEMBLY_THRESHOLD_M = 100
 
@@ -71,6 +74,7 @@ function MapPage() {
 
   const offRoutePushSentRef = useRef(false)
   const [mapLoaded, setMapLoaded] = useState(false)
+  const [styleLoadKey, setStyleLoadKey] = useState(0)
   const [mapBounds, setMapBounds] = useState<[number, number, number, number] | undefined>()
   const [routeData, setRouteData] = useState<RouteResponse['routes'][0] | null>(null)
   const [routeResponse, setRouteResponse] = useState<RouteResponse | null>(null)
@@ -93,20 +97,8 @@ function MapPage() {
   const geoStream = useGeolocationStream({ isInConvoy: !!convoyId })
   const { members, focusMemberId, joinConvoy, leaveConvoy } = useConvoyRoster()
   const computedAssemblyPoint: { lat: number; lng: number } | null = useMemo(() => {
-    if (assemblyPoint) return assemblyPoint
-    const points = members
-      .map((m) => {
-        if (m.joinLat != null && m.joinLng != null) return { lat: m.joinLat, lng: m.joinLng }
-        if (m.position) return { lat: m.position.lat, lng: m.position.lng }
-        return null
-      })
-      .filter((p): p is { lat: number; lng: number } => p !== null)
-    if (points.length === 0) return null
-    return {
-      lat: points.reduce((s, p) => s + p.lat, 0) / points.length,
-      lng: points.reduce((s, p) => s + p.lng, 0) / points.length,
-    }
-  }, [assemblyPoint, members])
+    return assemblyPoint
+  }, [assemblyPoint])
   const { theme } = useTheme()
 
   const memberVehicleMap = useRef<Map<string, { type: string; name: string; color?: string }>>(
@@ -116,25 +108,68 @@ function MapPage() {
 
   const MAP_VIEW_KEY = 'convoy-map-view'
 
+  function safeRemoveSource(m: maplibregl.Map, id: string) {
+    try {
+      if (m.getSource(id)) m.removeSource(id)
+    } catch {
+      /* source may not exist */
+    }
+  }
+  function safeRemoveLayer(m: maplibregl.Map, id: string) {
+    try {
+      if (m.getLayer(id)) m.removeLayer(id)
+    } catch {
+      /* layer may not exist */
+    }
+  }
+
+  function addRouteArrowImage(m: maplibregl.Map) {
+    if (m.hasImage('route-arrow')) return
+    const size = 24
+    const canvas = document.createElement('canvas')
+    canvas.width = size
+    canvas.height = size
+    const ctx = canvas.getContext('2d')!
+    ctx.fillStyle = '#6366f1'
+    ctx.beginPath()
+    ctx.moveTo(2, 2)
+    ctx.lineTo(size - 2, size / 2)
+    ctx.lineTo(2, size - 2)
+    ctx.closePath()
+    ctx.fill()
+    ctx.strokeStyle = '#ffffff'
+    ctx.lineWidth = 2
+    ctx.beginPath()
+    ctx.moveTo(2, 2)
+    ctx.lineTo(size - 2, size / 2)
+    ctx.lineTo(2, size - 2)
+    ctx.closePath()
+    ctx.stroke()
+    const imageData = ctx.getImageData(0, 0, size, size)
+    m.addImage('route-arrow', imageData, { pixelRatio: 2 })
+  }
+
   function clearAllRouteLayers() {
     const m = map.current
     if (!m) return
+
     const allLayers = m.getStyle().layers || []
     for (const layer of allLayers) {
       if (
         layer.id.startsWith(TRAFFIC_LAYER_PREFIX) ||
         layer.id.startsWith(ALT_LAYER_PREFIX) ||
-        layer.id === ROUTE_LAYER_ID
+        layer.id === ROUTE_LAYER_ID ||
+        layer.id === ROUTE_OUTLINE_LAYER_ID ||
+        layer.id === ROUTE_ARROW_LAYER_ID
       ) {
-        if (m.getLayer(layer.id)) m.removeLayer(layer.id)
+        safeRemoveLayer(m, layer.id)
       }
     }
     ;[TRAFFIC_SOURCE_ID, ROUTE_SOURCE_ID].forEach((sid) => {
       for (let i = 0; i < 5; i++) {
-        const altId = `${ALT_SOURCE_PREFIX}${i}`
-        if (m.getSource(altId)) m.removeSource(altId)
+        safeRemoveSource(m, `${ALT_SOURCE_PREFIX}${i}`)
       }
-      if (m.getSource(sid)) m.removeSource(sid)
+      safeRemoveSource(m, sid)
     })
   }
 
@@ -145,6 +180,7 @@ function MapPage() {
     const geometry = route.geometry as RouteGeometry
     const isActive = index === selectedAltIndex
 
+    safeRemoveSource(map.current, sourceId)
     map.current.addSource(sourceId, {
       type: 'geojson',
       data: { type: 'Feature', properties: {}, geometry },
@@ -158,22 +194,31 @@ function MapPage() {
         geometry: { type: 'LineString' as const, coordinates: seg.coordinates },
       }))
 
-      const curLayers = map.current.getStyle().layers || []
-      for (const layer of curLayers) {
-        if (
-          'source' in layer &&
-          (layer as { source: string }).source === TRAFFIC_SOURCE_ID &&
-          map.current.getLayer(layer.id)
-        ) {
-          map.current.removeLayer(layer.id)
+      for (const layer of map.current.getStyle().layers || []) {
+        if ('source' in layer && (layer as { source: string }).source === TRAFFIC_SOURCE_ID) {
+          safeRemoveLayer(map.current!, layer.id)
         }
       }
-      if (map.current.getSource(TRAFFIC_SOURCE_ID)) map.current.removeSource(TRAFFIC_SOURCE_ID)
+      safeRemoveSource(map.current, TRAFFIC_SOURCE_ID)
       map.current.addSource(TRAFFIC_SOURCE_ID, {
         type: 'geojson',
         data: { type: 'FeatureCollection', features: trafficFeatures },
       })
 
+      safeRemoveLayer(map.current, ROUTE_OUTLINE_LAYER_ID)
+      map.current.addLayer({
+        id: ROUTE_OUTLINE_LAYER_ID,
+        type: 'line',
+        source: sourceId,
+        layout: { 'line-join': 'round', 'line-cap': 'round' },
+        paint: {
+          'line-color': '#ffffff',
+          'line-width': 8,
+          'line-opacity': 0.5,
+        },
+      })
+
+      safeRemoveLayer(map.current, layerId)
       map.current.addLayer({
         id: layerId,
         type: 'line',
@@ -183,8 +228,10 @@ function MapPage() {
       })
 
       trafficSegments.forEach((seg, i) => {
+        const tId = `${TRAFFIC_LAYER_PREFIX}${i}`
+        safeRemoveLayer(map.current!, tId)
         map.current?.addLayer({
-          id: `${TRAFFIC_LAYER_PREFIX}${i}`,
+          id: tId,
           type: 'line',
           source: TRAFFIC_SOURCE_ID,
           filter: ['==', 'congestion', seg.congestion],
@@ -192,7 +239,26 @@ function MapPage() {
           paint: { 'line-color': seg.color, 'line-width': 5, 'line-opacity': 0.9 },
         })
       })
+
+      addRouteArrowImage(map.current)
+      safeRemoveLayer(map.current, ROUTE_ARROW_LAYER_ID)
+      map.current.addLayer({
+        id: ROUTE_ARROW_LAYER_ID,
+        type: 'symbol',
+        source: sourceId,
+        layout: {
+          'symbol-placement': 'line',
+          'symbol-spacing': 200,
+          'icon-image': 'route-arrow',
+          'icon-size': 0.5,
+          'icon-rotation-alignment': 'map',
+          'icon-allow-overlap': true,
+          'icon-ignore-placement': true,
+        },
+        paint: { 'icon-opacity': 0.85 },
+      })
     } else {
+      safeRemoveLayer(map.current, layerId)
       map.current.addLayer({
         id: layerId,
         type: 'line',
@@ -206,10 +272,9 @@ function MapPage() {
   function clearAssemblyRouteLayers() {
     if (!map.current) return
     for (let i = 0; i < 20; i++) {
-      const layerId = `${ASSEMBLY_LAYER_PREFIX}${i}`
-      const sourceId = `${ASSEMBLY_SOURCE_PREFIX}${i}`
-      if (map.current.getLayer(layerId)) map.current.removeLayer(layerId)
-      if (map.current.getSource(sourceId)) map.current.removeSource(sourceId)
+      safeRemoveLayer(map.current, `${ASSEMBLY_OUTLINE_PREFIX}${i}`)
+      safeRemoveLayer(map.current, `${ASSEMBLY_LAYER_PREFIX}${i}`)
+      safeRemoveSource(map.current, `${ASSEMBLY_SOURCE_PREFIX}${i}`)
     }
   }
 
@@ -217,13 +282,29 @@ function MapPage() {
     if (!map.current) return
     const sourceId = `${ASSEMBLY_SOURCE_PREFIX}${index}`
     const layerId = `${ASSEMBLY_LAYER_PREFIX}${index}`
+    const outlineId = `${ASSEMBLY_OUTLINE_PREFIX}${index}`
     const geometry = route.geometry as RouteGeometry
 
+    safeRemoveSource(map.current, sourceId)
     map.current.addSource(sourceId, {
       type: 'geojson',
       data: { type: 'Feature', properties: {}, geometry },
     })
 
+    safeRemoveLayer(map.current, outlineId)
+    map.current.addLayer({
+      id: outlineId,
+      type: 'line',
+      source: sourceId,
+      layout: { 'line-join': 'round', 'line-cap': 'round' },
+      paint: {
+        'line-color': '#ffffff',
+        'line-width': 5,
+        'line-opacity': 0.35,
+      },
+    })
+
+    safeRemoveLayer(map.current, layerId)
     map.current.addLayer({
       id: layerId,
       type: 'line',
@@ -874,13 +955,27 @@ function MapPage() {
     })
 
     const source = map.current?.getSource(VELOCITY_SOURCE_ID)
-    if (source && 'setData' in source) {
+    if (!source || !('setData' in source)) {
+      safeRemoveSource(map.current!, VELOCITY_SOURCE_ID)
+      safeRemoveLayer(map.current!, VELOCITY_LAYER_ID)
+      map.current?.addSource(VELOCITY_SOURCE_ID, {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: vectorFeatures },
+      })
+      map.current?.addLayer({
+        id: VELOCITY_LAYER_ID,
+        type: 'line',
+        source: VELOCITY_SOURCE_ID,
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: { 'line-color': '#6366f1', 'line-width': 2, 'line-opacity': 0.7 },
+      })
+    } else {
       ;(source as maplibregl.GeoJSONSource).setData({
         type: 'FeatureCollection',
         features: vectorFeatures,
       })
     }
-  }, [convoyPositions, mapLoaded])
+  }, [convoyPositions, mapLoaded, styleLoadKey])
 
   useEffect(() => {
     return () => {
@@ -929,6 +1024,7 @@ function MapPage() {
     map.current.addControl(new maplibregl.FullscreenControl(), 'top-right')
     map.current.on('load', () => {
       setMapLoaded(true)
+      addRouteArrowImage(map.current!)
       updateBounds()
       map.current?.on('styleimagemissing', (e) => {
         const id = e.id
@@ -984,6 +1080,9 @@ function MapPage() {
       map.current.setZoom(zoom)
       map.current.setPitch(pitch)
       map.current.setBearing(bearing)
+      map.current.once('style.load', () => {
+        setStyleLoadKey((k) => k + 1)
+      })
     }
   }, [theme, mapLoaded])
 
@@ -1020,6 +1119,9 @@ function MapPage() {
           return
 
         clearAllRouteLayers()
+
+        for (const marker of markersRef.current) marker.remove()
+        markersRef.current = []
 
         const meetingPoint: [number, number] = [convoy.source_lng, convoy.source_lat]
         const destination: [number, number] = [convoy.dest_lng, convoy.dest_lat]
@@ -1094,7 +1196,7 @@ function MapPage() {
     return () => {
       cancelled = true
     }
-  }, [convoyId, mapLoaded, convoyPhase])
+  }, [convoyId, mapLoaded, convoyPhase, styleLoadKey])
 
   const ownerUserId = convoyOwner
   const { routes: assemblyRoutes } = useAssemblyRoutes({
@@ -1120,7 +1222,7 @@ function MapPage() {
     return () => {
       clearAssemblyRouteLayers()
     }
-  }, [assemblyRoutes, mapLoaded])
+  }, [assemblyRoutes, mapLoaded, styleLoadKey])
 
   useEffect(() => {
     if (convoyPhase !== 'assembling' || !computedAssemblyPoint || !convoyId) return
