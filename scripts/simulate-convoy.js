@@ -260,24 +260,6 @@ async function main() {
   const meetingHash = `${Math.round(meetingPt.lat * 10000)},${Math.round(meetingPt.lng * 10000)}`
   const ASSEMBLY_DISTANCE_M = 80
 
-  // Find the point on each vehicle's route CLOSEST to the meeting point.
-  // Routes are independent (join→destination per vehicle) and don't necessarily
-  // pass through the meeting point, so fallback to the nearest route point.
-  const meetingIdxs = activeVehicles.map((v) => {
-    if (!v.geometry || v.geometry.length < 2) return 0
-    let bestIdx = 0
-    let bestDist = Infinity
-    for (let i = 0; i < v.geometry.length; i++) {
-      const d =
-        Math.abs(v.geometry[i][0] - meetingPt.lng) + Math.abs(v.geometry[i][1] - meetingPt.lat)
-      if (d < bestDist) {
-        bestDist = d
-        bestIdx = i
-      }
-    }
-    return bestIdx
-  })
-
   // Each vehicle has its own coord index into its geometry
   let coordIdxs = new Array(activeVehicles.length).fill(0)
   const VEHICLE_SPEED_VARIANCE = 0.3
@@ -290,9 +272,8 @@ async function main() {
 
   console.log(`[simulate-convoy] ${activeVehicles.length} vehicles with route geometries`)
   if (waitAtMeeting) {
-    const found = meetingIdxs.filter((i) => i >= 0).length
     console.log(
-      `[simulate-convoy] waitAtMeeting=ON — meeting point found in ${found}/${activeVehicles.length} vehicle routes`,
+      `[simulate-convoy] waitAtMeeting=ON — vehicles drive to destination, assembly detected within ${ASSEMBLY_DISTANCE_M}m of meeting point`,
     )
   }
 
@@ -318,11 +299,11 @@ async function main() {
     for (let i = 0; i < activeVehicles.length; i++) {
       const v = activeVehicles[i]
       const geo = v.geometry
-      const target = isAssembling ? meetingIdxs[i] : geo.length - 1
+      const target = geo.length - 1
       const speedVar = 1 + (i % 3) * VEHICLE_SPEED_VARIANCE
       const step = 3 * speedFactor * speedVar
 
-      // Advance toward target
+      // Advance toward destination
       if (coordIdxs[i] < target) {
         coordIdxs[i] = Math.min(coordIdxs[i] + step, target)
       }
@@ -345,26 +326,23 @@ async function main() {
       // Distance from current position to the meeting point
       const dLat = pos.lat - meetingPt.lat
       const dLng = pos.lng - meetingPt.lng
-      const posDistToMeeting = Math.sqrt(dLat * dLat + dLng * dLng) * 111320
+      const distToMeeting = Math.sqrt(dLat * dLat + dLng * dLng) * 111320
 
-      const reachedMeeting = isAssembling && coordIdxs[i] >= meetingIdxs[i]
-      const nearMeeting = isAssembling && posDistToMeeting < ASSEMBLY_DISTANCE_M
-      const waiting = arrived || reachedMeeting || nearMeeting
+      const nearMeeting = isAssembling && distToMeeting < ASSEMBLY_DISTANCE_M
+      const waiting = arrived || nearMeeting
       const speed = arrived || waiting ? 0 : 15 * speedFactor * speedVar
 
       await pbUpsertPosition(token, v.vehicleId, convoyId, pos.lat, pos.lng, speed, 0)
 
       if (!arrived) allDone = false
 
-      // Auto-mark as assembled when at meeting point or route end
+      // Auto-mark as assembled when near meeting point or at destination
       if (!assembledMembers.includes(v.userId)) {
-        const nearEnough =
-          nearMeeting || arrived || posDistToMeeting < ASSEMBLY_DISTANCE_M * 2 || reachedMeeting
-        if (nearEnough) {
+        if (nearMeeting || arrived) {
           assembledMembers = [...assembledMembers, v.userId]
           await pbUpdate(token, 'convoys', convoyId, { assembled_members: assembledMembers })
           console.log(
-            `[simulate-convoy] ${v.vehicleId} arrived at meeting point (${Math.round(posDistToMeeting)}m away)`,
+            `[simulate-convoy] ${v.vehicleId} assembled (${Math.round(distToMeeting)}m from meeting point)`,
           )
         }
       }

@@ -219,7 +219,11 @@ function MapPage() {
         type: 'line',
         source: sourceId,
         layout: { 'line-join': 'round', 'line-cap': 'round' },
-        paint: { 'line-color': '#6366f1', 'line-width': 4, 'line-opacity': 0.4 },
+        paint: {
+          'line-color': theme === 'dark' ? '#e2e8f0' : '#6366f1',
+          'line-width': 4,
+          'line-opacity': 0.4,
+        },
       })
 
       trafficSegments.forEach((seg, i) => {
