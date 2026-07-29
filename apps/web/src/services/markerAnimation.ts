@@ -34,6 +34,15 @@ function haversine(lat1: number, lng1: number, lat2: number, lng2: number): numb
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 }
 
+function bearing(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const dLng = ((lng2 - lng1) * Math.PI) / 180
+  const rLat1 = (lat1 * Math.PI) / 180
+  const rLat2 = (lat2 * Math.PI) / 180
+  const y = Math.sin(dLng) * Math.cos(rLat2)
+  const x = Math.cos(rLat1) * Math.sin(rLat2) - Math.sin(rLat1) * Math.cos(rLat2) * Math.cos(dLng)
+  return ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360
+}
+
 function findNearestRouteIndex(route: [number, number][], lat: number, lng: number): number {
   let bestDist = Infinity
   let bestIdx = 0
@@ -205,6 +214,7 @@ export class MarkerAnimator {
         if (progress >= 1) {
           state.interp = null
           state.lastUpdateTime = now
+          hasActive = true
         } else {
           hasActive = true
         }
@@ -228,8 +238,14 @@ export class MarkerAnimator {
             state.currentLat = result.lat
             state.currentLng = result.lng
             state.routeIndex = result.index
-            hasActive = true
+            const segIdx = Math.min(Math.floor(result.index), state.routeGeometry.length - 2)
+            if (segIdx >= 0) {
+              const [lng0, lat0] = state.routeGeometry[segIdx]
+              const [lng1, lat1] = state.routeGeometry[segIdx + 1]
+              state.heading = bearing(lat0, lng0, lat1, lng1)
+            }
           }
+          hasActive = true
         }
       }
 
