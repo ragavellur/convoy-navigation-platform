@@ -186,7 +186,7 @@ app.get('/api/simulation/status/:convoyId', (req, res) => {
 })
 
 app.post('/api/simulation/start', async (req, res) => {
-  const { convoyId, speedFactor = 10, interval = 2 } = req.body
+  const { convoyId, speedFactor = 10, interval = 2, waitAtMeeting = true } = req.body
   if (!convoyId) {
     return res.status(400).json({ error: 'convoyId is required' })
   }
@@ -206,7 +206,8 @@ app.post('/api/simulation/start', async (req, res) => {
     String(speedFactor),
     '--interval',
     String(interval),
-    '--no-flag',
+    '--wait-at-meeting',
+    String(waitAtMeeting),
   ]
 
   const child = spawn('node', args, {
@@ -294,7 +295,7 @@ app.post('/api/simulation/stop', async (req, res) => {
 })
 
 app.post('/api/simulation/restart', async (req, res) => {
-  const { convoyId, speedFactor = 10, interval = 2 } = req.body
+  const { convoyId, speedFactor = 10, interval = 2, waitAtMeeting = true } = req.body
   if (!convoyId) {
     return res.status(400).json({ error: 'convoyId is required' })
   }
@@ -320,7 +321,8 @@ app.post('/api/simulation/restart', async (req, res) => {
     String(speedFactor),
     '--interval',
     String(interval),
-    '--no-flag',
+    '--wait-at-meeting',
+    String(waitAtMeeting),
   ]
 
   const child = spawn('node', args, {

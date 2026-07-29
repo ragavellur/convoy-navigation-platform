@@ -72,6 +72,7 @@ function ConvoyDetailPage() {
   const [showNotifications, setShowNotifications] = useState(false)
   const [simRunning, setSimRunning] = useState(false)
   const [simSpeed, setSimSpeed] = useState(10)
+  const [waitAtMeeting, setWaitAtMeeting] = useState(true)
   const [simLoading, setSimLoading] = useState(false)
   const [simError, setSimError] = useState('')
 
@@ -200,7 +201,7 @@ function ConvoyDetailPage() {
     setSimLoading(true)
     setSimError('')
     try {
-      await startSimulation(id, simSpeed)
+      await startSimulation(id, simSpeed, 2, waitAtMeeting)
       setSimRunning(true)
       notifySimulationStarted(id)
     } catch (err) {
@@ -230,7 +231,7 @@ function ConvoyDetailPage() {
     setSimLoading(true)
     setSimError('')
     try {
-      await restartSimulation(id, simSpeed)
+      await restartSimulation(id, simSpeed, 2, waitAtMeeting)
       setSimRunning(true)
     } catch (err) {
       setSimError(err instanceof Error ? err.message : 'Failed to restart simulation')
@@ -493,6 +494,31 @@ function ConvoyDetailPage() {
                         <option value={30}>30x</option>
                         <option value={60}>60x</option>
                       </select>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-medium text-[var(--text)]">
+                          Wait at Meeting Point
+                        </p>
+                        <p className="text-[10px] text-[var(--text2)] opacity-70">
+                          All vehicles wait at meeting point until every member arrives, then resume
+                          together
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setWaitAtMeeting(!waitAtMeeting)}
+                        disabled={simRunning}
+                        className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:ring-offset-2 ${
+                          waitAtMeeting ? 'bg-[var(--primary)]' : 'bg-[var(--surface-hover)]'
+                        } ${simRunning ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      >
+                        <span
+                          className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-[var(--toggle-knob)] shadow ring-0 transition duration-200 ease-in-out ${
+                            waitAtMeeting ? 'translate-x-4' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
                     </div>
 
                     <div className="flex items-center justify-between">

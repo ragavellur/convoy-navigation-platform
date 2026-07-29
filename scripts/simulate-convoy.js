@@ -92,16 +92,29 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
+function coord4dp(coord) {
+  return `${Math.round(coord[1] * 10000)},${Math.round(coord[0] * 10000)}`
+}
+
 async function main() {
   const convoyId = process.argv[2]
   const speedFactor =
     parseFloat(process.argv[3] === '--speed-factor' ? process.argv[4] : '10') || 10
   const interval = parseFloat(process.argv[5] === '--interval' ? process.argv[6] : '2') || 2
 
+  const waitIdx = process.argv.indexOf('--wait-at-meeting')
+  const waitAtMeeting = waitIdx === -1 ? true : process.argv[waitIdx + 1] !== 'false'
+
   if (!convoyId) {
-    console.error('Usage: node simulate-convoy.js <convoyId> [--speed-factor N] [--interval N]')
+    console.error(
+      'Usage: node simulate-convoy.js <convoyId> [--speed-factor N] [--interval N] [--wait-at-meeting true|false]',
+    )
     process.exit(1)
   }
+
+  console.log(
+    `[simulate-convoy] Starting for convoy ${convoyId}, speedFactor=${speedFactor}, interval=${interval}s, waitAtMeeting=${waitAtMeeting}`,
+  )
 
   console.log(
     `[simulate-convoy] Starting for convoy ${convoyId}, speedFactor=${speedFactor}, interval=${interval}s`,
@@ -162,11 +175,28 @@ async function main() {
     ? `${Math.round(meetingPt.lat * 10000)},${Math.round(meetingPt.lng * 10000)}`
     : null
 
+  // Find meeting point index in each vehicle's geometry (first matching coord)
+  const meetingIdxs = meetingHash
+    ? activeVehicles.map((v) => {
+        if (!v.geometry) return -1
+        for (let i = 0; i < v.geometry.length; i++) {
+          if (coord4dp(v.geometry[i]) === meetingHash) return i
+        }
+        return -1
+      })
+    : new Array(activeVehicles.length).fill(-1)
+
   // Each vehicle has its own coord index into its geometry
   let coordIdxs = new Array(activeVehicles.length).fill(0)
   const VEHICLE_SPEED_VARIANCE = 0.3
 
   console.log(`[simulate-convoy] ${activeVehicles.length} vehicles with route geometries`)
+  if (waitAtMeeting) {
+    const found = meetingIdxs.filter((i) => i >= 0).length
+    console.log(
+      `[simulate-convoy] waitAtMeeting=ON — meeting point found in ${found}/${activeVehicles.length} vehicle routes`,
+    )
+  }
 
   while (true) {
     const fresh = await pbGet(token, `/api/collections/convoys/records/${convoyId}`)
@@ -181,13 +211,20 @@ async function main() {
     let assembledMembers = fresh.assembled_members || []
     let allDone = true
 
+    const isAssembling = phase === 'assembling' && waitAtMeeting
+
     for (let i = 0; i < activeVehicles.length; i++) {
       const v = activeVehicles[i]
       const geo = v.geometry
+      const target = isAssembling && meetingIdxs[i] >= 0 ? meetingIdxs[i] : geo.length - 1
       const speedVar = 1 + (i % 3) * VEHICLE_SPEED_VARIANCE
       const step = 3 * speedFactor * speedVar
 
-      coordIdxs[i] = Math.min(coordIdxs[i] + step, geo.length - 1)
+      // Advance toward target
+      if (coordIdxs[i] < target) {
+        coordIdxs[i] = Math.min(coordIdxs[i] + step, target)
+      }
+
       const idx = Math.floor(coordIdxs[i])
       const frac = coordIdxs[i] - idx
 
@@ -202,13 +239,14 @@ async function main() {
       }
 
       const arrived = coordIdxs[i] >= geo.length - 1
-      const speed = arrived ? 0 : 15 * speedFactor * speedVar
+      const waiting = isAssembling && meetingIdxs[i] >= 0 && coordIdxs[i] >= meetingIdxs[i]
+      const speed = arrived || waiting ? 0 : 15 * speedFactor * speedVar
 
       await pbUpsertPosition(token, v.vehicleId, convoyId, pos.lat, pos.lng, speed, 0)
 
       if (!arrived) allDone = false
 
-      // Auto-mark as arrived when crossing the meeting point (or at route end)
+      // Auto-mark as assembled when reaching meeting point or route end
       if (!assembledMembers.includes(v.userId) && meetingHash) {
         const currentHash = `${Math.round(pos.lat * 10000)},${Math.round(pos.lng * 10000)}`
         if (currentHash === meetingHash || arrived) {
@@ -221,8 +259,11 @@ async function main() {
 
     // Auto-transition based on phase
     if (phase === 'assembling' && assembledMembers.length >= activeVehicles.length) {
-      console.log('[simulate-convoy] All assembled — transitioning to in_transit')
-      await pbUpdate(token, 'convoys', convoyId, { phase: 'in_transit', assembled_members: [] })
+      const nextPhase = waitAtMeeting ? 'in_transit' : 'in_transit'
+      console.log(
+        `[simulate-convoy] All ${assembledMembers.length} assembled — transitioning to ${nextPhase}`,
+      )
+      await pbUpdate(token, 'convoys', convoyId, { phase: nextPhase, assembled_members: [] })
       assembledMembers = []
     }
 

@@ -30,11 +30,12 @@ export async function startSimulation(
   convoyId: string,
   speedFactor = 10,
   interval = 2,
+  waitAtMeeting = true,
 ): Promise<{ success: boolean; pid: number }> {
   const res = await fetch(`${SIMULATION_API_URL}/api/simulation/start`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ convoyId, speedFactor, interval }),
+    body: JSON.stringify({ convoyId, speedFactor, interval, waitAtMeeting }),
   })
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: 'Unknown error' }))
@@ -57,11 +58,12 @@ export async function restartSimulation(
   convoyId: string,
   speedFactor = 10,
   interval = 2,
+  waitAtMeeting = true,
 ): Promise<{ success: boolean; clearedPositions: number }> {
   const res = await fetch(`${SIMULATION_API_URL}/api/simulation/restart`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ convoyId, speedFactor, interval }),
+    body: JSON.stringify({ convoyId, speedFactor, interval, waitAtMeeting }),
   })
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: 'Unknown error' }))
