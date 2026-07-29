@@ -153,6 +153,8 @@ create_or_get("convoys", [
     {"name": "dest_lat", "type": "number", "required": False},
     {"name": "dest_lng", "type": "number", "required": False},
     {"name": "dest_name", "type": "text", "required": False},
+    {"name": "phase", "type": "select", "required": True, "options": {"values": ["forming", "assembling", "in_transit", "completed"], "maxSelect": 1}},
+    {"name": "assembled_members", "type": "json", "required": False, "options": {"maxSize": 2000000}},
 ], [
     "CREATE UNIQUE INDEX idx_convoys_code ON convoys (code)",
     "CREATE INDEX idx_convoys_owner ON convoys (owner)",
@@ -383,6 +385,16 @@ if cid:
             print(f"  convoy_members: UNIQUE INDEX FAILED - {result.get('message', result)}")
     else:
         print("  convoy_members: UNIQUE INDEX EXISTS")
+
+# ============================================
+# Phase 5: Add convoy lifecycle fields
+# ============================================
+print("\n=== Phase 5: Add convoy lifecycle fields ===")
+
+patch_schema("convoys", [
+    {"name": "phase", "type": "select", "required": True, "options": {"values": ["forming", "assembling", "in_transit", "completed"], "maxSelect": 1}},
+    {"name": "assembled_members", "type": "json", "required": False, "options": {"maxSize": 2000000}},
+])
 
 # ============================================
 # Summary

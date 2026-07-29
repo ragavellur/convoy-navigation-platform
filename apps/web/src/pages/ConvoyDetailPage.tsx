@@ -30,6 +30,8 @@ interface ConvoyRecord {
   owner: string
   status: 'active' | 'paused' | 'ended'
   convoy_type: 'vehicle' | 'trekker'
+  phase: 'forming' | 'assembling' | 'in_transit' | 'completed'
+  assembled_members?: string[]
   trip_id: string
   security_token: string
   source_lat?: number

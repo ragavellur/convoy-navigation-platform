@@ -10,14 +10,18 @@ export interface User {
   updated: string
 }
 
+export type ConvoyPhase = 'forming' | 'assembling' | 'in_transit' | 'completed'
+
 export interface Convoy {
   id: string
   name: string
   code: string
   description?: string
   owner: string
-  status: 'active' | 'archived'
+  status: 'active' | 'paused' | 'ended'
   convoy_type: 'vehicle' | 'trekker'
+  phase: ConvoyPhase
+  assembled_members?: string[]
   max_members?: number
   settings?: ConvoySettings
   created: string
