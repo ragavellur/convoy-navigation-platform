@@ -170,6 +170,7 @@ function ConvoyPage() {
         owner: user?.id,
         status: 'active',
         convoy_type: newConvoyType,
+        phase: 'forming',
         trip_id: tripId,
         security_token: securityToken,
       }
