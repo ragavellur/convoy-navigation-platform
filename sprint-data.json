@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-07-29T17:45:00Z",
+  "lastUpdated": "2026-07-29T19:22:00Z",
   "sprints": [
     {
       "id": 1,
@@ -1097,6 +1097,55 @@
           "status": "backlog",
           "priority": "medium",
           "description": "Start osrm-routed natively from /Users/Shared/OSM/osrm_extract on port 5001. Add OSRM_URL=http://host.docker.internal:5001 to simulation-service env. Faster on ARM Mac, runs outside Docker."
+        },
+        {
+          "id": "TASK-168",
+          "title": "v0.1.3: fix simulation exits immediately — auto-calc OSRM routes for members missing route_geometry",
+          "status": "done",
+          "priority": "high",
+          "description": "Added fetchOsrmRoute() to calc routes on-the-fly, fallback to straight line. No more 'No vehicles with route_geometry found' exit."
+        },
+        {
+          "id": "TASK-169",
+          "title": "v0.1.3: fix false 'A member left the convoy' notifications on update events",
+          "status": "done",
+          "priority": "high",
+          "description": "Added event.action === 'update' guard in notifications.ts. Already deployed as v0.1.2."
+        },
+        {
+          "id": "TASK-170",
+          "title": "v0.1.3: forward simulation child process logs to Docker",
+          "status": "done",
+          "priority": "high",
+          "description": "Added console.log/console.error forwarding for stdout/stderr/exit/error in index.js. Already deployed as v0.1.2."
+        },
+        {
+          "id": "TASK-171",
+          "title": "v0.1.3: fix phase badge overlapping MapLibre zoom controls",
+          "status": "done",
+          "priority": "medium",
+          "description": "Moved phase badge from top-4 right-4 to top-4 left-4, shrunk from w-72 to compact pill layout."
+        },
+        {
+          "id": "TASK-172",
+          "title": "v0.1.3: fix infinite loop when no meeting point + exit allDone regardless of phase",
+          "status": "done",
+          "priority": "high",
+          "description": "Skip assembly phase when no meetingHash exists. Exit simulation when allDone regardless of phase."
+        },
+        {
+          "id": "TASK-173",
+          "title": "v0.1.3: add route_geometry + join_lat/lng/name to setup-collections scripts",
+          "status": "done",
+          "priority": "high",
+          "description": "Updated setup-collections.sh and setup-collections.py with missing schema fields."
+        },
+        {
+          "id": "TASK-174",
+          "title": "v0.1.3: deploy to production + smoke test",
+          "status": "done",
+          "priority": "high",
+          "description": "Git push, docker compose rebuild, site loads correctly at convoy.vellur.in."
         }
       ]
     },

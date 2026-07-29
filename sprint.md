@@ -277,6 +277,16 @@
 - [ ] [TASK-166] Option A: Process India PBF inside Docker OSRM (v5.26.0) — match container version
 - [ ] [TASK-167] Option B: Run OSRM natively via Homebrew (v26.7.3) — use pre-processed data at /Users/Shared/OSM/osrm_extract
 
+### ✅ v0.1.3 — Critical Simulation Fixes (Done)
+
+- [x] [TASK-168] Fix simulation exits immediately — auto-calc OSRM routes for members missing route_geometry
+- [x] [TASK-169] Fix false "A member left the convoy" notifications on update events
+- [x] [TASK-170] Forward simulation child process logs to Docker
+- [x] [TASK-171] Fix phase badge overlapping MapLibre zoom controls
+- [x] [TASK-172] Fix infinite loop when no meeting point + exit allDone regardless of phase
+- [x] [TASK-173] Add route_geometry + join_lat/lng/name to setup-collections scripts
+- [x] [TASK-174] Deploy v0.1.3 to production + smoke test
+
 ---
 
 ## Sprint 12: Deploy & Launch (Week 23-24)
@@ -314,9 +324,9 @@
 | Sprint 8  | 21          | 10      | 0           | 11     | Web PWA + Trekker  |
 | Sprint 9  | 5           | 0       | 0           | 5      | Web CSS Refactor   |
 | Sprint 10 | 8           | 8       | 0           | 0      | Web CSS Refactor   |
-| Sprint 11 | 24          | 11      | 0           | 13     | All                |
+| Sprint 11 | 31          | 11      | 0           | 20     | All                |
 | Sprint 12 | 14          | 14      | 0           | 0      | All                |
-| **Total** | **174**     | **81**  | **4**       | **86** |                    |
+| **Total** | **181**     | **81**  | **4**       | **93** |                    |
 
 ---
 
