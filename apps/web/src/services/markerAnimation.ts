@@ -104,52 +104,88 @@ export class MarkerAnimator {
     if (!Number.isFinite(lat) || !Number.isFinite(lng)) return
 
     const now = performance.now()
-    const existing = this.states.get(id)
+    let state = this.states.get(id)
 
-    const currentLat = existing?.currentLat ?? lat
-    const currentLng = existing?.currentLng ?? lng
-
-    const dist = haversine(currentLat, currentLng, lat, lng)
-
-    if (!existing) {
-      this.states.set(id, {
+    if (!state) {
+      const routeGeo = routeGeometry ?? null
+      state = {
         currentLat: lat,
         currentLng: lng,
         heading,
         speed,
         lastUpdateTime: now,
-        routeGeometry: routeGeometry ?? null,
-        routeIndex: routeGeometry ? findNearestRouteIndex(routeGeometry, lat, lng) : 0,
+        routeGeometry: routeGeo as [number, number][] | null,
+        routeIndex: routeGeo ? findNearestRouteIndex(routeGeo, lat, lng) : 0,
         interp: null,
-      })
+      }
+      this.states.set(id, state)
       this.onUpdate(id, lat, lng, heading)
+      this.startAnimation()
       return
     }
+
+    const fromLat = state.currentLat
+    const fromLng = state.currentLng
+    const fromRouteIndex = state.routeIndex
+
+    state.lastUpdateTime = now
+    state.heading = heading
+    state.speed = speed
+    if (routeGeometry) {
+      state.routeGeometry = routeGeometry as [number, number][]
+    }
+
+    const newRouteIndex = state.routeGeometry
+      ? findNearestRouteIndex(state.routeGeometry, lat, lng)
+      : 0
+
+    state.routeIndex = newRouteIndex
+    state.interp = null
+
+    const dist = haversine(fromLat, fromLng, lat, lng)
 
     if (dist < 0.5) {
+      state.currentLat = lat
+      state.currentLng = lng
       this.onUpdate(id, lat, lng, heading)
+      this.startAnimation()
       return
     }
 
-    existing.lastUpdateTime = now
-    existing.heading = heading
-    existing.speed = speed
-    if (routeGeometry) {
-      existing.routeGeometry = routeGeometry as [number, number][]
-      existing.routeIndex = findNearestRouteIndex(existing.routeGeometry!, currentLat, currentLng)
+    const isBehind = state.routeGeometry !== null && newRouteIndex < fromRouteIndex - 2
+
+    if (isBehind && dist > 3) {
+      state.currentLat = fromLat
+      state.currentLng = fromLng
+      const durationMs = Math.min(Math.max((dist / 5) * 1000, 500), 5000)
+      state.interp = {
+        startLat: fromLat,
+        startLng: fromLng,
+        targetLat: lat,
+        targetLng: lng,
+        startTime: now,
+        durationMs,
+      }
+    } else {
+      state.currentLat = fromLat
+      state.currentLng = fromLng
+      const durationMs = Math.min(Math.max(dist * 50, 200), 2000)
+      state.interp = {
+        startLat: fromLat,
+        startLng: fromLng,
+        targetLat: lat,
+        targetLng: lng,
+        startTime: now,
+        durationMs,
+      }
     }
 
-    existing.interp = {
-      startLat: currentLat,
-      startLng: currentLng,
-      targetLat: lat,
-      targetLng: lng,
-      startTime: now,
-      durationMs: Math.min(Math.max(dist * 3, 150), 1500),
-    }
+    this.startAnimation()
+  }
 
+  private startAnimation(): void {
     if (!this.animationFrame) {
-      this.animate()
+      this.animationFrame = requestAnimationFrame(this.animate)
     }
   }
 
@@ -168,6 +204,7 @@ export class MarkerAnimator {
 
         if (progress >= 1) {
           state.interp = null
+          state.lastUpdateTime = now
         } else {
           hasActive = true
         }
@@ -184,16 +221,16 @@ export class MarkerAnimator {
           elapsedSinceUpdate < STALE_MS
         ) {
           const elapsedSec = elapsedSinceUpdate / 1000
-          const distanceM = state.speed * elapsedSec * 0.85
+          const distanceM = state.speed * elapsedSec
 
           if (distanceM > 0.05) {
             const result = walkRouteForward(state.routeGeometry, state.routeIndex, distanceM)
             state.currentLat = result.lat
             state.currentLng = result.lng
             state.routeIndex = result.index
+            hasActive = true
           }
         }
-        hasActive = true
       }
 
       if (Number.isFinite(state.currentLat) && Number.isFinite(state.currentLng)) {

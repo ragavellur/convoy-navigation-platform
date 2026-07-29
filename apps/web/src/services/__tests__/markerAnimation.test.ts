@@ -1,14 +1,25 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest'
 import { MarkerAnimator } from '../markerAnimation'
+
+beforeAll(() => {
+  global.requestAnimationFrame = ((cb: FrameRequestCallback) => {
+    return setTimeout(() => cb(performance.now()), 16) as unknown as number
+  }) as typeof global.requestAnimationFrame
+  global.cancelAnimationFrame = ((id: number) =>
+    clearTimeout(id)) as typeof global.cancelAnimationFrame
+})
+
+afterAll(() => {
+  delete (global as any).requestAnimationFrame
+  delete (global as any).cancelAnimationFrame
+})
 
 describe('MarkerAnimator', () => {
   it('calls onUpdate immediately on first updateTarget', () => {
-    const onUpdate = (_id: string, lat: number, lng: number, _heading: number | null) => {
-      expect(lat).toBe(12.34)
-      expect(lng).toBe(56.78)
-    }
+    const onUpdate = vi.fn()
     const animator = new MarkerAnimator(onUpdate)
     animator.updateTarget('v1', 12.34, 56.78, null, null)
+    expect(onUpdate).toHaveBeenCalledWith('v1', 12.34, 56.78, null)
     animator.destroy()
   })
 
@@ -21,7 +32,7 @@ describe('MarkerAnimator', () => {
     animator.destroy()
   })
 
-  it('skips animation when distance < 1m', () => {
+  it('snaps when distance < 0.5m', () => {
     const onUpdate = vi.fn()
     const animator = new MarkerAnimator(onUpdate)
     animator.updateTarget('v1', 12.34, 56.78, null, null)
