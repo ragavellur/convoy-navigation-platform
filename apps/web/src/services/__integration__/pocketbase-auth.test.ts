@@ -25,7 +25,7 @@ afterAll(async () => {
 
 describe('PocketBase Auth Integration', () => {
   test('admin can authenticate with valid credentials', async () => {
-    const res = await fetch(`${PB_URL}/api/admins/auth-with-password`, {
+    const res = await fetch(`${PB_URL}/api/collections/_superusers/auth-with-password`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ identity: ADMIN_EMAIL, password: ADMIN_PASS }),
@@ -33,11 +33,11 @@ describe('PocketBase Auth Integration', () => {
     expect(res.ok).toBe(true)
     const data = await res.json()
     expect(data.token).toBeTruthy()
-    expect(data.admin.email).toBe(ADMIN_EMAIL)
+    expect(data.record.email).toBe(ADMIN_EMAIL)
   })
 
   test('admin auth fails with wrong password', async () => {
-    const res = await fetch(`${PB_URL}/api/admins/auth-with-password`, {
+    const res = await fetch(`${PB_URL}/api/collections/_superusers/auth-with-password`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ identity: ADMIN_EMAIL, password: 'wrong-password-123' }),
@@ -46,7 +46,7 @@ describe('PocketBase Auth Integration', () => {
   })
 
   test('admin auth fails with non-existent email', async () => {
-    const res = await fetch(`${PB_URL}/api/admins/auth-with-password`, {
+    const res = await fetch(`${PB_URL}/api/collections/_superusers/auth-with-password`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ identity: 'nonexistent@test.com', password: 'somepass' }),

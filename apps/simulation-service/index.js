@@ -60,7 +60,7 @@ function isTokenExpired(token) {
 async function getAuthToken() {
   if (cachedToken && !isTokenExpired(cachedToken)) return cachedToken
   try {
-    const res = await fetch(`${POCKETBASE_URL}/api/admins/auth-with-password`, {
+    const res = await fetch(`${POCKETBASE_URL}/api/collections/_superusers/auth-with-password`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ identity: PB_EMAIL, password: PB_PASSWORD }),

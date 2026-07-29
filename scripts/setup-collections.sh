@@ -23,7 +23,7 @@ fi
 
 echo "Authenticating as $ADMIN_EMAIL..."
 
-TOKEN=$(curl -sf -X POST "$PB_URL/api/admins/auth-with-password" \
+TOKEN=$(curl -sf -X POST "$PB_URL/api/collections/_superusers/auth-with-password" \
   -H "Content-Type: application/json" \
   -d "{\"identity\": \"$ADMIN_EMAIL\", \"password\": \"$ADMIN_PASSWORD\"}" \
   | python3 -c "import sys, json; print(json.load(sys.stdin)['token'])")

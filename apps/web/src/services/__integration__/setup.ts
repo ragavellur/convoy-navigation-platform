@@ -61,7 +61,7 @@ export async function adminFetch(
 }
 
 export async function globalSetup(): Promise<TestContext> {
-  const authRes = await fetch(`${PB_URL}/api/admins/auth-with-password`, {
+  const authRes = await fetch(`${PB_URL}/api/collections/_superusers/auth-with-password`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ identity: ADMIN_EMAIL, password: ADMIN_PASS }),

@@ -47,7 +47,7 @@ async function pbAuth() {
     console.error('POCKETBASE_ADMIN_EMAIL and POCKETBASE_ADMIN_PASSWORD must be set')
     process.exit(1)
   }
-  const res = await fetch(`${POCKETBASE_URL}/api/admins/auth-with-password`, {
+  const res = await fetch(`${POCKETBASE_URL}/api/collections/_superusers/auth-with-password`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ identity: email, password }),

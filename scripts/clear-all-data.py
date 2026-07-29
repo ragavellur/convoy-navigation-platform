@@ -21,7 +21,7 @@ if not ADMIN_PASSWORD:
     sys.exit(1)
 
 print(f"Authenticating to {PB_URL}...")
-resp = requests.post(f"{PB_URL}/api/admins/auth-with-password", json={
+resp = requests.post(f"{PB_URL}/api/collections/_superusers/auth-with-password", json={
     "identity": ADMIN_EMAIL, "password": ADMIN_PASSWORD,
 })
 if resp.status_code != 200:
