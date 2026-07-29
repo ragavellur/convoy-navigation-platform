@@ -473,6 +473,16 @@
           "notes": "Feature implemented and verified in sprint"
         },
         {
+          "id": "P-9",
+          "title": "Smooth dead reckoning — Google Maps-like vehicle movement",
+          "steps": "Start simulation → observe vehicle markers between 4s poll intervals",
+          "expected": "Vehicles move smoothly along roads at 60fps with no visible jumps or teleportation",
+          "status": "pending",
+          "sprint": "Sprint 11",
+          "taskId": "TASK-180",
+          "priority": "high"
+        },
+        {
           "id": "R-1",
           "title": "Roster sidebar renders on map page",
           "steps": "Join convoy \u2192 Navigate to /map \u2192 Check sidebar",

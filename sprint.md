@@ -268,6 +268,7 @@
 - [ ] [TASK-155] Load testing for PocketBase Realtime
 - [ ] [TASK-157] Load India OSM data into OSRM for self-hosted routing (GeoFabrik)
 - [ ] [TASK-158] Load India OSM data into Nominatim for self-hosted geocoding (GeoFabrik)
+- [ ] [TASK-180] Google Maps-smooth vehicle DR — GeoJSON Source+Layer, derive heading from pos deltas, route-following DR
 - [x] [TASK-160] Phase 1: data model — phase field + assembled_members + types
 - [x] [TASK-161] Phase 2: assembly route engine — per-member OSRM routes to assembly point
 - [x] [TASK-162] Phase 3: map viz — colored dashed assembly routes + HUD + arrival detection
@@ -312,21 +313,21 @@
 
 ## Progress Summary
 
-| Sprint    | Total Tasks | Backlog | In Progress | Done   | Platform           |
-| --------- | ----------- | ------- | ----------- | ------ | ------------------ |
-| Sprint 1  | 32          | 0       | 0           | 32     | Web + Docker       |
-| Sprint 2  | 10          | 0       | 0           | 10     | Web                |
-| Sprint 3  | 12          | 0       | 0           | 12     | Web                |
-| Sprint 4  | 10          | 0       | 0           | 10     | Web                |
-| Sprint 5  | 11          | 0       | 0           | 11     | Web                |
-| Sprint 6  | 14          | 0       | 0           | 14     | Web                |
-| Sprint 7  | 12          | 12      | 0           | 0      | Web Critical Fixes |
-| Sprint 8  | 21          | 10      | 0           | 11     | Web PWA + Trekker  |
-| Sprint 9  | 5           | 0       | 0           | 5      | Web CSS Refactor   |
-| Sprint 10 | 8           | 8       | 0           | 0      | Web CSS Refactor   |
-| Sprint 11 | 31          | 11      | 0           | 20     | All                |
-| Sprint 12 | 14          | 14      | 0           | 0      | All                |
-| **Total** | **181**     | **81**  | **4**       | **93** |                    |
+| Sprint    | Total Tasks | Backlog | In Progress | Done    | Platform           |
+| --------- | ----------- | ------- | ----------- | ------- | ------------------ |
+| Sprint 1  | 31          | 0       | 0           | 31      | Web + Docker       |
+| Sprint 2  | 10          | 0       | 0           | 10      | Web                |
+| Sprint 3  | 12          | 0       | 0           | 12      | Web                |
+| Sprint 4  | 10          | 0       | 0           | 10      | Web                |
+| Sprint 5  | 11          | 0       | 0           | 11      | Web                |
+| Sprint 6  | 14          | 0       | 0           | 14      | Web                |
+| Sprint 7  | 12          | 0       | 0           | 12      | Web Critical Fixes |
+| Sprint 8  | 27          | 1       | 0           | 26      | Web PWA + Trekker  |
+| Sprint 9  | 5           | 0       | 0           | 5       | Web CSS Refactor   |
+| Sprint 10 | 8           | 0       | 0           | 8       | Web CSS Refactor   |
+| Sprint 11 | 37          | 12      | 0           | 25      | All                |
+| Sprint 12 | 14          | 14      | 0           | 0       | All                |
+| **Total** | **191**     | **27**  | **0**       | **164** |                    |
 
 ---
 

@@ -20,14 +20,14 @@
 | Authentication Flow      | 6      | 6      | 0      | 0       |
 | Map & Search             | 10     | 10     | 0      | 0       |
 | Convoy Lifecycle         | 10     | 10     | 0      | 0       |
-| Real-Time Position       | 8      | 8      | 0      | 0       |
+| Real-Time Position       | 9      | 8      | 0      | 1       |
 | Roster & UI              | 11     | 11     | 0      | 0       |
 | Voice & Chat             | 15     | 0      | 0      | 15      |
 | Multi-Browser Concurrent | 3      | 3      | 0      | 0       |
 | Edge Cases               | 6      | 6      | 0      | 0       |
 | Browser Support          | 5      | 0      | 0      | 5       |
 | Sprint 7 Critical Fixes  | 14     | 0      | 0      | 14      |
-| **Total**                | **94** | **60** | **0**  | **34**  |
+| **Total**                | **95** | **60** | **0**  | **35**  |
 
 ---
 
@@ -103,6 +103,7 @@
 | P-6 | Heartbeat broadcast     | Stay idle for 10s in convoy mode     | New position records every 5 seconds                         | TASK-046 |
 | P-7 | Position fetch on join  | Join convoy with existing members    | All member markers appear immediately                        | TASK-046 |
 | P-8 | Multiple convoy members | 3 browsers join same convoy          | All 3 markers visible, all animate independently             | TASK-044 |
+| P-9 | Smooth dead reckoning   | Start simulation → observe vehicles  | Smooth road-following movement at 60fps, no jumps            | TASK-180 |
 
 ---
 

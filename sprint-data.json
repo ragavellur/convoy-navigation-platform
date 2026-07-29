@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-07-29T19:22:00Z",
+  "lastUpdated": "2026-07-30T03:15:00Z",
   "sprints": [
     {
       "id": 1,
@@ -1181,6 +1181,13 @@
           "status": "done",
           "priority": "high",
           "description": "simulate-convoy exits cleanly on completed phase, /start calls clearPositions, individual delete errors are logged."
+        },
+        {
+          "id": "TASK-180",
+          "title": "Google Maps-smooth vehicle dead reckoning — GeoJSON Source+Layer, derive heading from position deltas, route-following DR",
+          "status": "backlog",
+          "priority": "high",
+          "description": "Replace DOM markers with GeoJSON Source+Layer for WebGL rendering. Derive heading from position deltas between polls (eliminate routeGeometry dependency). Linear DR fallback using derived heading. Route-following DR using walkRouteForward when geometry available. Reduce polling interval or switch to PocketBase Realtime subscriptions for sub-second updates. Adaptive error blending for seamless position corrections."
         }
       ]
     },
