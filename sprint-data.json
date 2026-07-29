@@ -1167,6 +1167,20 @@
           "status": "done",
           "priority": "high",
           "description": "Added push_subscriptions collection, assembly_route_geometry field, patched convoys.status values on production."
+        },
+        {
+          "id": "TASK-178",
+          "title": "v0.1.5: PocketBase v0.23.1 upgrade + batch API fix + auth endpoint update",
+          "status": "done",
+          "priority": "high",
+          "description": "Upgraded PB 0.21.3→0.23.1, enabled batch API, updated auth to /api/collections/_superusers, batch requests use 'url' not 'path'."
+        },
+        {
+          "id": "TASK-179",
+          "title": "v0.1.5: fix simulation stuck on completed phase + clearPositions on start",
+          "status": "done",
+          "priority": "high",
+          "description": "simulate-convoy exits cleanly on completed phase, /start calls clearPositions, individual delete errors are logged."
         }
       ]
     },
