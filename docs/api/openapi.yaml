@@ -1,0 +1,1026 @@
+openapi: "3.0.3"
+info:
+  title: Convoy Navigation & Communication Platform API
+  description: |
+    Real-time convoy tracking, geocoding, routing, voice communication,
+    and simulation APIs. PocketBase serves as the primary data layer
+    (auth + database + realtime), backed by OSRM for routing and
+    Nominatim for geocoding.
+  version: "1.0.0"
+  contact:
+    name: Convoy Platform Team
+
+servers:
+  - url: https://convoy.vellur.in/api
+    description: Production server (PocketBase API)
+  - url: http://localhost:8090/api
+    description: Local development (PocketBase)
+
+paths:
+  # ─── PocketBase Auth ────────────────────────────────────────
+  /collections/users/auth-with-password:
+    post:
+      tags: [Auth]
+      summary: Login with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [identity, password]
+              properties:
+                identity: { type: string, example: "user@example.com" }
+                password: { type: string, example: "securePass123!" }
+      responses:
+        "200":
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token: { type: string }
+                  record: { $ref: "#/components/schemas/User" }
+        "400":
+          description: Invalid credentials
+
+  /collections/users/auth-refresh:
+    post:
+      tags: [Auth]
+      summary: Refresh auth token
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Token refreshed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token: { type: string }
+                  record: { $ref: "#/components/schemas/User" }
+
+  /collections/users/records:
+    post:
+      tags: [Auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, passwordConfirm]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, minLength: 8 }
+                passwordConfirm: { type: string }
+                name: { type: string, maxLength: 100 }
+      responses:
+        "200":
+          description: User created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+
+  # ─── Convoys ───────────────────────────────────────────────
+  /collections/convoys/records:
+    get:
+      tags: [Convoys]
+      summary: List convoys
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: filter
+          in: query
+          schema: { type: string }
+          description: PocketBase filter expression (e.g. `status = "active"`)
+        - name: sort
+          in: query
+          schema: { type: string, default: "-created" }
+      responses:
+        "200":
+          description: List of convoys
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items: { type: array, items: { $ref: "#/components/schemas/Convoy" } }
+                  totalItems: { type: integer }
+    post:
+      tags: [Convoys]
+      summary: Create a convoy
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, code, owner, status, convoy_type]
+              properties:
+                name: { type: string, minLength: 2, maxLength: 100 }
+                code: { type: string, minLength: 6, maxLength: 6 }
+                owner: { type: string, description: "User ID" }
+                status: { type: string, enum: [active, paused, ended] }
+                convoy_type: { type: string, enum: [vehicle, trekker] }
+                trip_id: { type: string }
+                security_token: { type: string }
+                source_lat: { type: number }
+                source_lng: { type: number }
+                source_name: { type: string }
+                dest_lat: { type: number }
+                dest_lng: { type: number }
+                dest_name: { type: string }
+      responses:
+        "201":
+          description: Convoy created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Convoy" }
+
+  /collections/convoys/records/{id}:
+    get:
+      tags: [Convoys]
+      summary: Get a single convoy
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Convoy record
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Convoy" }
+    patch:
+      tags: [Convoys]
+      summary: Update a convoy
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status: { type: string, enum: [active, paused, ended] }
+                name: { type: string }
+      responses:
+        "200":
+          description: Updated convoy
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Convoy" }
+    delete:
+      tags: [Convoys]
+      summary: Delete a convoy
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Deleted
+
+  # ─── Vehicles ──────────────────────────────────────────────
+  /collections/vehicles/records:
+    get:
+      tags: [Vehicles]
+      summary: List vehicles
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: filter
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: List of vehicles
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items: { type: array, items: { $ref: "#/components/schemas/Vehicle" } }
+    post:
+      tags: [Vehicles]
+      summary: Register a vehicle
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [owner, name, type, status]
+              properties:
+                owner: { type: string }
+                name: { type: string, maxLength: 50 }
+                type: { type: string, enum: [car, truck, motorcycle, other, trekker] }
+                license_plate: { type: string }
+                color: { type: string }
+                status: { type: string, enum: [active, inactive, maintenance] }
+      responses:
+        "201":
+          description: Vehicle created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Vehicle" }
+
+  # ─── Convoy Members ────────────────────────────────────────
+  /collections/convoy_members/records:
+    get:
+      tags: [Convoy Members]
+      summary: List convoy members
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: filter
+          in: query
+          schema: { type: string }
+        - name: expand
+          in: query
+          schema: { type: string }
+          description: "Expand relations: user,vehicle"
+      responses:
+        "200":
+          description: List of members
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items: { type: array, items: { $ref: "#/components/schemas/ConvoyMember" } }
+    post:
+      tags: [Convoy Members]
+      summary: Add member to convoy (join)
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [convoy, user, role, status]
+              properties:
+                convoy: { type: string }
+                user: { type: string }
+                role: { type: string, enum: [owner, admin, member] }
+                vehicle: { type: string }
+                status: { type: string, enum: [active, kicked, left] }
+      responses:
+        "201":
+          description: Member added
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ConvoyMember" }
+
+  # ─── Positions ─────────────────────────────────────────────
+  /collections/positions/records:
+    get:
+      tags: [Positions]
+      summary: List positions
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: filter
+          in: query
+          schema: { type: string }
+        - name: sort
+          in: query
+          schema: { type: string, default: "-created" }
+        - name: perPage
+          in: query
+          schema: { type: integer, default: 50 }
+      responses:
+        "200":
+          description: List of positions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items: { type: array, items: { $ref: "#/components/schemas/Position" } }
+    post:
+      tags: [Positions]
+      summary: Publish a position (create or upsert)
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [vehicle, convoy, lat, lng]
+              properties:
+                vehicle: { type: string }
+                convoy: { type: string }
+                lat: { type: number }
+                lng: { type: number }
+                speed: { type: number }
+                heading: { type: number }
+                accuracy: { type: number }
+      responses:
+        "201":
+          description: Position recorded
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Position" }
+
+  # ─── Messages ──────────────────────────────────────────────
+  /collections/messages/records:
+    get:
+      tags: [Messages]
+      summary: List messages for a convoy
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: filter
+          in: query
+          schema: { type: string }
+          description: "Use `convoy ~ \"id\"` filter (convoy field is multi-value relation)"
+        - name: sort
+          in: query
+          schema: { type: string, default: "-created" }
+        - name: perPage
+          in: query
+          schema: { type: integer, default: 50 }
+      responses:
+        "200":
+          description: List of messages
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items: { type: array, items: { $ref: "#/components/schemas/Message" } }
+    post:
+      tags: [Messages]
+      summary: Send a message
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [convoy, sender, type, content]
+              properties:
+                convoy: { type: string }
+                sender: { type: string }
+                sender_name: { type: string }
+                type: { type: string, enum: [text, voice, system] }
+                content: { type: string, maxLength: 10000 }
+                duration: { type: number }
+      responses:
+        "201":
+          description: Message created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Message" }
+
+  # ─── Cached Routes ─────────────────────────────────────────
+  /collections/cached_routes/records:
+    get:
+      tags: [Cached Routes]
+      summary: Find cached route by coordinates
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: filter
+          in: query
+          schema: { type: string }
+          description: "Filter by origin/dest coords"
+      responses:
+        "200":
+          description: Cached routes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: "#/components/schemas/CachedRoute" }
+    post:
+      tags: [Cached Routes]
+      summary: Cache a route (admin/simulation only)
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [origin_lat, origin_lng, dest_lat, dest_lng, distance, duration, geometry]
+              properties:
+                origin_lat: { type: number }
+                origin_lng: { type: number }
+                dest_lat: { type: number }
+                dest_lng: { type: number }
+                distance: { type: number }
+                duration: { type: number }
+                geometry: { type: string }
+      responses:
+        "201":
+          description: Route cached
+
+  # ─── Telemetry Aggregated ──────────────────────────────────
+  /collections/telemetry_aggregated/records:
+    get:
+      tags: [Telemetry]
+      summary: List aggregated telemetry records
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: filter
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: Telemetry records
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: "#/components/schemas/TelemetryAggregated" }
+    post:
+      tags: [Telemetry]
+      summary: Write aggregated telemetry (admin/simulation only)
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [vehicle, hour_bucket, start_lat, start_lng, end_lat, end_lng]
+              properties:
+                vehicle: { type: string }
+                hour_bucket: { type: string }
+                start_lat: { type: number }
+                start_lng: { type: number }
+                end_lat: { type: number }
+                end_lng: { type: number }
+                avg_speed: { type: number }
+                max_speed: { type: number }
+                distance_traveled: { type: number }
+                point_count: { type: integer }
+                route_polyline: { type: string }
+      responses:
+        "201":
+          description: Telemetry record created
+
+  # ─── OSRM Routing ──────────────────────────────────────────
+  /route/v1/{profile}/{coordinates}:
+    get:
+      tags: [OSRM Routing]
+      summary: Calculate route between two or more coordinates
+      description: "Proxied via `/routing/` nginx path. Self-hosted on port 5001, falls back to https://router.project-osrm.org"
+      parameters:
+        - name: profile
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [driving, foot]
+          description: "Routing profile (driving for vehicles, foot for trekkers)"
+        - name: coordinates
+          in: path
+          required: true
+          schema: { type: string }
+          description: "Semicolon-separated lng,lat pairs: `{lng},{lat};{lng},{lat}`"
+        - name: overview
+          in: query
+          schema: { type: string, default: full, enum: [full, simplified, false] }
+        - name: steps
+          in: query
+          schema: { type: boolean, default: true }
+        - name: geometries
+          in: query
+          schema: { type: string, default: geojson, enum: [geojson, polyline, polyline6] }
+        - name: alternatives
+          in: query
+          schema: { type: boolean, default: true }
+      responses:
+        "200":
+          description: Route response (OSRM v5 standard)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code: { type: string, example: "Ok" }
+                  routes:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        distance: { type: number }
+                        duration: { type: number }
+                        geometry:
+                          oneOf:
+                            - { type: object }
+                            - { type: string }
+                        legs:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              steps: { type: array, items: { type: object } }
+                              distance: { type: number }
+                              duration: { type: number }
+                  waypoints:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        location: { type: array, items: { type: number }, minItems: 2, maxItems: 2 }
+                        name: { type: string }
+
+  # ─── Nominatim Geocoding ───────────────────────────────────
+  /search:
+    get:
+      tags: [Nominatim Geocoding]
+      summary: Forward geocode (place search)
+      description: "Proxied via `/geocode/` nginx path. Self-hosted on port 8080, falls back to https://nominatim.openstreetmap.org"
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema: { type: string }
+          description: Search query (place name, address)
+        - name: format
+          in: query
+          schema: { type: string, default: json, enum: [json, jsonv2] }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 5 }
+        - name: addressdetails
+          in: query
+          schema: { type: integer, default: 1 }
+        - name: extratags
+          in: query
+          schema: { type: integer, default: 1 }
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    place_id: { type: integer }
+                    display_name: { type: string }
+                    lat: { type: string }
+                    lon: { type: string }
+                    boundingbox: { type: array, items: { type: string } }
+
+  /reverse:
+    get:
+      tags: [Nominatim Geocoding]
+      summary: Reverse geocode (coordinates to address)
+      parameters:
+        - name: lat
+          in: query
+          required: true
+          schema: { type: number }
+        - name: lon
+          in: query
+          required: true
+          schema: { type: number }
+        - name: format
+          in: query
+          schema: { type: string, default: json }
+        - name: addressdetails
+          in: query
+          schema: { type: integer, default: 1 }
+      responses:
+        "200":
+          description: Reverse geocode result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                    place_id: { type: integer }
+                    display_name: { type: string }
+                    lat: { type: string }
+                    lon: { type: string }
+                    address: { type: object }
+
+  # ─── Simulation Service ────────────────────────────────────
+  /simulation/health:
+    get:
+      tags: [Simulation]
+      summary: Health check
+      responses:
+        "200":
+          description: Service status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: "ok" }
+                  running: { type: integer, description: "Number of active simulations" }
+
+  /simulation/api/simulation/status/{convoyId}:
+    get:
+      tags: [Simulation]
+      summary: Get simulation status for a convoy
+      parameters:
+        - name: convoyId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Simulation status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  running: { type: boolean }
+                  convoyId: { type: string }
+                  speedFactor: { type: number }
+                  interval: { type: number }
+                  startedAt: { type: string }
+
+  /simulation/api/simulation/start:
+    post:
+      tags: [Simulation]
+      summary: Start simulation for a convoy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [convoyId]
+              properties:
+                convoyId: { type: string }
+                speedFactor: { type: number, default: 1.0 }
+                interval: { type: number, default: 3000 }
+      responses:
+        "200":
+          description: Simulation started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  convoyId: { type: string }
+                  pid: { type: integer }
+
+  /simulation/api/simulation/stop:
+    post:
+      tags: [Simulation]
+      summary: Stop simulation for a convoy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [convoyId]
+              properties:
+                convoyId: { type: string }
+      responses:
+        "200":
+          description: Simulation stopped
+
+  /simulation/api/simulation/restart:
+    post:
+      tags: [Simulation]
+      summary: Restart simulation (stop + clear + start)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [convoyId]
+              properties:
+                convoyId: { type: string }
+                speedFactor: { type: number }
+                interval: { type: number }
+      responses:
+        "200":
+          description: Simulation restarted
+
+  /simulation/api/simulation/clear:
+    post:
+      tags: [Simulation]
+      summary: Delete all positions for a convoy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [convoyId]
+              properties:
+                convoyId: { type: string }
+      responses:
+        "200":
+          description: Positions cleared
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  deleted: { type: integer }
+
+  /simulation/api/simulation/cleanup:
+    post:
+      tags: [Simulation]
+      summary: Keep only latest position per vehicle
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [convoyId]
+              properties:
+                convoyId: { type: string }
+      responses:
+        "200":
+          description: Positions cleaned up
+
+  /simulation/api/simulation/logs/{convoyId}:
+    get:
+      tags: [Simulation]
+      summary: Get simulation logs
+      parameters:
+        - name: convoyId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Log entries
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  logs:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type: { type: string }
+                        line: { type: string }
+                        time: { type: string }
+
+  /simulation/api/push/send:
+    post:
+      tags: [Simulation]
+      summary: Send push notification to all convoy subscribers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [convoyId, title, body]
+              properties:
+                convoyId: { type: string }
+                title: { type: string }
+                body: { type: string }
+                url: { type: string }
+      responses:
+        "200":
+          description: Push notifications sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  sent: { type: integer }
+                  failed: { type: integer }
+
+  # ─── Voice Server (mediasoup SFU) ──────────────────────────
+  /voice/health:
+    get:
+      tags: [Voice]
+      summary: Voice server health check
+      responses:
+        "200":
+          description: Service status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: "ok" }
+                  rooms: { type: integer }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: PocketBase auth token (from login or register)
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id: { type: string }
+        email: { type: string, format: email }
+        name: { type: string }
+        avatar: { type: string }
+        phone: { type: string }
+        role: { type: string, enum: [admin, member] }
+        status: { type: string, enum: [active, inactive, banned] }
+        created: { type: string, format: date-time }
+        updated: { type: string, format: date-time }
+
+    Convoy:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        code: { type: string, minLength: 6, maxLength: 6 }
+        owner: { type: string }
+        status: { type: string, enum: [active, paused, ended] }
+        convoy_type: { type: string, enum: [vehicle, trekker] }
+        trip_id: { type: string }
+        security_token: { type: string }
+        source_lat: { type: number }
+        source_lng: { type: number }
+        source_name: { type: string }
+        dest_lat: { type: number }
+        dest_lng: { type: number }
+        dest_name: { type: string }
+        settings:
+          type: object
+          properties:
+            simulation_active: { type: boolean }
+            voice_enabled: { type: boolean }
+        created: { type: string, format: date-time }
+        updated: { type: string, format: date-time }
+
+    Vehicle:
+      type: object
+      properties:
+        id: { type: string }
+        owner: { type: string }
+        name: { type: string }
+        type: { type: string, enum: [car, truck, motorcycle, other, trekker] }
+        license_plate: { type: string }
+        color: { type: string }
+        status: { type: string, enum: [active, inactive, maintenance] }
+        created: { type: string, format: date-time }
+        updated: { type: string, format: date-time }
+
+    ConvoyMember:
+      type: object
+      properties:
+        id: { type: string }
+        convoy: { type: string }
+        user: { type: string }
+        role: { type: string, enum: [owner, admin, member] }
+        vehicle: { type: string }
+        status: { type: string, enum: [active, kicked, left] }
+        created: { type: string, format: date-time }
+        updated: { type: string, format: date-time }
+
+    Position:
+      type: object
+      properties:
+        id: { type: string }
+        vehicle: { type: string }
+        convoy: { type: string }
+        lat: { type: number }
+        lng: { type: number }
+        speed: { type: number, nullable: true }
+        heading: { type: number, nullable: true }
+        accuracy: { type: number, nullable: true }
+        created: { type: string, format: date-time }
+        updated: { type: string, format: date-time }
+
+    Message:
+      type: object
+      properties:
+        id: { type: string }
+        convoy: { type: string }
+        sender: { type: string }
+        sender_name: { type: string }
+        type: { type: string, enum: [text, voice, system] }
+        content: { type: string }
+        duration: { type: number }
+        created: { type: string, format: date-time }
+
+    CachedRoute:
+      type: object
+      properties:
+        id: { type: string }
+        origin_lat: { type: number }
+        origin_lng: { type: number }
+        dest_lat: { type: number }
+        dest_lng: { type: number }
+        distance: { type: number }
+        duration: { type: number }
+        geometry: { type: string }
+        created: { type: string, format: date-time }
+
+    TelemetryAggregated:
+      type: object
+      properties:
+        id: { type: string }
+        vehicle: { type: string }
+        hour_bucket: { type: string }
+        start_lat: { type: number }
+        start_lng: { type: number }
+        end_lat: { type: number }
+        end_lng: { type: number }
+        avg_speed: { type: number }
+        max_speed: { type: number }
+        distance_traveled: { type: number }
+        point_count: { type: integer }
+        route_polyline: { type: string }
+        created: { type: string, format: date-time }
+
+  # ─── Voice Server Socket.IO Events ─────────────────────────
+  # These are real-time WebSocket events, not REST endpoints.
+  # Documented here for reference.
+  x-voice-events:
+    client-to-server:
+      join-room:
+        description: Join a voice room
+        payload:
+          type: object
+          properties:
+            roomId: { type: string }
+            userId: { type: string }
+            userName: { type: string }
+      leave-room:
+        description: Leave a voice room
+        payload:
+          type: object
+          properties:
+            roomId: { type: string }
+      create-web-transport:
+        description: Create WebRTC transport (send or recv)
+        payload:
+          type: object
+          properties:
+            roomId: { type: string }
+            direction: { type: string, enum: [send, recv] }
+      connect-transport:
+        description: Connect WebRTC transport with DTLS parameters
+      produce:
+        description: Start producing audio
+      consume:
+        description: Start consuming remote audio
+      ptt-start:
+        description: Push-to-talk started
+      ptt-stop:
+        description: Push-to-talk stopped
+    server-to-client:
+      peer-joined:
+        description: Notify other peers when someone joins
+      peer-left:
+        description: Notify other peers when someone leaves
+      new-producer:
+        description: Notify others when someone starts producing
+      ptt-active:
+        description: Notify who is currently speaking
+      ptt-inactive:
+        description: Speaker stopped
+
+  # ─── Realtime Subscriptions (PocketBase WebSocket) ─────────
+  # All collections support realtime via PocketBase's subscription API.
+  # Connect via WebSocket to the PocketBase server and subscribe:
+  #   pb.collection('positions').subscribe('*', callback)
+  #   pb.collection('messages').subscribe('*', callback)
+  #   pb.collection('convoy_members').subscribe('*', callback)
+  #   pb.collection('convoys').subscribe(recordId, callback)
+  x-realtime-subscriptions:
+    positions:
+      description: Receive real-time position updates for all vehicles in a convoy
+      filter: "Filter by convoy in callback: `record.convoy === convoyId`"
+    messages:
+      description: Receive real-time chat messages
+    convoy_members:
+      description: Receive member join/leave notifications
+    convoys:
+      description: Receive convoy status changes (subscribe by recordId)

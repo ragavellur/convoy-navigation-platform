@@ -958,7 +958,7 @@
         {
           "id": "TASK-145",
           "title": "Implement telemetry aggregation + location update batching",
-          "status": "in-progress",
+          "status": "done",
           "priority": "high"
         },
         {
@@ -1024,7 +1024,7 @@
         {
           "id": "TASK-156",
           "title": "API documentation (OpenAPI/Swagger)",
-          "status": "in-progress",
+          "status": "done",
           "priority": "medium"
         }
       ]

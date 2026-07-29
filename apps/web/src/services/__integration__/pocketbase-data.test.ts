@@ -461,3 +461,59 @@ describe('PocketBase Push Subscriptions CRUD', () => {
     subId = ''
   })
 })
+
+describe('PocketBase Telemetry Aggregated CRUD', () => {
+  let aggId: string
+
+  afterAll(async () => {
+    if (aggId) {
+      await adminFetch('DELETE', `/api/collections/telemetry_aggregated/records/${aggId}`).catch(
+        () => {},
+      )
+    }
+  })
+
+  test('create a telemetry aggregated record (admin only)', async () => {
+    const agg = (await adminFetch('POST', '/api/collections/telemetry_aggregated/records', {
+      vehicle: ctx.testVehicle.id,
+      hour_bucket: new Date().toISOString().slice(0, 13),
+      avg_speed: 45.5,
+      max_speed: 62,
+      distance_traveled: 15000,
+      point_count: 12,
+      start_lat: 13.0827,
+      start_lng: 80.2707,
+      end_lat: 12.9716,
+      end_lng: 77.5946,
+      route_polyline: JSON.stringify({
+        type: 'LineString',
+        coordinates: [
+          [80.2707, 13.0827],
+          [77.5946, 12.9716],
+        ],
+      }),
+    })) as Record<string, unknown>
+    aggId = agg.id as string
+    expect(agg.id).toBeTruthy()
+    expect(agg.avg_speed).toBe(45.5)
+    expect(agg.max_speed).toBe(62)
+    expect(agg.distance_traveled).toBe(15000)
+    expect(agg.point_count).toBe(12)
+    expect(agg.start_lat).toBe(13.0827)
+    expect(agg.end_lat).toBe(12.9716)
+  })
+
+  test('query aggregated records by vehicle', async () => {
+    const results = (await adminFetch(
+      'GET',
+      `/api/collections/telemetry_aggregated/records?filter=${encodeURIComponent(`vehicle = "${ctx.testVehicle.id}"`)}`,
+    )) as { items: Array<Record<string, unknown>> }
+    expect(results.items.length).toBeGreaterThanOrEqual(1)
+    expect(results.items.some((r: Record<string, unknown>) => r.id === aggId)).toBe(true)
+  })
+
+  test('aggregated records are accessible via regular user (no restrictive rule)', async () => {
+    const results = await ctx.userPb.collection('telemetry_aggregated').getList(1, 10)
+    expect(results).toBeDefined()
+  })
+})

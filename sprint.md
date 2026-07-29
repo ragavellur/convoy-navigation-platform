@@ -246,10 +246,10 @@
 
 - [x] [TASK-146] Write unit tests for all services (>85% coverage)
 
-### 🔄 In Progress
+### ✅ Done
 
-- [-] [TASK-145] Implement telemetry aggregation + location update batching
-- [-] [TASK-156] API documentation (OpenAPI/Swagger)
+- [x] [TASK-145] Implement telemetry aggregation + location update batching
+- [x] [TASK-156] API documentation (OpenAPI/Swagger)
 
 ### ✅ Done
 
@@ -300,9 +300,9 @@
 | Sprint 8  | 21          | 10      | 0           | 11     | Web PWA + Trekker  |
 | Sprint 9  | 5           | 0       | 0           | 5      | Web CSS Refactor   |
 | Sprint 10 | 8           | 8       | 0           | 0      | Web CSS Refactor   |
-| Sprint 11 | 13          | 7       | 1           | 4      | All                |
+| Sprint 11 | 13          | 5       | 0           | 8      | All                |
 | Sprint 12 | 14          | 14      | 0           | 0      | All                |
-| **Total** | **163**     | **73**  | **6**       | **83** |                    |
+| **Total** | **163**     | **71**  | **4**       | **85** |                    |
 
 ---
 

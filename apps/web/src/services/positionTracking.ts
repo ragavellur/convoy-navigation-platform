@@ -1,5 +1,6 @@
 import pb from './pocketbase'
 import { queuePendingPosition, getPendingPositions, removePendingPosition } from '../lib/db'
+import { addReading, startAggregation, flushAll as flushTelemetry } from './telemetryAggregator'
 
 export interface Position {
   id: string
@@ -16,8 +17,9 @@ export interface Position {
 
 const DISTANCE_THRESHOLD_M = 75
 const MIN_PUBLISH_INTERVAL_MS = 3000
+const TELEMETRY_INTERVAL_MS = 60000
 
-function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
+export function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 6371000
   const dLat = ((lat2 - lat1) * Math.PI) / 180
   const dLng = ((lng2 - lng1) * Math.PI) / 180
@@ -104,6 +106,14 @@ export async function publishPosition(params: {
   } else {
     result = (await pb.collection('positions').create(data)) as unknown as Position
   }
+  startAggregation(TELEMETRY_INTERVAL_MS)
+  addReading(params.vehicleId, params.convoyId, {
+    lat: params.lat,
+    lng: params.lng,
+    speed: params.speed ?? null,
+    heading: params.heading ?? null,
+    timestamp: Date.now(),
+  })
   lastPublished = {
     lat: params.lat,
     lng: params.lng,
@@ -149,6 +159,9 @@ export async function flushPendingPositions(): Promise<number> {
     } catch {
       // keep in queue for next attempt
     }
+  }
+  if (flushed > 0) {
+    await flushTelemetry().catch(() => {})
   }
   return flushed
 }
