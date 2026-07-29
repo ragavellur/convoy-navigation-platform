@@ -1,6 +1,6 @@
 import type { RouteResponse, RouteSummary } from '../types'
 
-const LOCAL_OSRM_URL = 'http://localhost:5001'
+const LOCAL_OSRM_URL = import.meta.env.VITE_OSRM_URL || 'http://localhost:5001'
 const PUBLIC_OSRM_URL = 'https://router.project-osrm.org'
 
 interface OSRMRouteParams {
