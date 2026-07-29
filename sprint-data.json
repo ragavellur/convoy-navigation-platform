@@ -1146,6 +1146,27 @@
           "status": "done",
           "priority": "high",
           "description": "Git push, docker compose rebuild, site loads correctly at convoy.vellur.in."
+        },
+        {
+          "id": "TASK-175",
+          "title": "v0.1.4: persist assembly routes to PocketBase + show in all phases",
+          "status": "done",
+          "priority": "high",
+          "description": "Add assembly_route_geometry field, useAssemblyRoutes saves/reads from PB, join markers visible in all phases, no assembly filter."
+        },
+        {
+          "id": "TASK-176",
+          "title": "v0.1.4: fix ALL remaining schema sync gaps",
+          "status": "done",
+          "priority": "high",
+          "description": "push_subscriptions collection, convoys.status values (active/paused/ended), convoy_members.status values (.sh), ConvoyMember TS type, route_cache typo."
+        },
+        {
+          "id": "TASK-177",
+          "title": "v0.1.4: run setup-collections.sh on production + patch status values",
+          "status": "done",
+          "priority": "high",
+          "description": "Added push_subscriptions collection, assembly_route_geometry field, patched convoys.status values on production."
         }
       ]
     },
