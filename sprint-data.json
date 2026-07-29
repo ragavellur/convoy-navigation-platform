@@ -1047,6 +1047,42 @@
           "status": "done",
           "priority": "high",
           "description": "Replace hardcoded localhost:5001 in osrm.ts with VITE_OSRM_URL env var. Add /routing to .env.production. Remove /routing/ from frontend nginx.conf (host nginx handles it). Fixes 'Could not recalculate route' in production."
+        },
+        {
+          "id": "TASK-160",
+          "title": "Phase 1: data model — add phase field + assembled_members to convoys collection + TypeScript types",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-161",
+          "title": "Phase 2: assembly route engine — per-member OSRM routes from position to assembly point",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-162",
+          "title": "Phase 3: map visualization — colored dashed assembly routes + progress HUD + arrival detection",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-163",
+          "title": "Phase 4: phase management — host controls (Assemble/Depart/Complete) + phase transitions",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-164",
+          "title": "Phase 5: 2-phase simulation — assemble (scatter) then transit all vehicles together",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-165",
+          "title": "Phase 7: real-time assembly updates via PocketBase Realtime subscriptions",
+          "status": "backlog",
+          "priority": "medium"
         }
       ]
     },

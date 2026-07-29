@@ -268,6 +268,12 @@
 - [ ] [TASK-155] Load testing for PocketBase Realtime
 - [ ] [TASK-157] Load India OSM data into OSRM for self-hosted routing (GeoFabrik)
 - [ ] [TASK-158] Load India OSM data into Nominatim for self-hosted geocoding (GeoFabrik)
+- [ ] [TASK-160] Phase 1: data model — phase field + assembled_members + types
+- [ ] [TASK-161] Phase 2: assembly route engine — per-member OSRM routes to assembly point
+- [ ] [TASK-162] Phase 3: map viz — colored dashed assembly routes + HUD + arrival detection
+- [ ] [TASK-163] Phase 4: phase management — host controls + phase transitions
+- [ ] [TASK-164] Phase 5: 2-phase simulation — assemble (scatter) then transit
+- [ ] [TASK-165] Phase 7: real-time assembly updates via Realtime subscriptions
 
 ---
 
@@ -306,9 +312,9 @@
 | Sprint 8  | 21          | 10      | 0           | 11     | Web PWA + Trekker  |
 | Sprint 9  | 5           | 0       | 0           | 5      | Web CSS Refactor   |
 | Sprint 10 | 8           | 8       | 0           | 0      | Web CSS Refactor   |
-| Sprint 11 | 16          | 7       | 0           | 9      | All                |
+| Sprint 11 | 22          | 13      | 0           | 9      | All                |
 | Sprint 12 | 14          | 14      | 0           | 0      | All                |
-| **Total** | **166**     | **73**  | **4**       | **86** |                    |
+| **Total** | **172**     | **79**  | **4**       | **86** |                    |
 
 ---
 
