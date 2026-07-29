@@ -34,8 +34,6 @@ import type { SearchResult, RouteResponse, RouteGeometry } from '../types'
 
 const ROUTE_SOURCE_ID = 'route'
 const ROUTE_LAYER_ID = 'route-line'
-const ROUTE_OUTLINE_LAYER_ID = 'route-line-outline'
-const ROUTE_ARROW_LAYER_ID = 'route-arrows'
 const ALT_SOURCE_PREFIX = 'alt-route-'
 const ALT_LAYER_PREFIX = 'alt-route-line-'
 const TRAFFIC_SOURCE_ID = 'traffic'
@@ -44,7 +42,6 @@ const VELOCITY_SOURCE_ID = 'velocity-vectors'
 const VELOCITY_LAYER_ID = 'velocity-line'
 const ASSEMBLY_SOURCE_PREFIX = 'assembly-route-'
 const ASSEMBLY_LAYER_PREFIX = 'assembly-route-line-'
-const ASSEMBLY_OUTLINE_PREFIX = 'assembly-route-outline-'
 
 const ASSEMBLY_THRESHOLD_M = 100
 
@@ -123,32 +120,6 @@ function MapPage() {
     }
   }
 
-  function addRouteArrowImage(m: maplibregl.Map) {
-    if (m.hasImage('route-arrow')) return
-    const size = 24
-    const canvas = document.createElement('canvas')
-    canvas.width = size
-    canvas.height = size
-    const ctx = canvas.getContext('2d')!
-    ctx.fillStyle = '#6366f1'
-    ctx.beginPath()
-    ctx.moveTo(2, 2)
-    ctx.lineTo(size - 2, size / 2)
-    ctx.lineTo(2, size - 2)
-    ctx.closePath()
-    ctx.fill()
-    ctx.strokeStyle = '#ffffff'
-    ctx.lineWidth = 2
-    ctx.beginPath()
-    ctx.moveTo(2, 2)
-    ctx.lineTo(size - 2, size / 2)
-    ctx.lineTo(2, size - 2)
-    ctx.closePath()
-    ctx.stroke()
-    const imageData = ctx.getImageData(0, 0, size, size)
-    m.addImage('route-arrow', imageData, { pixelRatio: 2 })
-  }
-
   function clearAllRouteLayers() {
     const m = map.current
     if (!m) return
@@ -158,9 +129,7 @@ function MapPage() {
       if (
         layer.id.startsWith(TRAFFIC_LAYER_PREFIX) ||
         layer.id.startsWith(ALT_LAYER_PREFIX) ||
-        layer.id === ROUTE_LAYER_ID ||
-        layer.id === ROUTE_OUTLINE_LAYER_ID ||
-        layer.id === ROUTE_ARROW_LAYER_ID
+        layer.id === ROUTE_LAYER_ID
       ) {
         safeRemoveLayer(m, layer.id)
       }
@@ -205,19 +174,6 @@ function MapPage() {
         data: { type: 'FeatureCollection', features: trafficFeatures },
       })
 
-      safeRemoveLayer(map.current, ROUTE_OUTLINE_LAYER_ID)
-      map.current.addLayer({
-        id: ROUTE_OUTLINE_LAYER_ID,
-        type: 'line',
-        source: sourceId,
-        layout: { 'line-join': 'round', 'line-cap': 'round' },
-        paint: {
-          'line-color': '#ffffff',
-          'line-width': 8,
-          'line-opacity': 0.5,
-        },
-      })
-
       safeRemoveLayer(map.current, layerId)
       map.current.addLayer({
         id: layerId,
@@ -239,24 +195,6 @@ function MapPage() {
           paint: { 'line-color': seg.color, 'line-width': 5, 'line-opacity': 0.9 },
         })
       })
-
-      addRouteArrowImage(map.current)
-      safeRemoveLayer(map.current, ROUTE_ARROW_LAYER_ID)
-      map.current.addLayer({
-        id: ROUTE_ARROW_LAYER_ID,
-        type: 'symbol',
-        source: sourceId,
-        layout: {
-          'symbol-placement': 'line',
-          'symbol-spacing': 200,
-          'icon-image': 'route-arrow',
-          'icon-size': 0.5,
-          'icon-rotation-alignment': 'map',
-          'icon-allow-overlap': true,
-          'icon-ignore-placement': true,
-        },
-        paint: { 'icon-opacity': 0.85 },
-      })
     } else {
       safeRemoveLayer(map.current, layerId)
       map.current.addLayer({
@@ -272,7 +210,6 @@ function MapPage() {
   function clearAssemblyRouteLayers() {
     if (!map.current) return
     for (let i = 0; i < 20; i++) {
-      safeRemoveLayer(map.current, `${ASSEMBLY_OUTLINE_PREFIX}${i}`)
       safeRemoveLayer(map.current, `${ASSEMBLY_LAYER_PREFIX}${i}`)
       safeRemoveSource(map.current, `${ASSEMBLY_SOURCE_PREFIX}${i}`)
     }
@@ -282,7 +219,6 @@ function MapPage() {
     if (!map.current) return
     const sourceId = `${ASSEMBLY_SOURCE_PREFIX}${index}`
     const layerId = `${ASSEMBLY_LAYER_PREFIX}${index}`
-    const outlineId = `${ASSEMBLY_OUTLINE_PREFIX}${index}`
     const geometry = route.geometry as RouteGeometry
 
     safeRemoveSource(map.current, sourceId)
@@ -291,28 +227,12 @@ function MapPage() {
       data: { type: 'Feature', properties: {}, geometry },
     })
 
-    safeRemoveLayer(map.current, outlineId)
-    map.current.addLayer({
-      id: outlineId,
-      type: 'line',
-      source: sourceId,
-      layout: { 'line-join': 'round', 'line-cap': 'round' },
-      paint: {
-        'line-color': '#ffffff',
-        'line-width': 5,
-        'line-opacity': 0.35,
-      },
-    })
-
     safeRemoveLayer(map.current, layerId)
     map.current.addLayer({
       id: layerId,
       type: 'line',
       source: sourceId,
-      layout: {
-        'line-join': 'round',
-        'line-cap': 'round',
-      },
+      layout: { 'line-join': 'round', 'line-cap': 'round' },
       paint: {
         'line-color': color,
         'line-width': 3,
@@ -1024,7 +944,6 @@ function MapPage() {
     map.current.addControl(new maplibregl.FullscreenControl(), 'top-right')
     map.current.on('load', () => {
       setMapLoaded(true)
-      addRouteArrowImage(map.current!)
       updateBounds()
       map.current?.on('styleimagemissing', (e) => {
         const id = e.id
@@ -1076,11 +995,15 @@ function MapPage() {
       const pitch = map.current.getPitch()
       const bearing = map.current.getBearing()
       map.current.setStyle(getMapStyleUrl(theme))
-      map.current.setCenter(center)
-      map.current.setZoom(zoom)
-      map.current.setPitch(pitch)
-      map.current.setBearing(bearing)
       map.current.once('style.load', () => {
+        try {
+          map.current?.setCenter(center)
+          map.current?.setZoom(zoom)
+          map.current?.setPitch(pitch)
+          map.current?.setBearing(bearing)
+        } catch {
+          /* setStyle may not preserve transform */
+        }
         setStyleLoadKey((k) => k + 1)
       })
     }
