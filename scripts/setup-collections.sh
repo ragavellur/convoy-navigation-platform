@@ -145,7 +145,7 @@ create_or_get("convoys", [
     {"name": "code", "type": "text", "required": True, "options": {"min": 6, "max": 6}},
     {"name": "description", "type": "text", "required": False},
     {"name": "owner", "type": "relation", "required": True, "options": {"collectionId": "_pb_users_auth_", "cascadeDelete": True, "maxSelect": 1}},
-    {"name": "status", "type": "select", "required": True, "options": {"values": ["active", "archived"], "maxSelect": 1}},
+    {"name": "status", "type": "select", "required": True, "options": {"values": ["active", "paused", "ended"], "maxSelect": 1}},
     {"name": "convoy_type", "type": "select", "required": True, "options": {"values": ["vehicle", "trekker"], "maxSelect": 1}},
     {"name": "max_members", "type": "number", "required": False},
     {"name": "settings", "type": "json", "required": False, "options": {"maxSize": 2000000}},
@@ -182,12 +182,13 @@ create_or_get("convoy_members", [
     {"name": "user", "type": "relation", "required": True, "options": {"collectionId": "_pb_users_auth_", "cascadeDelete": True, "maxSelect": 1}},
     {"name": "role", "type": "select", "required": True, "options": {"values": ["owner", "admin", "member"], "maxSelect": 1}},
     {"name": "vehicle", "type": "relation", "required": False, "options": {"collectionId": ids.get("vehicles", "_"), "cascadeDelete": False, "maxSelect": 1}},
-    {"name": "status", "type": "select", "required": True, "options": {"values": ["active", "kicked", "left"], "maxSelect": 1}},
+    {"name": "status", "type": "select", "required": True, "options": {"values": ["active", "inactive", "kicked", "left", "removed"], "maxSelect": 1}},
     {"name": "joined_at", "type": "date", "required": False},
     {"name": "join_lat", "type": "number", "required": False},
     {"name": "join_lng", "type": "number", "required": False},
     {"name": "join_name", "type": "text", "required": False},
     {"name": "route_geometry", "type": "json", "required": False, "options": {"maxSize": 2000000}},
+    {"name": "assembly_route_geometry", "type": "json", "required": False, "options": {"maxSize": 2000000}},
 ], [
     "CREATE INDEX idx_convoy_members_convoy ON convoy_members (convoy)",
     "CREATE INDEX idx_convoy_members_user ON convoy_members (user)",
@@ -274,6 +275,14 @@ create_or_get("audit_log", [
     "CREATE INDEX idx_audit_action ON audit_log (action)",
 ])
 
+create_or_get("push_subscriptions", [
+    {"name": "user", "type": "relation", "required": True, "options": {"collectionId": "_pb_users_auth_", "cascadeDelete": True, "maxSelect": 1}},
+    {"name": "endpoint", "type": "text", "required": True, "options": {"max": 512}},
+    {"name": "p256dh", "type": "text", "required": False, "options": {"max": 256}},
+    {"name": "auth", "type": "text", "required": False, "options": {"max": 256}},
+    {"name": "user_agent", "type": "text", "required": False, "options": {"max": 512}},
+], [])
+
 # ============================================
 # Phase 2: Set rules (after schema exists)
 # ============================================
@@ -351,6 +360,14 @@ patch_rules("audit_log",
     delete_rule=None,
 )
 
+patch_rules("push_subscriptions",
+    list_rule="@request.auth.id != ''",
+    view_rule="@request.auth.id = user",
+    create_rule="@request.auth.id != ''",
+    update_rule="@request.auth.id = user",
+    delete_rule="@request.auth.id = user",
+)
+
 # Users collection needs open list/view rules for expand=user to work
 # (convoy_members expand needs to resolve other users' names)
 patch_rules("_pb_users_auth_",
@@ -402,6 +419,15 @@ print("\n=== Phase 5: Add convoy lifecycle fields ===")
 patch_schema("convoys", [
     {"name": "phase", "type": "select", "required": True, "options": {"values": ["forming", "assembling", "in_transit", "completed"], "maxSelect": 1}},
     {"name": "assembled_members", "type": "json", "required": False, "options": {"maxSize": 2000000}},
+])
+
+# ============================================
+# Phase 7: Add assembly_route_geometry to existing convoy_members
+# ============================================
+print("\n=== Phase 7: Add assembly_route_geometry field ===")
+
+patch_schema("convoy_members", [
+    {"name": "assembly_route_geometry", "type": "json", "required": False, "options": {"maxSize": 2000000}},
 ])
 
 # ============================================

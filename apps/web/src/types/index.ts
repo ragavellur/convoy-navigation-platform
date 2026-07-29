@@ -49,7 +49,7 @@ export interface ConvoyMember {
   user: string
   role: 'owner' | 'admin' | 'member'
   vehicle?: string
-  status: 'active' | 'kicked' | 'left'
+  status: 'active' | 'inactive' | 'kicked' | 'left' | 'removed'
   created: string
   updated: string
 }

@@ -149,7 +149,7 @@ export async function globalSetup(): Promise<TestContext> {
 export async function globalTeardown(): Promise<void> {
   if (!CTX.testConvoy?.id) return
 
-  const cols = ['positions', 'messages', 'push_subscriptions', 'route_cache', 'convoy_members']
+  const cols = ['positions', 'messages', 'push_subscriptions', 'cached_routes', 'convoy_members']
   for (const col of cols) {
     try {
       const records = (await adminFetch(

@@ -1101,8 +1101,6 @@ function MapPage() {
     members,
     ownerUserId,
     assemblyPoint: computedAssemblyPoint,
-    phase: convoyPhase,
-    assembledMembers,
   })
 
   useEffect(() => {
@@ -1122,7 +1120,7 @@ function MapPage() {
     return () => {
       clearAssemblyRouteLayers()
     }
-  }, [assemblyRoutes, convoyPhase, mapLoaded])
+  }, [assemblyRoutes, mapLoaded])
 
   useEffect(() => {
     if (convoyPhase !== 'assembling' || !computedAssemblyPoint || !convoyId) return
@@ -1188,8 +1186,6 @@ function MapPage() {
 
     joinMarkersRef.current.forEach((m) => m.remove())
     joinMarkersRef.current.clear()
-
-    if (convoyPhase !== 'assembling' && convoyPhase !== 'forming') return
 
     for (const m of members) {
       if (!m.userId) continue
