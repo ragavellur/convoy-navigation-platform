@@ -51,6 +51,7 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         navigateFallbackDenylist: [
           /^\/api\//,
+          /^\/api-docs\//,
           /^\/pb\//,
           /^\/voice\//,
           /^\/routing\//,
