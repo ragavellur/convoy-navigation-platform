@@ -8,6 +8,7 @@ COPY package.json ./
 RUN npm install --production
 
 COPY index.js ./
+COPY scripts/ ./scripts/
 
 EXPOSE 3002
 
