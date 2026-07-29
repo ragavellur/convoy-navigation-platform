@@ -238,9 +238,9 @@ async function main() {
     process.exit(0)
   }
 
-  // Calculate meeting point from all members' routes if not already set
+  // Calculate meeting point from all members' routes
   // Algorithm: walk owner's route forward, find first coord present in ALL members' geometries
-  if (!convoy.source_lat || !convoy.source_lng) {
+  {
     const active = members.filter((m) => m.join_lat != null && m.join_lng != null)
     const owner = members.find((m) => m.role === 'owner')
     let meetingPoint = null
