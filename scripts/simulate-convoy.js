@@ -296,6 +296,7 @@ async function main() {
 
     const isAssembling = phase === 'assembling' && waitAtMeeting
 
+    // First pass: advance all vehicles toward destination
     for (let i = 0; i < activeVehicles.length; i++) {
       const v = activeVehicles[i]
       const geo = v.geometry
@@ -303,7 +304,6 @@ async function main() {
       const speedVar = 1 + (i % 3) * VEHICLE_SPEED_VARIANCE
       const step = 3 * speedFactor * speedVar
 
-      // Advance toward destination
       if (coordIdxs[i] < target) {
         coordIdxs[i] = Math.min(coordIdxs[i] + step, target)
       }
@@ -322,28 +322,48 @@ async function main() {
       }
 
       const arrived = coordIdxs[i] >= geo.length - 1
-
-      // Distance from current position to the meeting point
-      const dLat = pos.lat - meetingPt.lat
-      const dLng = pos.lng - meetingPt.lng
-      const distToMeeting = Math.sqrt(dLat * dLat + dLng * dLng) * 111320
-
-      const nearMeeting = isAssembling && distToMeeting < ASSEMBLY_DISTANCE_M
-      const waiting = arrived || nearMeeting
-      const speed = arrived || waiting ? 0 : 15 * speedFactor * speedVar
-
-      await pbUpsertPosition(token, v.vehicleId, convoyId, pos.lat, pos.lng, speed, 0)
-
       if (!arrived) allDone = false
 
-      // Auto-mark as assembled when near meeting point or at destination
+      v._pos = pos
+      v._arrived = arrived
+    }
+
+    // Second pass: detect convergence — vehicles sharing the same coordinate
+    // stop and get marked assembled, regardless of predefined meeting point
+    const converged = new Set()
+    if (isAssembling) {
+      for (let i = 0; i < activeVehicles.length; i++) {
+        const a = activeVehicles[i]
+        if (a._arrived) {
+          converged.add(a.userId)
+          continue
+        }
+        for (let j = i + 1; j < activeVehicles.length; j++) {
+          const b = activeVehicles[j]
+          const dLat = a._pos.lat - b._pos.lat
+          const dLng = a._pos.lng - b._pos.lng
+          const dist = Math.sqrt(dLat * dLat + dLng * dLng) * 111320
+          if (dist < ASSEMBLY_DISTANCE_M) {
+            converged.add(a.userId)
+            converged.add(b.userId)
+          }
+        }
+      }
+    }
+
+    // Third pass: write positions, set speed, mark assembled
+    for (let i = 0; i < activeVehicles.length; i++) {
+      const v = activeVehicles[i]
+      const waiting = v._arrived || (isAssembling && converged.has(v.userId))
+      const speed =
+        v._arrived || waiting ? 0 : 15 * speedFactor * (1 + (i % 3) * VEHICLE_SPEED_VARIANCE)
+      await pbUpsertPosition(token, v.vehicleId, convoyId, v._pos.lat, v._pos.lng, speed, 0)
+
       if (!assembledMembers.includes(v.userId)) {
-        if (nearMeeting || arrived) {
+        if (v._arrived || (isAssembling && converged.has(v.userId))) {
           assembledMembers = [...assembledMembers, v.userId]
           await pbUpdate(token, 'convoys', convoyId, { assembled_members: assembledMembers })
-          console.log(
-            `[simulate-convoy] ${v.vehicleId} assembled (${Math.round(distToMeeting)}m from meeting point)`,
-          )
+          console.log(`[simulate-convoy] ${v.vehicleId} assembled`)
         }
       }
     }
