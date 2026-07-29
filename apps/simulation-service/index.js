@@ -673,7 +673,7 @@ async function clearPositions(convoyId) {
     if (ids.length > 1) {
       const batchRequests = ids.map((id) => ({
         method: 'DELETE',
-        path: `/api/collections/positions/records/${id}`,
+        url: `/api/collections/positions/records/${id}`,
       }))
       try {
         await pbRequest('POST', '/api/batch', { requests: batchRequests })
@@ -756,7 +756,7 @@ async function cleanupKeepLatest(convoyId) {
     const batch = idsToDelete.slice(i, i + BATCH_SIZE)
     const batchRequests = batch.map((id) => ({
       method: 'DELETE',
-      path: `/api/collections/positions/records/${id}`,
+      url: `/api/collections/positions/records/${id}`,
     }))
     try {
       await pbRequest('POST', '/api/batch', { requests: batchRequests })
