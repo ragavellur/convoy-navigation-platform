@@ -280,9 +280,9 @@ async function main() {
     })
   }
 
-  // Set phase to assembling if still forming
-  if (!convoy.phase || convoy.phase === 'forming') {
-    console.log('[simulate-convoy] Setting phase to assembling')
+  // Set phase to assembling if forming or completed (restart)
+  if (!convoy.phase || convoy.phase === 'forming' || convoy.phase === 'completed') {
+    console.log(`[simulate-convoy] Setting phase from ${convoy.phase} to assembling`)
     await pbUpdate(token, 'convoys', convoyId, { phase: 'assembling', assembled_members: [] })
   }
 
