@@ -3,7 +3,18 @@ import { deriveMemberStatus, formatSpeedKmh, formatETA, haversineDistance } from
 import type { Position } from '../../services/positionTracking'
 
 function makePosition(overrides: Partial<Position> & { updated: string }): Position {
-  return { lat: 0, lng: 0, heading: 0, speed: 0, accuracy: 0, timestamp: 0, ...overrides }
+  return {
+    id: '',
+    vehicle: '',
+    convoy: '',
+    created: '',
+    lat: 0,
+    lng: 0,
+    heading: 0,
+    speed: 0,
+    accuracy: 0,
+    ...overrides,
+  }
 }
 
 describe('deriveMemberStatus', () => {

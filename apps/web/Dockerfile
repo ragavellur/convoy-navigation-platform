@@ -19,4 +19,5 @@ RUN npm run build --workspace=@convoy/web
 FROM nginx:alpine
 COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/apps/web/dist /usr/share/nginx/html
+COPY docs/api/ /usr/share/nginx/html/api-docs/
 EXPOSE 80

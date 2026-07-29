@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Convoy Platform - API Docs</title>
+    <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css" />
+    <style>
+      :root {
+        --bg: #1a1a2e;
+        --surface: #16213e;
+        --surface2: #1a2744;
+        --border: #2a3a5c;
+        --text: #e0e0e0;
+        --text-muted: #8892a4;
+        --accent: #4fc3f7;
+        --accent2: #81c784;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      }
+      header {
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        padding: 16px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+      header h1 {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--accent);
+      }
+      header h1 small {
+        font-size: 13px;
+        font-weight: 400;
+        color: var(--text-muted);
+        margin-left: 10px;
+      }
+      .topbar {
+        display: none;
+      }
+      .swagger-ui {
+        color: var(--text);
+      }
+      .swagger-ui .scheme-container {
+        background: var(--surface);
+        box-shadow: none;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        margin: 16px 24px;
+        padding: 12px 20px;
+      }
+      .swagger-ui .opblock-tag {
+        color: var(--accent);
+        border-bottom: 1px solid var(--border);
+      }
+      .swagger-ui .opblock-tag:hover {
+        background: transparent;
+      }
+      .swagger-ui .opblock {
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        margin: 8px 0;
+        background: var(--surface);
+      }
+      .swagger-ui .opblock .opblock-summary {
+        border-bottom: 1px solid var(--border);
+      }
+      .swagger-ui .opblock .opblock-summary-description {
+        color: var(--text-muted);
+      }
+      .swagger-ui .opblock-body {
+        background: var(--surface2);
+      }
+      .swagger-ui .opblock-body pre {
+        background: #0d1117;
+        border-radius: 6px;
+      }
+      .swagger-ui .opblock-body .response-col_status,
+      .swagger-ui .opblock-body .response-col_description {
+        color: var(--text);
+      }
+      .swagger-ui .opblock .opblock-section-header {
+        background: var(--surface);
+        border: none;
+        box-shadow: none;
+      }
+      .swagger-ui .opblock .opblock-section-header h4 {
+        color: var(--text);
+      }
+      .swagger-ui table thead tr td,
+      .swagger-ui table thead tr th {
+        color: var(--text-muted);
+        border-bottom: 1px solid var(--border);
+      }
+      .swagger-ui .parameter__name {
+        color: var(--text);
+      }
+      .swagger-ui .parameter__type {
+        color: var(--text-muted);
+      }
+      .swagger-ui .model-box {
+        background: #0d1117;
+        border-radius: 6px;
+      }
+      .swagger-ui .model {
+        color: var(--text);
+      }
+      .swagger-ui .model-title {
+        color: var(--text);
+      }
+      .swagger-ui .prop-name {
+        color: #7ec8e3;
+      }
+      .swagger-ui .prop-type {
+        color: #ce9178;
+      }
+      .swagger-ui .btn {
+        border-radius: 6px;
+        font-size: 13px;
+      }
+      .swagger-ui .btn.execute {
+        background: var(--accent2);
+        border-color: var(--accent2);
+        color: #000;
+      }
+      .swagger-ui select {
+        background: var(--surface2);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+      }
+      .swagger-ui input {
+        background: var(--surface2);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+      }
+      .swagger-ui textarea {
+        background: var(--surface2);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+      }
+      .swagger-ui .responses-inner h4,
+      .swagger-ui .responses-inner h5 {
+        color: var(--text);
+      }
+      .swagger-ui .response-col_links {
+        display: none;
+      }
+      .swagger-ui .info {
+        margin: 16px 24px;
+      }
+      .swagger-ui .info .title {
+        color: var(--accent);
+      }
+      .swagger-ui .info .description p {
+        color: var(--text-muted);
+      }
+      .swagger-ui .info .contact {
+        color: var(--text-muted);
+      }
+      .swagger-ui a {
+        color: var(--accent);
+      }
+      .swagger-ui .markdown p {
+        color: var(--text-muted);
+      }
+      .swagger-ui .scheme-container .servers label {
+        color: var(--text);
+      }
+      .swagger-ui svg:not(:root) {
+        fill: var(--text);
+      }
+      .swagger-ui .opblock-summary-control:hover {
+        background: transparent;
+      }
+      .note-banner {
+        background: #1e3a5f;
+        border: 1px solid #2a5a8f;
+        border-radius: 8px;
+        padding: 12px 20px;
+        margin: 8px 24px;
+        font-size: 13px;
+        color: #b0cfe0;
+        line-height: 1.5;
+      }
+      .note-banner strong {
+        color: var(--accent);
+      }
+      .note-banner code {
+        background: #0d1117;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 12px;
+      }
+      @media (max-width: 640px) {
+        header {
+          flex-direction: column;
+          align-items: start;
+        }
+        .swagger-ui .scheme-container,
+        .swagger-ui .info,
+        .note-banner {
+          margin: 12px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Convoy Platform <small>API Documentation</small></h1>
+      <span style="font-size: 12px; color: var(--text-muted)">
+        <span id="spec-version">v1.0.0</span>
+        &middot;
+        <a href="openapi.yaml" style="color: var(--accent2)" download>Download YAML</a>
+      </span>
+    </header>
+
+    <div class="note-banner">
+      <strong>Testing APIs:</strong> Select the appropriate server from the dropdown below for the
+      endpoint you want to test. PocketBase API uses <code>/collections/&hellip;</code> paths with
+      <strong>PocketBase</strong> server. OSRM, Nominatim, Simulation and Voice each have their own
+      server entries. Only services with CORS enabled can be tested directly from the browser.
+      <br /><br />
+      <strong>Auth flow:</strong>
+      <ol style="margin: 4px 0 0 18px">
+        <li>Select <strong>PocketBase API</strong> server</li>
+        <li>Call <code>POST /collections/users/auth-with-password</code> with email/password</li>
+        <li>Copy the returned <code>token</code> value</li>
+        <li>
+          Click <strong>Authorize</strong> (top right) and paste the token as
+          <code>Bearer &lt;token&gt;</code>
+        </li>
+      </ol>
+    </div>
+
+    <div id="swagger-ui"></div>
+
+    <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+    <script>
+      SwaggerUIBundle({
+        url: 'openapi.yaml',
+        dom_id: '#swagger-ui',
+        deepLinking: true,
+        presets: [SwaggerUIBundle.presets.apis, SwaggerUIBundle.SwaggerUIStandalonePreset],
+        layout: 'BaseLayout',
+        defaultModelRendering: 'model',
+        docExpansion: 'list',
+        filter: true,
+        showExtensions: true,
+        showCommonExtensions: true,
+        tryItOutEnabled: false,
+        syntaxHighlight: { activate: true, theme: 'monokai' },
+        onComplete: function () {
+          var ver = document.querySelector('.info .title small')
+          if (ver) document.getElementById('spec-version').textContent = ver.textContent.trim()
+        },
+      })
+    </script>
+  </body>
+</html>

@@ -11,10 +11,26 @@ info:
     name: Convoy Platform Team
 
 servers:
-  - url: https://convoy.vellur.in/api
-    description: Production server (PocketBase API)
   - url: http://localhost:8090/api
-    description: Local development (PocketBase)
+    description: "Local: PocketBase API"
+  - url: https://convoy.vellur.in/api
+    description: "Production: PocketBase API"
+  - url: http://localhost:5001
+    description: "Local: OSRM Routing"
+  - url: https://convoy.vellur.in/routing
+    description: "Production: OSRM Routing"
+  - url: http://localhost:8080
+    description: "Local: Nominatim Geocoding"
+  - url: https://convoy.vellur.in/geocode
+    description: "Production: Nominatim Geocoding"
+  - url: http://localhost:3002
+    description: "Local: Simulation Service"
+  - url: https://convoy.vellur.in/simulation
+    description: "Production: Simulation Service"
+  - url: http://localhost:3003
+    description: "Local: Voice Server"
+  - url: https://convoy.vellur.in/voice
+    description: "Production: Voice Server"
 
 paths:
   # ─── PocketBase Auth ────────────────────────────────────────
