@@ -230,17 +230,24 @@ app.post('/api/simulation/start', async (req, res) => {
 
   child.stdout.on('data', (data) => {
     const line = data.toString().trim()
-    sim.logs.push({ type: 'stdout', line, time: new Date().toISOString() })
-    if (sim.logs.length > 500) sim.logs.shift()
+    if (line) {
+      console.log(`[sim:${convoyId}] ${line}`)
+      sim.logs.push({ type: 'stdout', line, time: new Date().toISOString() })
+      if (sim.logs.length > 500) sim.logs.shift()
+    }
   })
 
   child.stderr.on('data', (data) => {
     const line = data.toString().trim()
-    sim.logs.push({ type: 'stderr', line, time: new Date().toISOString() })
-    if (sim.logs.length > 500) sim.logs.shift()
+    if (line) {
+      console.error(`[sim:${convoyId}] ${line}`)
+      sim.logs.push({ type: 'stderr', line, time: new Date().toISOString() })
+      if (sim.logs.length > 500) sim.logs.shift()
+    }
   })
 
   child.on('exit', (code) => {
+    console.log(`[sim:${convoyId}] Process exited with code ${code}`)
     sim.logs.push({
       type: 'exit',
       line: `Process exited with code ${code}`,
@@ -251,6 +258,7 @@ app.post('/api/simulation/start', async (req, res) => {
   })
 
   child.on('error', (err) => {
+    console.error(`[sim:${convoyId}] Process error: ${err.message}`)
     sim.logs.push({ type: 'error', line: err.message, time: new Date().toISOString() })
     runningSimulations.delete(convoyId)
     setSimulationFlag(convoyId, false).catch(() => {})
@@ -351,17 +359,24 @@ app.post('/api/simulation/restart', async (req, res) => {
 
   child.stdout.on('data', (data) => {
     const line = data.toString().trim()
-    newSim.logs.push({ type: 'stdout', line, time: new Date().toISOString() })
-    if (newSim.logs.length > 500) newSim.logs.shift()
+    if (line) {
+      console.log(`[sim:${convoyId}] ${line}`)
+      newSim.logs.push({ type: 'stdout', line, time: new Date().toISOString() })
+      if (newSim.logs.length > 500) newSim.logs.shift()
+    }
   })
 
   child.stderr.on('data', (data) => {
     const line = data.toString().trim()
-    newSim.logs.push({ type: 'stderr', line, time: new Date().toISOString() })
-    if (newSim.logs.length > 500) newSim.logs.shift()
+    if (line) {
+      console.error(`[sim:${convoyId}] ${line}`)
+      newSim.logs.push({ type: 'stderr', line, time: new Date().toISOString() })
+      if (newSim.logs.length > 500) newSim.logs.shift()
+    }
   })
 
   child.on('exit', (code) => {
+    console.log(`[sim:${convoyId}] Process exited with code ${code}`)
     newSim.logs.push({
       type: 'exit',
       line: `Process exited with code ${code}`,
@@ -372,6 +387,7 @@ app.post('/api/simulation/restart', async (req, res) => {
   })
 
   child.on('error', (err) => {
+    console.error(`[sim:${convoyId}] Process error: ${err.message}`)
     newSim.logs.push({ type: 'error', line: err.message, time: new Date().toISOString() })
     runningSimulations.delete(convoyId)
     setSimulationFlag(convoyId, false).catch(() => {})

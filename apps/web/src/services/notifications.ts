@@ -24,6 +24,8 @@ export async function subscribeToConvoyNotifications(
 
   const unsub = await pb.collection('convoy_members').subscribe('*', (event) => {
     if (event.record.convoy !== convoyId) return
+    if (event.action === 'update') return
+
     const notification: ConvoyNotification = {
       id: event.record.id,
       convoy: event.record.convoy,
