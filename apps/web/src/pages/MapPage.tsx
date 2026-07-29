@@ -72,6 +72,7 @@ function MapPage() {
   const routeResponseRef = useRef<RouteResponse | null>(null)
   const assemblyRoutesDataRef = useRef<AssemblyRoute[]>([])
   const vectorFeaturesRef = useRef<GeoJSON.Feature[]>([])
+  const meetingPointRef = useRef<{ lat: number; lng: number } | null>(null)
 
   const offRoutePushSentRef = useRef(false)
   const [mapLoaded, setMapLoaded] = useState(false)
@@ -111,6 +112,10 @@ function MapPage() {
     selectedAltIndexRef.current = selectedAltIndex
   }, [selectedAltIndex])
 
+  useEffect(() => {
+    meetingPointRef.current = computedAssemblyPoint
+  }, [computedAssemblyPoint])
+
   const MAP_VIEW_KEY = 'convoy-map-view'
 
   function safeRemoveSource(m: maplibregl.Map, id: string) {
@@ -137,6 +142,7 @@ function MapPage() {
       if (
         layer.id.startsWith(TRAFFIC_LAYER_PREFIX) ||
         layer.id.startsWith(ALT_LAYER_PREFIX) ||
+        layer.id.endsWith('-dash') ||
         layer.id === ROUTE_LAYER_ID
       ) {
         safeRemoveLayer(m, layer.id)
@@ -145,9 +151,24 @@ function MapPage() {
     ;[TRAFFIC_SOURCE_ID, ROUTE_SOURCE_ID].forEach((sid) => {
       for (let i = 0; i < 5; i++) {
         safeRemoveSource(m, `${ALT_SOURCE_PREFIX}${i}`)
+        safeRemoveSource(m, `${ALT_SOURCE_PREFIX}${i}-dash`)
       }
+      safeRemoveSource(m, `${sid}-dash`)
       safeRemoveSource(m, sid)
     })
+  }
+
+  function findSplitIdx(coords: [number, number][], point: { lat: number; lng: number }): number {
+    let minDist = Infinity
+    let idx = 0
+    for (let i = 0; i < coords.length; i++) {
+      const d = Math.abs(coords[i][0] - point.lng) + Math.abs(coords[i][1] - point.lat)
+      if (d < minDist) {
+        minDist = d
+        idx = i
+      }
+    }
+    return idx
   }
 
   function renderRouteOnMap(
@@ -207,6 +228,38 @@ function MapPage() {
           paint: { 'line-color': seg.color, 'line-width': 5, 'line-opacity': 0.9 },
         })
       })
+
+      const mp = meetingPointRef.current
+      if (mp && geometry.coordinates.length > 2) {
+        const splitIdx = findSplitIdx(geometry.coordinates as [number, number][], mp)
+        if (splitIdx > 0) {
+          const dasSourceId = sourceId + '-dash'
+          const dasLayerId = layerId + '-dash'
+          const beforeCoords = geometry.coordinates.slice(0, splitIdx + 1)
+          safeRemoveSource(map.current, dasSourceId)
+          safeRemoveLayer(map.current, dasLayerId)
+          map.current.addSource(dasSourceId, {
+            type: 'geojson',
+            data: {
+              type: 'Feature',
+              properties: {},
+              geometry: { type: 'LineString', coordinates: beforeCoords },
+            },
+          })
+          map.current.addLayer({
+            id: dasLayerId,
+            type: 'line',
+            source: dasSourceId,
+            layout: { 'line-join': 'round', 'line-cap': 'round' },
+            paint: {
+              'line-color': '#6366f1',
+              'line-width': 4,
+              'line-opacity': 0.7,
+              'line-dasharray': [3, 2],
+            },
+          })
+        }
+      }
     } else {
       safeRemoveLayer(map.current, layerId)
       map.current.addLayer({
@@ -1113,7 +1166,20 @@ function MapPage() {
         destMarker.addTo(map.current!)
         markersRef.current.push(destMarker)
 
-        const origin = meetingPoint
+        let origin = meetingPoint
+        const userId = pb.authStore.record?.id
+        if (userId) {
+          try {
+            const member = await pb
+              .collection('convoy_members')
+              .getFirstListItem(`convoy = "${convoyId}" && user = "${userId}" && status = "active"`)
+            if (member.join_lat != null && member.join_lng != null) {
+              origin = [member.join_lng, member.join_lat]
+            }
+          } catch {
+            // Member fetch failed — fallback to meeting point
+          }
+        }
 
         const response = await getRoute({
           origin,
