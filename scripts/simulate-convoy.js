@@ -238,26 +238,59 @@ async function main() {
     process.exit(0)
   }
 
-  // Set source_lat/lng as meeting point if not set
+  // Calculate meeting point from all members' routes if not already set
+  // Algorithm: walk owner's route forward, find first coord present in ALL members' geometries
   if (!convoy.source_lat || !convoy.source_lng) {
-    const first = members.find((m) => m.join_lat != null && m.join_lng != null)
-    if (first) {
-      convoy.source_lat = first.join_lat
-      convoy.source_lng = first.join_lng
-    } else {
-      convoy.source_lat = convoy.dest_lat
-      convoy.source_lng = convoy.dest_lng
+    const active = members.filter((m) => m.join_lat != null && m.join_lng != null)
+    const owner = members.find((m) => m.role === 'owner')
+    let meetingPoint = null
+
+    if (owner && active.length >= 2) {
+      const ownerGeom = vehicles.find((v) => v.userId === owner.user)?.geometry
+      const otherGeoms = active
+        .filter((m) => m.user !== owner.user)
+        .map((m) => vehicles.find((v) => v.userId === m.user)?.geometry)
+        .filter(Boolean)
+
+      if (ownerGeom && otherGeoms.length > 0) {
+        const hashSets = otherGeoms.map((geo) => {
+          const s = new Set()
+          for (const c of geo) s.add(coord4dp(c))
+          return s
+        })
+        for (const c of ownerGeom) {
+          const h = coord4dp(c)
+          if (hashSets.every((s) => s.has(h))) {
+            meetingPoint = { lat: c[1], lng: c[0] }
+            break
+          }
+        }
+      }
     }
+
+    if (!meetingPoint) {
+      meetingPoint = { lat: convoy.dest_lat, lng: convoy.dest_lng }
+    }
+
+    convoy.source_lat = meetingPoint.lat
+    convoy.source_lng = meetingPoint.lng
     await pbUpdate(token, 'convoys', convoyId, {
-      source_lat: convoy.source_lat,
-      source_lng: convoy.source_lng,
-      source_name: 'Starting point',
+      source_lat: meetingPoint.lat,
+      source_lng: meetingPoint.lng,
+      source_name:
+        meetingPoint.lat === convoy.dest_lat && meetingPoint.lng === convoy.dest_lng
+          ? 'Destination'
+          : 'Merging point',
     })
+    console.log(
+      `[simulate-convoy] Meeting point set: ${meetingPoint.lat},${meetingPoint.lng}${
+        meetingPoint.lat === convoy.dest_lat && meetingPoint.lng === convoy.dest_lng
+          ? ' (destination)'
+          : ''
+      }`,
+    )
   }
 
-  // Build meeting hash from converged source_lat/lng (guaranteed non-null now)
-  const meetingPt = { lat: convoy.source_lat, lng: convoy.source_lng }
-  const meetingHash = `${Math.round(meetingPt.lat * 10000)},${Math.round(meetingPt.lng * 10000)}`
   const ASSEMBLY_DISTANCE_M = 80
 
   // Each vehicle has its own coord index into its geometry
