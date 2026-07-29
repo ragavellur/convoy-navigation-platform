@@ -320,9 +320,11 @@ async function main() {
   let coordIdxs = new Array(activeVehicles.length).fill(0)
   const VEHICLE_SPEED_VARIANCE = 0.3
 
-  // Set phase to assembling if forming or completed (restart)
-  if (!convoy.phase || convoy.phase === 'forming' || convoy.phase === 'completed') {
-    console.log(`[simulate-convoy] Setting phase from ${convoy.phase} to assembling`)
+  // Always reset phase to assembling when simulation starts
+  if (convoy.phase !== 'assembling') {
+    console.log(
+      `[simulate-convoy] Resetting phase from ${convoy.phase} to assembling with empty assembled_members`,
+    )
     await pbUpdate(token, 'convoys', convoyId, { phase: 'assembling', assembled_members: [] })
   }
 
