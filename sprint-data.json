@@ -970,7 +970,7 @@
         {
           "id": "TASK-147",
           "title": "Write integration tests for API endpoints",
-          "status": "in-progress",
+          "status": "done",
           "priority": "high"
         },
         {

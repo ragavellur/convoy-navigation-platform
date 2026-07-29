@@ -250,9 +250,12 @@
 
 - [ ] [TASK-145] Implement location update batching
 
-### 🔄 In Progress
+### ✅ Done
 
-- [-] [TASK-147] Write integration tests for API endpoints
+- [x] [TASK-147] Write integration tests for API endpoints
+
+### 📌 Backlog
+
 - [ ] [TASK-149] Write E2E tests for Android (Detox)
 - [ ] [TASK-150] Performance profiling & optimization
 - [ ] [TASK-152] Implement analytics tracking

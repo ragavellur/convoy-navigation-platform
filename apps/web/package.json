@@ -11,7 +11,8 @@
     "test:e2e:debug": "playwright test --debug",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "test:integration": "vitest run --config vitest.integration.config.ts"
   },
   "dependencies": {
     "@sentry/react": "^10.68.0",

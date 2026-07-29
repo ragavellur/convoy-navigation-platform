@@ -56,7 +56,7 @@ All code structures must conform to project architecture and be managed through 
 ### Branching & Source Control
 
 - **Feature Branches**: Branch from `main` using the strict naming convention: `feature/issue-[ID]-short-description`.
-- **Commit Guidelines**: Follow the Conventional Commits specification: `<type>(<scope>): <short description>`. Commit atomically after passing unit test verification for an individual function. Never submit massive multi-file commits.
+- **Commit Guidelines**: Follow the Conventional Commits specification: `<type>(<scope>): <short description>`. Commit atomically after passing ALL tests (unit + integration) for the affected scope. Never submit massive multi-file commits. Never commit with failing tests.
 
 ### Mandatory Local Changes Review
 
@@ -64,12 +64,14 @@ Before ANY commit or push operation, you MUST present ALL local changes for user
 
 1. **Show `git status`**: Display all modified, untracked, and staged files
 2. **Show `git diff`**: Display the actual code changes for each modified file
-3. **Wait for approval**: User must explicitly approve with "LGTM" / "approved" before proceeding
-4. **Never commit without review**: Even if changes are small or obvious, always present them
+3. **Run all tests**: Run `npm run test` (and `npm run test:integration` if applicable) and show results. ALL tests MUST pass before committing.
+4. **Wait for approval**: User must explicitly approve with "LGTM" / "approved" before proceeding
+5. **Never commit without review**: Even if changes are small or obvious, always present them
 
 ```
 DENIED: Committing or pushing code without presenting local changes for review.
-REQUIRED: Present git status + git diff → Wait for "LGTM" / "approved" → Then commit/push
+DENIED: Committing or pushing code with failing tests.
+REQUIRED: Present git status + git diff → Run all tests (must pass) → Wait for "LGTM" / "approved" → Then commit/push
 ```
 
 ### Pull Requests (PRs)
@@ -159,9 +161,14 @@ Every production deployment MUST execute this checklist in order. Skipping steps
 ### Pre-Deploy Verification
 
 ```
-DENIED: Building without verifying environment configuration.
+DENIED: Building without running tests and verifying environment configuration.
 REQUIRED: Run through ALL checklist items before `vite build` or `npm run build`.
 ```
+
+0. **Test Pass Gate**
+   - [ ] `npm run test` passes (all unit tests green)
+   - [ ] `npm run test:integration` passes (all integration tests green, if applicable)
+   - [ ] `npm run lint` passes (no lint errors)
 
 1. **Environment Config**
    - [ ] `apps/web/.env.production` exists and contains correct `VITE_POCKETBASE_URL` (production domain, NOT localhost)
@@ -196,6 +203,7 @@ REQUIRED: Run through ALL checklist items before `vite build` or `npm run build`
 FLOW: Verify env config → Build → Server sync → Deploy files → Purge cache → Smoke test
 DENIED: Deploying without running the full checklist.
 DENIED: Building with missing or incorrect VITE_POCKETBASE_URL.
+DENIED: Deploying without all tests passing (unit + integration).
 ```
 
 ---
@@ -216,6 +224,7 @@ Do not bypass these rules under any circumstances. Below are common anti-pattern
 | "I'll figure out the infrastructure later."                              | **Denied.** Infrastructure requirements (Docker, deployment, hosting) must be captured in PRD and sprint planning BEFORE development begins.            |
 | "I'll just start coding without a plan."                                 | **Denied.** Present execution plan first. Wait for explicit "LGTM" / "approved" before ANY file modifications, shell commands, or code execution.       |
 | "I'll just start a new task without pulling latest code."                | **Denied.** ALWAYS run `git pull origin main` before starting ANY new task to prevent merge conflicts and ensure consistency.                           |
+| "I'll skip running tests because the change is small."                   | **Denied.** ALL tests (unit + integration) must pass before every commit. Run `npm run test` and `npm run test:integration`. Failing tests = no commit. |
 
 ---
 
