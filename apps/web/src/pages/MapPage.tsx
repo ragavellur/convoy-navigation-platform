@@ -104,9 +104,9 @@ function MapPage() {
   }, [assemblyPoint])
   const { theme } = useTheme()
 
-  const memberVehicleMap = useRef<Map<string, { type: string; name: string; color?: string }>>(
-    new Map(),
-  )
+  const memberVehicleMap = useRef<
+    Map<string, { type: string; name: string; color?: string; routeGeometry?: number[][] }>
+  >(new Map())
   const mapViewRestoredRef = useRef(false)
   const selectedAltIndexRef = useRef(selectedAltIndex)
 
@@ -780,6 +780,7 @@ function MapPage() {
           type: m.vehicleType ?? 'car',
           name: m.userName,
           color: m.vehicleColor,
+          routeGeometry: m.routeGeometry,
         })
       }
     }
@@ -942,7 +943,14 @@ function MapPage() {
         convoyMarkersRef.current.set(vehicleId, marker)
       }
 
-      animatorRef.current!.updateTarget(vehicleId, offsetLat, offsetLng, pos.heading, pos.speed)
+      animatorRef.current!.updateTarget(
+        vehicleId,
+        offsetLat,
+        offsetLng,
+        pos.heading,
+        pos.speed,
+        memberVehicleMap.current.get(vehicleId)?.routeGeometry as [number, number][] | undefined,
+      )
 
       if (pos.heading !== null && pos.speed !== null && pos.speed > 0.5) {
         const R = 6371000

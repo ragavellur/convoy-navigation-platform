@@ -1,62 +1,93 @@
-export interface InterpolationState {
+const STALE_MS = 25000
+
+interface InterpState {
   startLat: number
   startLng: number
   targetLat: number
   targetLng: number
   startTime: number
   durationMs: number
-  heading: number | null
-  speed: number | null
 }
 
-export function lerp(a: number, b: number, t: number): number {
+interface VehicleState {
+  currentLat: number
+  currentLng: number
+  heading: number | null
+  speed: number | null
+  lastUpdateTime: number
+  routeGeometry: [number, number][] | null
+  routeIndex: number
+  interp: InterpState | null
+}
+
+function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * Math.min(Math.max(t, 0), 1)
 }
 
-export function lerpPosition(
-  startLat: number,
-  startLng: number,
-  targetLat: number,
-  targetLng: number,
-  progress: number,
-): { lat: number; lng: number } {
-  return {
-    lat: lerp(startLat, targetLat, progress),
-    lng: lerp(startLng, targetLng, progress),
-  }
+function haversine(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371000
+  const dLat = ((lat2 - lat1) * Math.PI) / 180
+  const dLng = ((lng2 - lng1) * Math.PI) / 180
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 }
 
-export function calculateDeadReckoning(
-  lat: number,
-  lng: number,
-  heading: number | null,
-  speed: number | null,
-  elapsedMs: number,
-): { lat: number; lng: number } {
-  if (heading === null || speed === null || speed < 0.5) {
-    return { lat, lng }
+function findNearestRouteIndex(route: [number, number][], lat: number, lng: number): number {
+  let bestDist = Infinity
+  let bestIdx = 0
+  for (let i = 0; i < route.length; i++) {
+    const d = haversine(lat, lng, route[i][1], route[i][0])
+    if (d < bestDist) {
+      bestDist = d
+      bestIdx = i
+    }
+  }
+  return bestIdx
+}
+
+function walkRouteForward(
+  route: [number, number][],
+  fromIndex: number,
+  distanceM: number,
+): { lat: number; lng: number; index: number } {
+  if (route.length < 2) {
+    return { lat: route[0]?.[1] ?? 0, lng: route[0]?.[0] ?? 0, index: 0 }
   }
 
-  const R = 6371000
-  const headingRad = (heading * Math.PI) / 180
-  const distanceM = speed * (elapsedMs / 1000)
-  const dLat = (distanceM * Math.cos(headingRad)) / R
-  const dLng = (distanceM * Math.sin(headingRad)) / (R * Math.cos((lat * Math.PI) / 180))
+  let remaining = distanceM
+  let i = Math.floor(fromIndex)
 
-  return {
-    lat: lat + (dLat * 180) / Math.PI,
-    lng: lng + (dLng * 180) / Math.PI,
+  if (i >= route.length - 1) {
+    const last = route[route.length - 1]
+    return { lat: last[1], lng: last[0], index: route.length - 1 }
   }
+
+  while (remaining > 0 && i < route.length - 1) {
+    const segLen = haversine(route[i][1], route[i][0], route[i + 1][1], route[i + 1][0])
+    if (segLen <= 0) {
+      i++
+      continue
+    }
+    if (segLen >= remaining) {
+      const frac = remaining / segLen
+      const lat = lerp(route[i][1], route[i + 1][1], frac)
+      const lng = lerp(route[i][0], route[i + 1][0], frac)
+      return { lat, lng, index: i + frac }
+    }
+    remaining -= segLen
+    i++
+  }
+
+  const last = route[route.length - 1]
+  return { lat: last[1], lng: last[0], index: route.length - 1 }
 }
 
 export class MarkerAnimator {
-  private states = new Map<string, InterpolationState>()
+  private states = new Map<string, VehicleState>()
   private animationFrame: number | null = null
   private onUpdate: (id: string, lat: number, lng: number, heading: number | null) => void
-  private lastKnownPositions = new Map<
-    string,
-    { lat: number; lng: number; heading: number | null; speed: number | null }
-  >()
 
   constructor(onUpdate: (id: string, lat: number, lng: number, heading: number | null) => void) {
     this.onUpdate = onUpdate
@@ -68,35 +99,54 @@ export class MarkerAnimator {
     lng: number,
     heading: number | null,
     speed: number | null,
+    routeGeometry?: [number, number][] | null,
   ): void {
     if (!Number.isFinite(lat) || !Number.isFinite(lng)) return
 
-    const prev = this.lastKnownPositions.get(id)
-    this.lastKnownPositions.set(id, { lat, lng, heading, speed })
+    const now = performance.now()
+    const existing = this.states.get(id)
 
-    if (prev && prev.lat === lat && prev.lng === lng) return
+    const currentLat = existing?.currentLat ?? lat
+    const currentLng = existing?.currentLng ?? lng
 
-    const isFirstAppearance = !prev
-    const startLat = isFirstAppearance ? lat : (prev?.lat ?? lat)
-    const startLng = isFirstAppearance ? lng : (prev?.lng ?? lng)
-    const dist = this.haversine(startLat, startLng, lat, lng)
+    const dist = haversine(currentLat, currentLng, lat, lng)
 
-    if (isFirstAppearance || dist < 1) {
+    if (!existing) {
+      this.states.set(id, {
+        currentLat: lat,
+        currentLng: lng,
+        heading,
+        speed,
+        lastUpdateTime: now,
+        routeGeometry: routeGeometry ?? null,
+        routeIndex: routeGeometry ? findNearestRouteIndex(routeGeometry, lat, lng) : 0,
+        interp: null,
+      })
       this.onUpdate(id, lat, lng, heading)
-      this.states.delete(id)
       return
     }
 
-    this.states.set(id, {
-      startLat,
-      startLng,
+    if (dist < 0.5) {
+      this.onUpdate(id, lat, lng, heading)
+      return
+    }
+
+    existing.lastUpdateTime = now
+    existing.heading = heading
+    existing.speed = speed
+    if (routeGeometry) {
+      existing.routeGeometry = routeGeometry as [number, number][]
+      existing.routeIndex = findNearestRouteIndex(existing.routeGeometry!, currentLat, currentLng)
+    }
+
+    existing.interp = {
+      startLat: currentLat,
+      startLng: currentLng,
       targetLat: lat,
       targetLng: lng,
-      startTime: performance.now(),
-      durationMs: Math.min(Math.max(dist * 10, 300), 3000),
-      heading,
-      speed,
-    })
+      startTime: now,
+      durationMs: Math.min(Math.max(dist * 3, 150), 1500),
+    }
 
     if (!this.animationFrame) {
       this.animate()
@@ -108,33 +158,46 @@ export class MarkerAnimator {
     let hasActive = false
 
     this.states.forEach((state, id) => {
-      const elapsed = now - state.startTime
-      const baseProgress = Math.min(elapsed / state.durationMs, 1)
-      const eased = 1 - Math.pow(1 - baseProgress, 3)
+      if (state.interp) {
+        const elapsed = now - state.interp.startTime
+        const progress = Math.min(elapsed / state.interp.durationMs, 1)
+        const eased = 1 - Math.pow(1 - progress, 3)
 
-      let pos = lerpPosition(
-        state.startLat,
-        state.startLng,
-        state.targetLat,
-        state.targetLng,
-        eased,
-      )
+        state.currentLat = lerp(state.interp.startLat, state.interp.targetLat, eased)
+        state.currentLng = lerp(state.interp.startLng, state.interp.targetLng, eased)
 
-      if (baseProgress >= 1 && state.speed !== null && state.heading !== null) {
-        const overshoot = elapsed - state.durationMs
-        if (overshoot < 2000) {
-          pos = calculateDeadReckoning(pos.lat, pos.lng, state.heading, state.speed, overshoot)
+        if (progress >= 1) {
+          state.interp = null
+        } else {
+          hasActive = true
         }
       }
 
-      if (Number.isFinite(pos.lat) && Number.isFinite(pos.lng)) {
-        this.onUpdate(id, pos.lat, pos.lng, state.heading)
+      if (!state.interp) {
+        const elapsedSinceUpdate = now - state.lastUpdateTime
+
+        if (
+          state.speed !== null &&
+          state.speed > 0.5 &&
+          state.routeGeometry !== null &&
+          state.routeGeometry.length > 1 &&
+          elapsedSinceUpdate < STALE_MS
+        ) {
+          const elapsedSec = elapsedSinceUpdate / 1000
+          const distanceM = state.speed * elapsedSec * 0.85
+
+          if (distanceM > 0.05) {
+            const result = walkRouteForward(state.routeGeometry, state.routeIndex, distanceM)
+            state.currentLat = result.lat
+            state.currentLng = result.lng
+            state.routeIndex = result.index
+          }
+        }
+        hasActive = true
       }
 
-      if (baseProgress < 1) {
-        hasActive = true
-      } else {
-        this.states.delete(id)
+      if (Number.isFinite(state.currentLat) && Number.isFinite(state.currentLng)) {
+        this.onUpdate(id, state.currentLat, state.currentLng, state.heading)
       }
     })
 
@@ -151,16 +214,5 @@ export class MarkerAnimator {
       this.animationFrame = null
     }
     this.states.clear()
-    this.lastKnownPositions.clear()
-  }
-
-  private haversine(lat1: number, lng1: number, lat2: number, lng2: number): number {
-    const R = 6371000
-    const dLat = ((lat2 - lat1) * Math.PI) / 180
-    const dLng = ((lng2 - lng1) * Math.PI) / 180
-    const a =
-      Math.sin(dLat / 2) ** 2 +
-      Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2
-    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
   }
 }

@@ -28,6 +28,7 @@ export interface RosterMember {
   joinLng?: number
   joinName?: string
   assemblyRouteGeometry?: number[][]
+  routeGeometry?: number[][]
 }
 
 export interface ConvoyRosterContextType {
@@ -93,6 +94,7 @@ export function ConvoyRosterProvider({ children }: { children: ReactNode }) {
           joinLng: m.join_lng ?? undefined,
           joinName: m.join_name ?? undefined,
           assemblyRouteGeometry: m.assembly_route_geometry ?? undefined,
+          routeGeometry: m.route_geometry ?? undefined,
         }
       })
 
