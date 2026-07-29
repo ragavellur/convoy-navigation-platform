@@ -1,4 +1,5 @@
 import pb from './pocketbase'
+import type { RosterMember } from '../stores/ConvoyRosterContext'
 
 export interface SessionState {
   convoyId: string
@@ -35,6 +36,37 @@ export async function endConvoy(convoyId: string): Promise<void> {
   for (const member of members) {
     await pb.collection('convoy_members').update(member.id, { status: 'inactive' })
   }
+}
+
+export async function autoCalculateAssemblyPoint(
+  convoyId: string,
+  members: RosterMember[],
+  ownerUserId: string,
+): Promise<void> {
+  const points = members
+    .filter((m) => m.userId !== ownerUserId)
+    .map((m) => {
+      if (m.joinLat != null && m.joinLng != null)
+        return { lat: m.joinLat, lng: m.joinLng, name: m.joinName }
+      if (m.position) return { lat: m.position.lat, lng: m.position.lng, name: undefined }
+      return null
+    })
+    .filter((p): p is { lat: number; lng: number; name: string | undefined } => p !== null)
+
+  if (points.length === 0) return
+
+  const centroid = {
+    lat: points.reduce((s, p) => s + p.lat, 0) / points.length,
+    lng: points.reduce((s, p) => s + p.lng, 0) / points.length,
+  }
+
+  await pb.collection('convoys').update(convoyId, {
+    source_lat: centroid.lat,
+    source_lng: centroid.lng,
+    source_name: 'Auto-calculated meeting point',
+    phase: 'assembling',
+    assembled_members: [],
+  })
 }
 
 export async function markMemberInactive(memberId: string): Promise<void> {

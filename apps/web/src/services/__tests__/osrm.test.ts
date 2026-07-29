@@ -57,7 +57,10 @@ describe('getRoute', () => {
     })
     const result = await getRoute({ origin: [12, 34], destination: [56, 78] })
     expect(result.code).toBe('Ok')
-    expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining('localhost:5001'))
+    expect(mockFetch).toHaveBeenCalledWith(
+      expect.stringContaining('localhost:5001'),
+      expect.objectContaining({ signal: expect.any(AbortSignal) }),
+    )
   })
 
   it('falls back to public OSRM when local returns 0 distance', async () => {

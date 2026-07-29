@@ -33,6 +33,9 @@ export function haversineDistance(lat1: number, lng1: number, lat2: number, lng2
 }
 
 let lastPublished: { lat: number; lng: number; vehicleId: string; time: number } | null = null
+let heartbeatTimer: ReturnType<typeof setInterval> | null = null
+let heartbeatVehicleId: string | null = null
+let heartbeatConvoyId: string | null = null
 
 export function hasMovedSignificantly(lat: number, lng: number, vehicleId: string): boolean {
   if (!lastPublished || lastPublished.vehicleId !== vehicleId) return true
@@ -197,6 +200,50 @@ export async function getLatestPositions(convoyId: string): Promise<Position[]> 
     requestKey: null,
   })
   return result.items
+}
+
+export function startHeartbeat(vehicleId: string, convoyId: string): void {
+  stopHeartbeat()
+  heartbeatVehicleId = vehicleId
+  heartbeatConvoyId = convoyId
+  heartbeatTimer = setInterval(async () => {
+    if (!heartbeatVehicleId || !heartbeatConvoyId) return
+    resetPositionThreshold()
+    try {
+      const record = await pb
+        .collection('positions')
+        .getFirstListItem<{
+          lat: number
+          lng: number
+          speed: number | null
+          heading: number | null
+          accuracy: number | null
+        }>(`vehicle = "${heartbeatVehicleId}" && convoy = "${heartbeatConvoyId}"`)
+        .catch(() => null)
+      if (record) {
+        await publishPosition({
+          vehicleId: heartbeatVehicleId,
+          convoyId: heartbeatConvoyId,
+          lat: record.lat,
+          lng: record.lng,
+          speed: record.speed,
+          heading: record.heading,
+          accuracy: record.accuracy,
+        })
+      }
+    } catch {
+      /* heartbeat publish failure is non-critical */
+    }
+  }, 15_000)
+}
+
+export function stopHeartbeat(): void {
+  if (heartbeatTimer !== null) {
+    clearInterval(heartbeatTimer)
+    heartbeatTimer = null
+  }
+  heartbeatVehicleId = null
+  heartbeatConvoyId = null
 }
 
 export function unsubscribePositions(): void {

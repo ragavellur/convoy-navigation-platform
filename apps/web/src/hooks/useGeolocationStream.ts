@@ -151,21 +151,9 @@ export function useGeolocationStream(options?: { isInConvoy?: boolean }) {
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        if (isInConvoy && permissionRef.current === 'granted') {
-          stopWatching()
-        }
-      } else {
-        if (isInConvoy) {
-          hasStartedRef.current = false
-          startWatching()
-        }
-      }
-    }
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
-  }, [isInConvoy, startWatching, stopWatching])
+    if (!isInConvoy) return
+    return () => {}
+  }, [isInConvoy])
 
   return {
     ...state,

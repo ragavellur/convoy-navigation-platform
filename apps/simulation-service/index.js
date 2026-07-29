@@ -46,9 +46,19 @@ if (VAPID_PRIVATE_KEY && VAPID_PUBLIC_KEY) {
 
 const runningSimulations = new Map()
 let cachedToken = null
+const TOKEN_EXPIRY_BUFFER_S = 300
+
+function isTokenExpired(token) {
+  try {
+    const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString())
+    return (payload.exp || 0) * 1000 < Date.now() + TOKEN_EXPIRY_BUFFER_S * 1000
+  } catch {
+    return true
+  }
+}
 
 async function getAuthToken() {
-  if (cachedToken) return cachedToken
+  if (cachedToken && !isTokenExpired(cachedToken)) return cachedToken
   try {
     const res = await fetch(`${POCKETBASE_URL}/api/admins/auth-with-password`, {
       method: 'POST',
@@ -66,7 +76,7 @@ async function getAuthToken() {
   }
 }
 
-async function pbRequest(method, apiPath, body) {
+async function pbRequest(method, apiPath, body, retried) {
   const token = await getAuthToken()
   if (!token) throw new Error('Not authenticated with PocketBase')
   const headers = { Authorization: token }
@@ -76,6 +86,10 @@ async function pbRequest(method, apiPath, body) {
     headers,
     body: body ? JSON.stringify(body) : undefined,
   })
+  if (res.status === 401 && !retried) {
+    cachedToken = null
+    return pbRequest(method, apiPath, body, true)
+  }
   if (!res.ok) {
     const text = await res.text().catch(() => '')
     throw new Error(`PB ${method} ${apiPath} failed: ${res.status} ${text}`)
@@ -431,7 +445,7 @@ async function setSimulationFlag(convoyId, active) {
   }
   settings.simulation_active = active
   await pbRequest('PATCH', `/api/collections/convoys/records/${convoyId}`, {
-    settings: JSON.stringify(settings),
+    settings,
   })
 }
 

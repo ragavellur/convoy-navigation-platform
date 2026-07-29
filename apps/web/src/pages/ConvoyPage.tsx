@@ -87,9 +87,15 @@ function ConvoyPage() {
   const [vehicles, setVehicles] = useState<VehicleOption[]>([])
   const [selectedVehicleId, setSelectedVehicleId] = useState('')
   const [enableSimulation, setEnableSimulation] = useState(false)
+  const [autoCalcSource, setAutoCalcSource] = useState(false)
   const [newConvoyType, setNewConvoyType] = useState<'vehicle' | 'trekker'>('vehicle')
   const [joinConvoyLookup, setJoinConvoyLookup] = useState<ConvoyRecord | null>(null)
   const [lookingUp, setLookingUp] = useState(false)
+  const [joinSourceLat, setJoinSourceLat] = useState<number | null>(null)
+  const [joinSourceLng, setJoinSourceLng] = useState<number | null>(null)
+  const [joinSourceName, setJoinSourceName] = useState('')
+  const [showJoinSearch, setShowJoinSearch] = useState(false)
+  const [gettingJoinLocation, setGettingJoinLocation] = useState(false)
 
   useEffect(() => {
     const fetchConvoys = async () => {
@@ -167,7 +173,7 @@ function ConvoyPage() {
         trip_id: tripId,
         security_token: securityToken,
       }
-      if (sourceName && sourceLat !== null && sourceLng !== null) {
+      if (!autoCalcSource && sourceName && sourceLat !== null && sourceLng !== null) {
         data.source_name = sourceName
         data.source_lat = sourceLat
         data.source_lng = sourceLng
@@ -211,6 +217,7 @@ function ConvoyPage() {
       setDestLat(null)
       setDestLng(null)
       setEnableSimulation(false)
+      setAutoCalcSource(false)
       setNewConvoyType('vehicle')
       setShowCreateForm(false)
       const memberships = await pb.collection('convoy_members').getFullList({
@@ -315,9 +322,16 @@ function ConvoyPage() {
         role: 'member',
         status: 'active',
         joined_at: new Date().toISOString(),
+        join_lat: joinSourceLat,
+        join_lng: joinSourceLng,
+        join_name: joinSourceName || undefined,
       })
       setJoinCode('')
       setJoinConvoyLookup(null)
+      setJoinSourceLat(null)
+      setJoinSourceLng(null)
+      setJoinSourceName('')
+      setShowJoinSearch(false)
       setSuccess(`Joined "${convoy.name}" successfully!`)
       const memberships = await pb.collection('convoy_members').getFullList({
         filter: `user = "${user?.id}" && status = "active"`,
@@ -418,21 +432,46 @@ function ConvoyPage() {
               onChange={(e) => setNewConvoyDesc(e.target.value)}
               className="input-field w-full rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
             />
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-[var(--surface-hover)] border border-[var(--border)]">
+              <input
+                type="checkbox"
+                id="auto-calc-source"
+                checked={autoCalcSource}
+                onChange={(e) => {
+                  setAutoCalcSource(e.target.checked)
+                  if (e.target.checked) {
+                    setSourceName('')
+                    setSourceLat(null)
+                    setSourceLng(null)
+                  }
+                }}
+                className="h-4 w-4 text-indigo-500 focus:ring-indigo-500/50 rounded"
+                style={{ accentColor: '#6366f1' }}
+              />
+              <label htmlFor="auto-calc-source" className="text-sm text-[var(--text)]">
+                Auto-calculate meeting point
+                <span className="block text-xs text-[var(--text2)] mt-0.5">
+                  Assembly point will be computed from member locations instead of a fixed start
+                </span>
+              </label>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-medium text-[var(--text2)] mb-1">
-                  Starting Point
-                </label>
-                <SearchBar
-                  onResultSelect={(result: SearchResult) => {
-                    setSourceName(result.displayName)
-                    setSourceLat(result.lat)
-                    setSourceLng(result.lng)
-                  }}
-                />
-                {sourceName && <p className="text-xs text-[var(--text2)] mt-1">{sourceName}</p>}
-              </div>
-              <div>
+              {!autoCalcSource && (
+                <div>
+                  <label className="block text-xs font-medium text-[var(--text2)] mb-1">
+                    Starting Point
+                  </label>
+                  <SearchBar
+                    onResultSelect={(result: SearchResult) => {
+                      setSourceName(result.displayName)
+                      setSourceLat(result.lat)
+                      setSourceLng(result.lng)
+                    }}
+                  />
+                  {sourceName && <p className="text-xs text-[var(--text2)] mt-1">{sourceName}</p>}
+                </div>
+              )}
+              <div className={autoCalcSource ? 'col-span-2' : ''}>
                 <label className="block text-xs font-medium text-[var(--text2)] mb-1">
                   Destination
                 </label>
@@ -566,6 +605,72 @@ function ConvoyPage() {
                     {joinConvoyLookup.source_name || '?'} → {joinConvoyLookup.dest_name || '?'}
                   </p>
                 )}
+
+                <div>
+                  <label className="block text-xs font-medium text-[var(--text2)] mb-1">
+                    Your Starting Point
+                  </label>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        setGettingJoinLocation(true)
+                        navigator.geolocation.getCurrentPosition(
+                          (pos) => {
+                            setJoinSourceLat(pos.coords.latitude)
+                            setJoinSourceLng(pos.coords.longitude)
+                            setJoinSourceName('Current location')
+                            setShowJoinSearch(false)
+                            setGettingJoinLocation(false)
+                          },
+                          () => {
+                            setGettingJoinLocation(false)
+                          },
+                          { enableHighAccuracy: true, timeout: 10000 },
+                        )
+                      }}
+                      disabled={gettingJoinLocation}
+                      className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
+                        !showJoinSearch && joinSourceLat
+                          ? 'bg-[var(--primary)] text-white border-[var(--primary)]'
+                          : 'border-[var(--border)] text-[var(--text)] hover:bg-[var(--surface-hover)]'
+                      }`}
+                    >
+                      {gettingJoinLocation ? 'Getting location...' : '📍 Use my location'}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowJoinSearch(!showJoinSearch)
+                        if (!showJoinSearch) {
+                          setJoinSourceLat(null)
+                          setJoinSourceLng(null)
+                          setJoinSourceName('')
+                        }
+                      }}
+                      className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
+                        showJoinSearch
+                          ? 'bg-[var(--primary)] text-white border-[var(--primary)]'
+                          : 'border-[var(--border)] text-[var(--text)] hover:bg-[var(--surface-hover)]'
+                      }`}
+                    >
+                      🔍 Search location
+                    </button>
+                  </div>
+                  {showJoinSearch && (
+                    <div className="mt-2">
+                      <SearchBar
+                        onResultSelect={(result: SearchResult) => {
+                          setJoinSourceLat(result.lat)
+                          setJoinSourceLng(result.lng)
+                          setJoinSourceName(result.displayName)
+                          setShowJoinSearch(false)
+                        }}
+                      />
+                    </div>
+                  )}
+                  {joinSourceName && !showJoinSearch && (
+                    <p className="text-xs text-[var(--text2)] mt-1">{joinSourceName}</p>
+                  )}
+                </div>
 
                 {(joinConvoyLookup.convoy_type || 'vehicle') === 'vehicle' && (
                   <div>

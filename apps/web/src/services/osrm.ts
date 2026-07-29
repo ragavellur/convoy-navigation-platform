@@ -2,6 +2,7 @@ import type { RouteResponse, RouteSummary } from '../types'
 
 const LOCAL_OSRM_URL = import.meta.env.VITE_OSRM_URL || 'http://localhost:5001'
 const PUBLIC_OSRM_URL = 'https://router.project-osrm.org'
+const FETCH_TIMEOUT_MS = 10_000
 
 interface OSRMRouteParams {
   origin: [number, number]
@@ -18,7 +19,17 @@ async function fetchOSRM(
   searchParams: URLSearchParams,
 ): Promise<RouteResponse> {
   const url = `${base}/route/v1/driving/${coordinates}?${searchParams.toString()}`
-  const response = await fetch(url)
+
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
+
+  let response: Response
+  try {
+    response = await fetch(url, { signal: controller.signal })
+  } finally {
+    clearTimeout(timeoutId)
+  }
+
   if (!response.ok) throw new Error(`OSRM ${base} failed: ${response.status}`)
   const data = await response.json()
   if (data.code !== 'Ok') throw new Error(`OSRM error: ${data.code}`)

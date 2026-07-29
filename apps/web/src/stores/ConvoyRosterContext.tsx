@@ -24,6 +24,9 @@ export interface RosterMember {
   vehicleName?: string
   position: Position | null
   status: MemberStatus
+  joinLat?: number
+  joinLng?: number
+  joinName?: string
 }
 
 export interface ConvoyRosterContextType {
@@ -69,7 +72,7 @@ export function ConvoyRosterProvider({ children }: { children: ReactNode }) {
         posMap.set(pos.vehicle, pos)
       }
 
-      const roster: RosterMember[] = memberRecords.map((m) => {
+      const roster: RosterMember[] = memberRecords.map((m: any) => {
         const vehicle = m.expand?.vehicle
         const position = vehicle ? (posMap.get(vehicle.id) ?? null) : null
         const user = m.expand?.user
@@ -85,6 +88,9 @@ export function ConvoyRosterProvider({ children }: { children: ReactNode }) {
           vehicleName: vehicle?.name,
           position,
           status: deriveMemberStatus(position),
+          joinLat: m.join_lat ?? undefined,
+          joinLng: m.join_lng ?? undefined,
+          joinName: m.join_name ?? undefined,
         }
       })
 

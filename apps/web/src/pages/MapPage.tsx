@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
@@ -17,6 +17,8 @@ import {
   publishPosition,
   unsubscribePositions,
   resetPositionThreshold,
+  startHeartbeat,
+  stopHeartbeat,
 } from '../services/positionTracking'
 import { MarkerAnimator } from '../services/markerAnimation'
 import { createVehicleMarkerElement, getDistinctColor } from '../components/VehicleMarker'
@@ -24,7 +26,7 @@ import pb from '../services/pocketbase'
 import { useConvoyRoster, haversineDistance } from '../stores/ConvoyRosterContext'
 import { useTheme, getMapStyleUrl } from '../stores/ThemeContext'
 import { notifyOffRoute } from '../services/pushSender'
-import { transitionPhase } from '../services/sessionState'
+import { transitionPhase, autoCalculateAssemblyPoint } from '../services/sessionState'
 import { useAssemblyRoutes } from '../hooks/useAssemblyRoutes'
 import type { AssemblyRoute } from '../services/assemblyRoutes'
 import type { SearchResult, RouteResponse, RouteGeometry } from '../types'
@@ -83,10 +85,28 @@ function MapPage() {
   const [convoyPhase, setConvoyPhase] = useState<string>('forming')
   const [convoyOwner, setConvoyOwner] = useState<string | null>(null)
   const [assembledMembers, setAssembledMembers] = useState<string[]>([])
+  const [isAutoMode, setIsAutoMode] = useState(false)
   const [assemblyPoint, setAssemblyPoint] = useState<{ lat: number; lng: number } | null>(null)
+
   const { position } = useGeolocation()
   const geoStream = useGeolocationStream({ isInConvoy: !!convoyId })
   const { members, focusMemberId, joinConvoy, leaveConvoy } = useConvoyRoster()
+  const computedAssemblyPoint: { lat: number; lng: number } | null = useMemo(() => {
+    if (assemblyPoint) return assemblyPoint
+    const points = members
+      .filter((m) => m.userId !== convoyOwner)
+      .map((m) => {
+        if (m.joinLat != null && m.joinLng != null) return { lat: m.joinLat, lng: m.joinLng }
+        if (m.position) return { lat: m.position.lat, lng: m.position.lng }
+        return null
+      })
+      .filter((p): p is { lat: number; lng: number } => p !== null)
+    if (points.length === 0) return null
+    return {
+      lat: points.reduce((s, p) => s + p.lat, 0) / points.length,
+      lng: points.reduce((s, p) => s + p.lng, 0) / points.length,
+    }
+  }, [assemblyPoint, members, convoyOwner])
   const { theme } = useTheme()
 
   const memberVehicleMap = useRef<Map<string, { type: string; name: string; color?: string }>>(
@@ -279,12 +299,64 @@ function MapPage() {
         setSelectedAltIndex(0)
 
         displayRoutes(response, 0)
-      } catch {
-        setRouteError('Could not recalculate route.')
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err)
+        setRouteError(`Could not recalculate route: ${msg}`)
+        setTimeout(() => {
+          if (!map.current || !position) return
+          const origin: [number, number] = [position.lng, position.lat]
+          getRoute({
+            origin,
+            destination,
+            steps: true,
+            geometries: 'geojson',
+            profile: convoyType === 'trekker' ? 'foot' : 'driving',
+          })
+            .then((response) => {
+              const route = response.routes[0]
+              setRouteData(route)
+              setRouteResponse(response)
+              routeRef.current = route
+              setIsOffRoute(false)
+              setSelectedAltIndex(0)
+              displayRoutes(response, 0)
+              setRouteError(null)
+            })
+            .catch(() => {})
+        }, 3000)
       }
     },
-    [position, displayRoutes],
+    [position, displayRoutes, convoyType],
   )
+
+  useEffect(() => {
+    if (!convoyId) return
+    let vehicleId: string | null = null
+
+    const init = async () => {
+      try {
+        const userId = pb.authStore.record?.id
+        if (!userId) return
+        const memberRecord = await pb
+          .collection('convoy_members')
+          .getFirstListItem(`convoy = "${convoyId}" && user = "${userId}" && status = "active"`, {
+            expand: 'vehicle',
+          })
+        vehicleId = memberRecord.vehicle || null
+        if (vehicleId) {
+          startHeartbeat(vehicleId, convoyId)
+        }
+      } catch {
+        /* vehicle not found */
+      }
+    }
+
+    init()
+
+    return () => {
+      stopHeartbeat()
+    }
+  }, [convoyId])
 
   const hideRoutePanel = useCallback(() => {
     setShowRoutePanel(false)
@@ -547,6 +619,7 @@ function MapPage() {
         setConvoyPhase(convoy.phase || 'forming')
         setConvoyOwner(convoy.owner)
         setAssembledMembers(convoy.assembled_members || [])
+        setIsAutoMode(!convoy.source_lat || !convoy.source_lng)
         if (convoy.source_lat && convoy.source_lng) {
           setAssemblyPoint({ lat: convoy.source_lat, lng: convoy.source_lng })
         }
@@ -564,6 +637,7 @@ function MapPage() {
         setConvoyPhase(r.phase || 'forming')
         setConvoyOwner(r.owner)
         setAssembledMembers(r.assembled_members || [])
+        setIsAutoMode(!r.source_lat || !r.source_lng)
         if (r.source_lat && r.source_lng) {
           setAssemblyPoint({ lat: r.source_lat, lng: r.source_lng })
         }
@@ -991,7 +1065,7 @@ function MapPage() {
   const { routes: assemblyRoutes } = useAssemblyRoutes({
     members,
     ownerUserId,
-    assemblyPoint,
+    assemblyPoint: computedAssemblyPoint,
     phase: convoyPhase,
     assembledMembers,
   })
@@ -1014,7 +1088,7 @@ function MapPage() {
   }, [assemblyRoutes, convoyPhase, mapLoaded])
 
   useEffect(() => {
-    if (convoyPhase !== 'assembling' || !assemblyPoint || !convoyId) return
+    if (convoyPhase !== 'assembling' || !computedAssemblyPoint || !convoyId) return
 
     const arrivedIds: string[] = []
     for (const m of members) {
@@ -1023,8 +1097,8 @@ function MapPage() {
       const d = haversineDistance(
         m.position.lat,
         m.position.lng,
-        assemblyPoint.lat,
-        assemblyPoint.lng,
+        computedAssemblyPoint.lat,
+        computedAssemblyPoint.lng,
       )
       if (d <= ASSEMBLY_THRESHOLD_M) {
         arrivedIds.push(m.userId)
@@ -1041,7 +1115,33 @@ function MapPage() {
       .update(convoyId, { assembled_members: updated })
       .catch(() => {})
     return () => clearTimeout(timer)
-  }, [convoyPhase, members, assemblyPoint, convoyOwner, assembledMembers, convoyId])
+  }, [convoyPhase, members, computedAssemblyPoint, convoyOwner, assembledMembers, convoyId])
+
+  useEffect(() => {
+    if (convoyPhase !== 'forming' || !isAutoMode || !convoyId) return
+
+    const allActiveNonOwnerWithVehicle = members.filter(
+      (m) => m.userId !== convoyOwner && m.vehicleId,
+    )
+
+    if (allActiveNonOwnerWithVehicle.length === 0) return
+
+    const hasJoinOrPosition = members.filter(
+      (m) => m.userId !== convoyOwner && ((m.joinLat != null && m.joinLng != null) || m.position),
+    )
+
+    if (hasJoinOrPosition.length < allActiveNonOwnerWithVehicle.length) return
+
+    const timer = setTimeout(async () => {
+      try {
+        await autoCalculateAssemblyPoint(convoyId, members, convoyOwner!)
+      } catch (err) {
+        console.error('[MapPage] auto-start failed:', err)
+      }
+    }, 3000)
+
+    return () => clearTimeout(timer)
+  }, [convoyPhase, isAutoMode, convoyId, members, convoyOwner])
 
   const firstStep = routeData?.legs[0]?.steps[0]
   const alternatives = routeResponse?.routes || []
@@ -1155,7 +1255,11 @@ function MapPage() {
             )}
 
             {convoyPhase === 'forming' && (
-              <p className="text-xs text-[var(--text2)]">Waiting for host to start assembly</p>
+              <p className="text-xs text-[var(--text2)]">
+                {isAutoMode
+                  ? 'Waiting for location from all members...'
+                  : 'Waiting for host to start assembly'}
+              </p>
             )}
 
             {(convoyPhase === 'forming' ||
@@ -1163,7 +1267,7 @@ function MapPage() {
               convoyPhase === 'in_transit') &&
               pb.authStore.record?.id === convoyOwner && (
                 <div className="flex gap-2 mt-2 pt-2 border-t border-[var(--border)]">
-                  {convoyPhase === 'forming' && (
+                  {convoyPhase === 'forming' && !isAutoMode && (
                     <button
                       onClick={() => transitionPhase(convoyId, 'assembling')}
                       className="flex-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-[var(--primary)] text-white hover:opacity-90 transition-opacity"

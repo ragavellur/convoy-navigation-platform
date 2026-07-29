@@ -129,8 +129,8 @@ async function main() {
   const token = await pbAuth()
 
   const convoy = await pbGet(token, `/api/collections/convoys/records/${convoyId}`)
-  if (!convoy.source_lat || !convoy.source_lng || !convoy.dest_lat || !convoy.dest_lng) {
-    console.error('Convoy must have source_lat/lng and dest_lat/lng')
+  if (!convoy.dest_lat || !convoy.dest_lng) {
+    console.error('Convoy must have dest_lat/lng')
     process.exit(1)
   }
 
@@ -148,7 +148,30 @@ async function main() {
     process.exit(0)
   }
 
-  const assemblyPt = { lat: convoy.source_lat, lng: convoy.source_lng }
+  let assemblyPt = { lat: 0, lng: 0 }
+  if (convoy.source_lat && convoy.source_lng) {
+    assemblyPt = { lat: convoy.source_lat, lng: convoy.source_lng }
+  } else {
+    const positionsData = await pbGet(
+      token,
+      `/api/collections/positions/records?perPage=50&filter=${encodeURIComponent(`convoy="${convoyId}"`)}`,
+    )
+    const positions = positionsData.items || []
+    const vehiclePositions = positions.reduce((map, p) => {
+      map.set(p.vehicle, { lat: p.lat, lng: p.lng })
+      return map
+    }, new Map())
+    const pts = vehicles.map((v) => vehiclePositions.get(v.vehicleId)).filter(Boolean)
+    if (pts.length > 0) {
+      assemblyPt = {
+        lat: pts.reduce((s, p) => s + p.lat, 0) / pts.length,
+        lng: pts.reduce((s, p) => s + p.lng, 0) / pts.length,
+      }
+    } else {
+      console.error('No vehicle positions found for centroid calculation')
+      process.exit(1)
+    }
+  }
   const destPt = { lat: convoy.dest_lat, lng: convoy.dest_lng }
 
   const scatterPositions = vehicles.map((_, i) => {
