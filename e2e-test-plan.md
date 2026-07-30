@@ -109,20 +109,20 @@
 
 ## 6. Roster & UI (Sprint 5)
 
-| ID   | Test                          | Steps                                          | Expected Result                                       | Sprint   |
-| ---- | ----------------------------- | ---------------------------------------------- | ----------------------------------------------------- | -------- |
-| R-1  | Roster sidebar renders        | Join convoy → Navigate to /map → Check sidebar | Sidebar shows convoy members with avatars             | TASK-049 |
-| R-2  | Roster drawer expand/collapse | Click expand button on roster sidebar          | Sidebar expands to show full member details           | TASK-050 |
-| R-3  | Vehicle type icon in roster   | Check roster member with vehicle               | Correct vehicle icon (car/truck/motorcycle) displayed | TASK-051 |
-| R-4  | Status indicators             | Check roster members with different positions  | Green=In-Transit, Yellow=Stopped, Gray=Offline        | TASK-052 |
-| R-5  | Speed & ETA display           | Check roster with active position data         | Speed (km/h) and ETA shown for each member            | TASK-053 |
-| R-6  | Focus on member interaction   | Click a member in roster sidebar               | Map flies to that member's marker position            | TASK-054 |
-| R-7  | Member avatar & info cards    | Check roster member cards                      | Avatar with name, role, vehicle info displayed        | TASK-055 |
-| R-8  | Member count badge            | Check roster toggle button                     | Badge shows number of active members                  | TASK-056 |
-| R-9  | Real-time roster updates      | User B joins convoy while User A views roster  | Roster updates instantly without page refresh         | TASK-057 |
-| R-10 | Touch-optimized gestures      | Swipe left/right on roster on mobile           | Drawer opens/closes with swipe gesture                | TASK-058 |
-| R-11 | Dark mode toggle              | Click dark mode toggle                         | Map style switches to dark, UI theme inverts          | TASK-059 |
-| R-12 | Inter-member distance         | Join convoy with members → Open roster         | Each member shows distance from user, updated live    | TASK-181 |
+| ID   | Test                            | Steps                                          | Expected Result                                        | Sprint   |
+| ---- | ------------------------------- | ---------------------------------------------- | ------------------------------------------------------ | -------- |
+| R-1  | Roster sidebar renders          | Join convoy → Navigate to /map → Check sidebar | Sidebar shows convoy members with avatars              | TASK-049 |
+| R-2  | Roster drawer expand/collapse   | Click expand button on roster sidebar          | Sidebar expands to show full member details            | TASK-050 |
+| R-3  | Vehicle type icon in roster     | Check roster member with vehicle               | Correct vehicle icon (car/truck/motorcycle) displayed  | TASK-051 |
+| R-4  | Status indicators               | Check roster members with different positions  | Green=In-Transit, Yellow=Stopped, Gray=Offline         | TASK-052 |
+| R-5  | Speed & ETA display             | Check roster with active position data         | Speed (km/h) and ETA shown for each member             | TASK-053 |
+| R-6  | Focus on member interaction     | Click a member in roster sidebar               | Map flies to that member's marker position             | TASK-054 |
+| R-7  | Member avatar & info cards      | Check roster member cards                      | Avatar with name, role, vehicle info displayed         | TASK-055 |
+| R-8  | Member count badge              | Check roster toggle button                     | Badge shows number of active members                   | TASK-056 |
+| R-9  | Real-time roster updates        | User B joins convoy while User A views roster  | Roster updates instantly without page refresh          | TASK-057 |
+| R-10 | Touch-optimized gestures        | Swipe left/right on roster on mobile           | Drawer opens/closes with swipe gesture                 | TASK-058 |
+| R-11 | Dark mode toggle                | Click dark mode toggle                         | Map style switches to dark, UI theme inverts           | TASK-059 |
+| R-12 | Distance-to-viewer + dest + ETA | Join convoy with members + dest → Open roster  | Each member shows viewer-dist, dest-dist+ETA, clear UI | TASK-181 |
 
 ---
 

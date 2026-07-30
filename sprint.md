@@ -269,7 +269,7 @@
 - [ ] [TASK-157] Load India OSM data into OSRM for self-hosted routing (GeoFabrik)
 - [ ] [TASK-158] Load India OSM data into Nominatim for self-hosted geocoding (GeoFabrik)
 - [ ] [TASK-180] Google Maps-smooth vehicle DR — GeoJSON Source+Layer, derive heading from pos deltas, route-following DR
-- [ ] [TASK-181] Show inter-member distance in Convoy Members list on map
+- [ ] [TASK-181] Show distance-to-viewer + distance-to-destination + ETA per member in Convoy roster
 - [x] [TASK-160] Phase 1: data model — phase field + assembled_members + types
 - [x] [TASK-161] Phase 2: assembly route engine — per-member OSRM routes to assembly point
 - [x] [TASK-162] Phase 3: map viz — colored dashed assembly routes + HUD + arrival detection

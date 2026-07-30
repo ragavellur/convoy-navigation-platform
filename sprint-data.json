@@ -1191,10 +1191,10 @@
         },
         {
           "id": "TASK-181",
-          "title": "Show inter-member distance in Convoy Members list on map",
+          "title": "Show distance-to-viewer + distance-to-destination + ETA per member in Convoy roster",
           "status": "backlog",
           "priority": "medium",
-          "description": "In the Convoy Members roster, display the distance from the current user to each other member (e.g., '2.3 km away'). Calculate using haversine formula on latest known positions. Update in real-time as positions change. Show as a subtitle or badge below each member name."
+          "description": "In the Convoy Members roster, show two distance metrics per member: (1) distance from viewer to member (e.g. '2.3 km away') and (2) distance from member to the convoy destination with ETA (e.g. '12 km - ETA 9 min'). Calculate using haversine for distance, use speed + distance for ETA. Update in real-time. Design the UI to avoid confusion — consider icon labels (eye icon for viewer-distance, flag icon for destination-distance) and compact single-line layout."
         }
       ]
     },

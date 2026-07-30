@@ -605,9 +605,9 @@
         },
         {
           "id": "R-12",
-          "title": "Inter-member distance in Convoy Members list",
-          "steps": "Join convoy with multiple members → Open roster → Check member entries",
-          "expected": "Each member shows distance from current user (e.g. '2.3 km away') updated in real-time",
+          "title": "Distance-to-viewer + distance-to-destination + ETA in Convoy roster",
+          "steps": "Join convoy with multiple members and active destination → Open roster → Check member entries",
+          "expected": "Each member shows viewer-distance (icon label) and destination-distance + ETA (flag icon), updated in real-time, clear visual distinction",
           "status": "pending",
           "sprint": "Sprint 11",
           "taskId": "TASK-181",
