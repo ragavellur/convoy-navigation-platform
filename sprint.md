@@ -268,7 +268,7 @@
 - [ ] [TASK-155] Load testing for PocketBase Realtime
 - [ ] [TASK-157] Load India OSM data into OSRM for self-hosted routing (GeoFabrik)
 - [ ] [TASK-158] Load India OSM data into Nominatim for self-hosted geocoding (GeoFabrik)
-- [ ] [TASK-180] Google Maps-smooth vehicle DR — GeoJSON Source+Layer, derive heading from pos deltas, route-following DR
+- [ ] [TASK-180] Replace 4s polling with PocketBase Realtime subscriptions + GeoJSON Source+Layer rendering + smooth DR
 - [ ] [TASK-181] Show distance-to-viewer + distance-to-destination + ETA per member in Convoy roster
 - [x] [TASK-160] Phase 1: data model — phase field + assembled_members + types
 - [x] [TASK-161] Phase 2: assembly route engine — per-member OSRM routes to assembly point

@@ -1187,7 +1187,7 @@
           "title": "Google Maps-smooth vehicle dead reckoning — GeoJSON Source+Layer, derive heading from position deltas, route-following DR",
           "status": "backlog",
           "priority": "high",
-          "description": "Replace DOM markers with GeoJSON Source+Layer for WebGL rendering. Derive heading from position deltas between polls (eliminate routeGeometry dependency). Linear DR fallback using derived heading. Route-following DR using walkRouteForward when geometry available. Reduce polling interval or switch to PocketBase Realtime subscriptions for sub-second updates. Adaptive error blending for seamless position corrections."
+          "description": "Replace 4s HTTP polling in MapPage with existing subscribeToConvoyPositions() for sub-second position updates via PocketBase Realtime. Wire subscription events into MarkerAnimator instead of setConvoyPositions. Convert DOM markers to GeoJSON Source+Layer for WebGL rendering. Derive heading from position deltas (eliminate routeGeometry dependency). Linear DR fallback using derived heading. Route-following DR using walkRouteForward when geometry available. Adaptive error blending for seamless position corrections."
         },
         {
           "id": "TASK-181",
