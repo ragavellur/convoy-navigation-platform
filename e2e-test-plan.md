@@ -21,13 +21,13 @@
 | Map & Search             | 10     | 10     | 0      | 0       |
 | Convoy Lifecycle         | 10     | 10     | 0      | 0       |
 | Real-Time Position       | 9      | 8      | 0      | 1       |
-| Roster & UI              | 11     | 11     | 0      | 0       |
+| Roster & UI              | 12     | 11     | 0      | 1       |
 | Voice & Chat             | 15     | 0      | 0      | 15      |
 | Multi-Browser Concurrent | 3      | 3      | 0      | 0       |
 | Edge Cases               | 6      | 6      | 0      | 0       |
 | Browser Support          | 5      | 0      | 0      | 5       |
 | Sprint 7 Critical Fixes  | 14     | 0      | 0      | 14      |
-| **Total**                | **95** | **60** | **0**  | **35**  |
+| **Total**                | **96** | **60** | **0**  | **36**  |
 
 ---
 
@@ -122,6 +122,7 @@
 | R-9  | Real-time roster updates      | User B joins convoy while User A views roster  | Roster updates instantly without page refresh         | TASK-057 |
 | R-10 | Touch-optimized gestures      | Swipe left/right on roster on mobile           | Drawer opens/closes with swipe gesture                | TASK-058 |
 | R-11 | Dark mode toggle              | Click dark mode toggle                         | Map style switches to dark, UI theme inverts          | TASK-059 |
+| R-12 | Inter-member distance         | Join convoy with members → Open roster         | Each member shows distance from user, updated live    | TASK-181 |
 
 ---
 

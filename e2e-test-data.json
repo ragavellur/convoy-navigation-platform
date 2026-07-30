@@ -604,6 +604,16 @@
           "notes": "Implemented and verified in Sprint 5"
         },
         {
+          "id": "R-12",
+          "title": "Inter-member distance in Convoy Members list",
+          "steps": "Join convoy with multiple members → Open roster → Check member entries",
+          "expected": "Each member shows distance from current user (e.g. '2.3 km away') updated in real-time",
+          "status": "pending",
+          "sprint": "Sprint 11",
+          "taskId": "TASK-181",
+          "priority": "medium"
+        },
+        {
           "id": "V-1",
           "title": "Voice server health check",
           "steps": "GET http://localhost:3001/health",

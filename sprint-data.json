@@ -1188,6 +1188,13 @@
           "status": "backlog",
           "priority": "high",
           "description": "Replace DOM markers with GeoJSON Source+Layer for WebGL rendering. Derive heading from position deltas between polls (eliminate routeGeometry dependency). Linear DR fallback using derived heading. Route-following DR using walkRouteForward when geometry available. Reduce polling interval or switch to PocketBase Realtime subscriptions for sub-second updates. Adaptive error blending for seamless position corrections."
+        },
+        {
+          "id": "TASK-181",
+          "title": "Show inter-member distance in Convoy Members list on map",
+          "status": "backlog",
+          "priority": "medium",
+          "description": "In the Convoy Members roster, display the distance from the current user to each other member (e.g., '2.3 km away'). Calculate using haversine formula on latest known positions. Update in real-time as positions change. Show as a subtitle or badge below each member name."
         }
       ]
     },
