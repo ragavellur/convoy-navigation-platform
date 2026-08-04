@@ -115,7 +115,7 @@ function ProfilePage() {
 
   const handleDeleteVehicle = async (vehicleId: string) => {
     try {
-      await pb.collection('vehicles').update(vehicleId, { status: 'retired' })
+      await pb.collection('vehicles').delete(vehicleId)
       setVehicles((prev) => prev.filter((v) => v.id !== vehicleId))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to remove vehicle')

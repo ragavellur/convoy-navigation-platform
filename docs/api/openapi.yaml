@@ -244,7 +244,7 @@ paths:
                 type: { type: string, enum: [car, truck, motorcycle, other, trekker] }
                 license_plate: { type: string }
                 color: { type: string }
-                status: { type: string, enum: [active, inactive, maintenance] }
+                status: { type: string, enum: [active, inactive, maintenance, retired] }
       responses:
         "201":
           description: Vehicle created
@@ -903,7 +903,7 @@ components:
         type: { type: string, enum: [car, truck, motorcycle, other, trekker] }
         license_plate: { type: string }
         color: { type: string }
-        status: { type: string, enum: [active, inactive, maintenance] }
+        status: { type: string, enum: [active, inactive, maintenance, retired] }
         created: { type: string, format: date-time }
         updated: { type: string, format: date-time }
 
