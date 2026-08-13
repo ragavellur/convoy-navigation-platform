@@ -2,9 +2,9 @@
 
 **Project:** Real-Time Convoy Navigation & Communication Platform
 **Scope:** Full-stack end-to-end verification post-Sprint 7 critical fixes
-**Environment:** Local development (Docker + Vite dev server)
+**Environment:** V2 — GitHub Pages (frontend) + Supabase (backend); local dev (Vite + Supabase)
 **Created:** 2026-07-26
-**Last Updated:** 2026-07-27
+**Last Updated:** 2026-08-13
 
 ---
 
@@ -14,20 +14,21 @@
 
 ### Current Status
 
-| Category                 | Total  | Passed | Failed | Pending |
-| ------------------------ | ------ | ------ | ------ | ------- |
-| Infrastructure Smoke     | 6      | 6      | 0      | 0       |
-| Authentication Flow      | 6      | 6      | 0      | 0       |
-| Map & Search             | 10     | 10     | 0      | 0       |
-| Convoy Lifecycle         | 10     | 10     | 0      | 0       |
-| Real-Time Position       | 9      | 8      | 0      | 1       |
-| Roster & UI              | 12     | 11     | 0      | 1       |
-| Voice & Chat             | 15     | 0      | 0      | 15      |
-| Multi-Browser Concurrent | 3      | 3      | 0      | 0       |
-| Edge Cases               | 6      | 6      | 0      | 0       |
-| Browser Support          | 5      | 0      | 0      | 5       |
-| Sprint 7 Critical Fixes  | 14     | 0      | 0      | 14      |
-| **Total**                | **96** | **60** | **0**  | **36**  |
+| Category                 | Total   | Passed | Failed | Pending |
+| ------------------------ | ------- | ------ | ------ | ------- |
+| Infrastructure Smoke     | 6       | 6      | 0      | 0       |
+| Authentication Flow      | 6       | 6      | 0      | 0       |
+| Map & Search             | 10      | 10     | 0      | 0       |
+| Convoy Lifecycle         | 10      | 10     | 0      | 0       |
+| Real-Time Position       | 9       | 8      | 0      | 1       |
+| Roster & UI              | 12      | 11     | 0      | 1       |
+| Voice & Chat             | 15      | 0      | 0      | 15      |
+| Multi-Browser Concurrent | 3       | 3      | 0      | 0       |
+| Edge Cases               | 6       | 6      | 0      | 0       |
+| Browser Support          | 5       | 0      | 0      | 5       |
+| Sprint 7 Critical Fixes  | 14      | 0      | 0      | 14      |
+| V2 Migration (13-16)     | 16      | 0      | 0      | 16      |
+| **Total**                | **112** | **60** | **0**  | **52**  |
 
 ---
 
@@ -239,6 +240,51 @@
 
 ---
 
+## V2 Migration: Supabase + GitHub Pages (Sprint 13-16)
+
+> **Scope:** Migrate from PocketBase+VPS+Docker to Supabase (Postgres + Auth + Realtime) + GitHub Pages (static hosting). Remove voice chat (mediasoup/UDP). Keep text chat via Supabase Realtime.
+>
+> **Test Base URL:** `https://ragavellur.github.io/convoy-navigation-platform/`
+> **Test Backend:** `https://pbvcbomojmnxukyypvrm.supabase.co`
+
+### Sprint 13: Supabase Backend & Schema
+
+| ID   | Test                             | Steps                                           | Expected Result                                                                                      | Sprint   |
+| ---- | -------------------------------- | ----------------------------------------------- | ---------------------------------------------------------------------------------------------------- | -------- |
+| V2-1 | Supabase project healthy         | GET `https://pbvcbomojmnxukyypvrm.supabase.co/` | HTTP 200 (or auth challenge) from Supabase                                                           | TASK-183 |
+| V2-2 | Supabase tables exist            | Query information_schema                        | All 7+ tables (vehicles, convoys, convoy_members, positions, messages, push_subscriptions, profiles) | TASK-185 |
+| V2-3 | RLS policies enforce owner rules | Attempt to update another user's vehicle        | Policy blocks (no rows affected)                                                                     | TASK-185 |
+| V2-4 | Realtime enabled on positions    | Insert a position row                           | `postgres_changes` event received via Realtime                                                       | TASK-186 |
+| V2-5 | Register via Supabase Auth       | POST signup to supabase.auth                    | User created, profile row auto-created                                                               | TASK-187 |
+
+### Sprint 14: Frontend Data Layer
+
+| ID   | Test                                   | Steps                                      | Expected Result                                        | Sprint   |
+| ---- | -------------------------------------- | ------------------------------------------ | ------------------------------------------------------ | -------- |
+| V2-6 | Login via Supabase Auth                | POST sign-in to supabase.auth              | Access token returned, session persists                | TASK-192 |
+| V2-7 | Vehicle CRUD on Supabase (hard delete) | Add vehicle in ProfilePage, then Remove    | DELETE removes row entirely from Supabase              | TASK-193 |
+| V2-8 | Position publish + subscribe Realtime  | Two browsers in a convoy on map            | Both markers update in <1s via Realtime (no polling)   | TASK-195 |
+| V2-9 | Chat via Supabase Realtime             | User A sends message, User B has chat open | Message appears instantly, persisted in messages table | TASK-196 |
+
+### Sprint 15: GitHub Pages + Voice Removal + Edge Functions
+
+| ID    | Test                        | Steps                                                           | Expected Result                                      | Sprint   |
+| ----- | --------------------------- | --------------------------------------------------------------- | ---------------------------------------------------- | -------- |
+| V2-10 | Voice chat removed          | Open convoy map page                                            | No voice panel, no PTT button, no mediasoup code     | TASK-201 |
+| V2-11 | GitHub Pages serves app     | Open `https://ragavellur.github.io/convoy-navigation-platform/` | App loads without blank page                         | TASK-203 |
+| V2-12 | SPA routing on GitHub Pages | Visit `/map` or deep link path directly                         | 404.html fallback serves index.html, route renders   | TASK-202 |
+| V2-13 | Push via Edge Function      | Trigger convoy event with subscriptions                         | Browser push notification received via Edge Function | TASK-204 |
+
+### Sprint 16: Validation & Launch
+
+| ID    | Test                         | Steps                                       | Expected Result                                           | Sprint   |
+| ----- | ---------------------------- | ------------------------------------------- | --------------------------------------------------------- | -------- |
+| V2-14 | Production data migrated     | Compare row counts PocketBase vs Supabase   | All records migrated (users, vehicles, convoys, messages) | TASK-211 |
+| V2-15 | Full E2E on Pages + Supabase | Login → create convoy → join → chat → track | All core flows work without VPS                           | TASK-210 |
+| V2-16 | v2.0.0 tag deployed          | Check latest release                        | Tag v2.0.0 exists, Pages serves latest build              | TASK-214 |
+
+---
+
 ## Sprint Traceability
 
 - **Sprint 1 (TASK-000–017):** Infrastructure, Auth, Map basics → Tests I-1–6, A-1–6, M-1
@@ -249,3 +295,4 @@
 - **Sprint 6 (TASK-060–073):** Voice, Chat → Tests V-1–5, C-11–15
 - **Sprint 7 (TASK-074–085):** Critical Convoy Fixes → Tests S7-1–14
 - **Sprint 11 (TASK-144–156):** Polish & Testing → Tests E2-1–4 (Error handling)
+- **Sprint 13-16 (TASK-182–214):** V2 Supabase + GitHub Pages Migration → Tests V2-1–16
