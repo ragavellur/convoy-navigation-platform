@@ -311,11 +311,14 @@
 
 ### 🔄 In Progress
 
-- [-] [TASK-182] Publish V2 sprint plan (Supabase + GitHub Pages migration)
+- [x] [TASK-182] Publish V2 sprint plan (Supabase + GitHub Pages migration)
+
+- [-] [TASK-183] Link Supabase CLI to project pbvcbomojmnxukyypvrm + verify connection
+
+- [-] [TASK-183] Link Supabase CLI to project pbvcbomojmnxukyypvrm + verify connection
 
 ### 📌 Backlog
 
-- [ ] [TASK-183] Link Supabase CLI to project pbvcbomojmnxukyypvrm + verify connection
 - [ ] [TASK-184] Design Postgres schema in Supabase (tables mirroring PB collections)
 - [ ] [TASK-185] Apply schema migrations + RLS policies (mirror PB API rules)
 - [ ] [TASK-186] Enable Supabase Realtime on positions, messages, convoy_members, convoys

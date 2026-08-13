@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-08-13T09:00:00Z",
+  "lastUpdated": "2026-08-13T10:00:00Z",
   "sprints": [
     {
       "id": 1,
@@ -1301,13 +1301,13 @@
         {
           "id": "TASK-182",
           "title": "Publish V2 sprint plan (Supabase + GitHub Pages migration)",
-          "status": "in-progress",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-183",
           "title": "Link Supabase CLI to project pbvcbomojmnxukyypvrm + verify connection",
-          "status": "backlog",
+          "status": "in-progress",
           "priority": "high"
         },
         {
