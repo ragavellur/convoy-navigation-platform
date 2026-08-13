@@ -17,6 +17,7 @@ import {
   publishPosition,
   unsubscribePositions,
   resetPositionThreshold,
+  setPositionPublishingEnabled,
   startHeartbeat,
   stopHeartbeat,
 } from '../services/positionTracking'
@@ -76,6 +77,7 @@ function MapPage() {
   const meetingPointRef = useRef<{ lat: number; lng: number } | null>(null)
   const simActiveRef = useRef(false)
   const userVehicleIdRef = useRef<string | null>(null)
+  const convoyStatusRef = useRef<'not_started' | 'active' | 'paused' | 'ended'>('active')
 
   const offRoutePushSentRef = useRef(false)
   const [mapLoaded, setMapLoaded] = useState(false)
@@ -431,16 +433,22 @@ function MapPage() {
       try {
         const userId = user?.id
         if (!userId) return
-        const { data: memberRecord } = await supabase
-          .from('convoy_members')
-          .select('vehicle')
-          .eq('convoy', convoyId)
-          .eq('user', userId)
-          .eq('status', 'active')
-          .limit(1)
-          .maybeSingle()
+        const [{ data: memberRecord }, { data: convoy }] = await Promise.all([
+          supabase
+            .from('convoy_members')
+            .select('vehicle')
+            .eq('convoy', convoyId)
+            .eq('user', userId)
+            .eq('status', 'active')
+            .limit(1)
+            .maybeSingle(),
+          supabase.from('convoys').select('status').eq('id', convoyId).maybeSingle(),
+        ])
+        convoyStatusRef.current =
+          (convoy?.status as 'not_started' | 'active' | 'paused' | 'ended' | undefined) ?? 'active'
+        setPositionPublishingEnabled(convoyStatusRef.current === 'active')
         vehicleId = memberRecord?.vehicle || null
-        if (vehicleId) {
+        if (vehicleId && convoyStatusRef.current === 'active') {
           startHeartbeat(vehicleId, convoyId)
         }
       } catch {
@@ -675,7 +683,7 @@ function MapPage() {
       try {
         const { data: convoy } = await supabase
           .from('convoys')
-          .select('settings, convoy_type')
+          .select('settings, convoy_type, status')
           .eq('id', convoyId)
           .maybeSingle()
         const settings = (
@@ -686,6 +694,9 @@ function MapPage() {
         simulationActive = !!settings.simulation_active
         setSimActive(simulationActive)
         setConvoyType(convoy?.convoy_type as 'vehicle' | 'trekker')
+        convoyStatusRef.current =
+          (convoy?.status as 'not_started' | 'active' | 'paused' | 'ended' | undefined) ?? 'active'
+        setPositionPublishingEnabled(convoyStatusRef.current === 'active')
       } catch {
         simulationActive = false
       }
@@ -703,7 +714,7 @@ function MapPage() {
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'convoys', filter: `id=eq.${convoyId}` },
         (payload) => {
-          const record = payload.new as { settings?: unknown }
+          const record = payload.new as { settings?: unknown; status?: string }
           const settings = (
             typeof record.settings === 'string'
               ? (JSON.parse(record.settings) as Record<string, unknown>)
@@ -711,12 +722,17 @@ function MapPage() {
           ) as Record<string, unknown>
           simulationActive = !!settings.simulation_active
           setSimActive(simulationActive)
+          if (record.status) {
+            convoyStatusRef.current = record.status as 'not_started' | 'active' | 'paused' | 'ended'
+            setPositionPublishingEnabled(convoyStatusRef.current === 'active')
+          }
         },
       )
       .subscribe()
 
     const publish = async () => {
       if (simulationActive) return
+      if (convoyStatusRef.current !== 'active') return
       if (!vehicleId) {
         await resolveVehicleId()
       }

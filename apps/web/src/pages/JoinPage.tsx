@@ -54,7 +54,7 @@ function JoinPage() {
           .from('convoys')
           .select('id, code, name, convoy_type, status')
           .eq('code', data.code)
-          .eq('status', 'active')
+          .in('status', ['active', 'not_started'])
           .limit(1)
 
         if (!convoys || convoys.length === 0) {

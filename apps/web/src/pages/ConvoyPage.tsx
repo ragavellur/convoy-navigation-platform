@@ -14,7 +14,7 @@ interface ConvoyRecord {
   code: string
   description?: string
   owner: string
-  status: 'active' | 'paused' | 'ended'
+  status: 'not_started' | 'active' | 'paused' | 'ended'
   convoy_type: 'vehicle' | 'trekker'
   max_members?: number
   trip_id: string
@@ -185,7 +185,7 @@ function ConvoyPage() {
         code,
         description: newConvoyDesc.trim() || null,
         owner: user?.id ?? '',
-        status: 'active' as const,
+        status: 'not_started' as const,
         convoy_type: newConvoyType,
         phase: 'forming',
         trip_id: tripId,
@@ -267,7 +267,7 @@ function ConvoyPage() {
         .from('convoys')
         .select('*')
         .eq('code', code)
-        .eq('status', 'active')
+        .in('status', ['active', 'not_started'])
         .limit(1)
       if (!results || results.length === 0) {
         throw new Error('Convoy not found or inactive')

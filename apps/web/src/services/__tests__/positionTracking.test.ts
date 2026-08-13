@@ -25,6 +25,7 @@ import {
   flushPendingPositions,
   subscribeToConvoyPositions,
   getLatestPositions,
+  setPositionPublishingEnabled,
   unsubscribePositions,
 } from '../positionTracking'
 
@@ -45,6 +46,7 @@ beforeEach(() => {
   Object.values(mocks).forEach((m) => m.mockReset())
   harness.reset()
   resetPositionThreshold()
+  setPositionPublishingEnabled(true)
   vi.stubGlobal('navigator', { onLine: true })
 })
 
@@ -112,6 +114,42 @@ describe('publishPosition', () => {
     const result = await publishPosition({ vehicleId: 'v1', convoyId: 'c1', lat: 10, lng: 20 })
     expect(result).toBeNull()
     expect(mocks.mockQueuePendingPosition).toHaveBeenCalled()
+  })
+})
+
+describe('position publishing gate', () => {
+  it('blocks publishPosition when disabled', async () => {
+    setPositionPublishingEnabled(false)
+    const result = await publishPosition({ vehicleId: 'v1', convoyId: 'c1', lat: 10, lng: 20 })
+    expect(result).toBeNull()
+    expect(harness.findOps('positions')).toHaveLength(0)
+  })
+
+  it('does not queue pending positions when disabled', async () => {
+    setPositionPublishingEnabled(false)
+    vi.stubGlobal('navigator', { onLine: false })
+    const result = await publishPosition({ vehicleId: 'v1', convoyId: 'c1', lat: 10, lng: 20 })
+    expect(result).toBeNull()
+    expect(mocks.mockQueuePendingPosition).not.toHaveBeenCalled()
+  })
+
+  it('returns 0 from flushPendingPositions when disabled', async () => {
+    setPositionPublishingEnabled(false)
+    mocks.mockGetPendingPositions.mockResolvedValueOnce([
+      { id: 'p1', vehicleId: 'v1', convoyId: 'c1', lat: 10, lng: 20 },
+    ])
+    const count = await flushPendingPositions()
+    expect(count).toBe(0)
+    expect(mocks.mockGetPendingPositions).not.toHaveBeenCalled()
+  })
+
+  it('resumes publishing once re-enabled', async () => {
+    setPositionPublishingEnabled(false)
+    setPositionPublishingEnabled(true)
+    harness.mockFor('positions', 'select').mockResolvedValueOnce({ data: null, error: null })
+    harness.mockFor('positions', 'upsert').mockResolvedValueOnce({ data: positionRow, error: null })
+    const result = await publishPosition({ vehicleId: 'v1', convoyId: 'c1', lat: 10, lng: 20 })
+    expect(result).not.toBeNull()
   })
 })
 

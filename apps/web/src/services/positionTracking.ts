@@ -36,6 +36,18 @@ let lastPublished: { lat: number; lng: number; vehicleId: string; time: number }
 let heartbeatTimer: ReturnType<typeof setInterval> | null = null
 let heartbeatVehicleId: string | null = null
 let heartbeatConvoyId: string | null = null
+let publishingEnabled = true
+
+export function setPositionPublishingEnabled(enabled: boolean): void {
+  publishingEnabled = enabled
+  if (!enabled) {
+    lastPublished = null
+  }
+}
+
+export function isPositionPublishingEnabled(): boolean {
+  return publishingEnabled
+}
 
 export function hasMovedSignificantly(lat: number, lng: number, vehicleId: string): boolean {
   if (!lastPublished || lastPublished.vehicleId !== vehicleId) return true
@@ -128,6 +140,10 @@ export async function publishPosition(params: {
   heading?: number | null
   accuracy?: number | null
 }): Promise<Position | null> {
+  if (!publishingEnabled) {
+    return null
+  }
+
   if (!hasMovedSignificantly(params.lat, params.lng, params.vehicleId)) {
     return null
   }
@@ -203,7 +219,7 @@ export async function publishPosition(params: {
 }
 
 export async function flushPendingPositions(): Promise<number> {
-  if (!navigator.onLine) return 0
+  if (!publishingEnabled || !navigator.onLine) return 0
   const pending = await getPendingPositions()
   let flushed = 0
 
@@ -316,7 +332,7 @@ export function startHeartbeat(vehicleId: string, convoyId: string): void {
   heartbeatVehicleId = vehicleId
   heartbeatConvoyId = convoyId
   heartbeatTimer = setInterval(async () => {
-    if (!heartbeatVehicleId || !heartbeatConvoyId) return
+    if (!publishingEnabled || !heartbeatVehicleId || !heartbeatConvoyId) return
     resetPositionThreshold()
     try {
       const { data } = await supabase

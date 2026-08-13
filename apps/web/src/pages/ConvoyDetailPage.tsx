@@ -28,7 +28,7 @@ interface ConvoyRecord {
   code: string
   description?: string
   owner: string
-  status: 'active' | 'paused' | 'ended'
+  status: 'not_started' | 'active' | 'paused' | 'ended'
   convoy_type: 'vehicle' | 'trekker'
   phase: 'forming' | 'assembling' | 'in_transit' | 'completed'
   assembled_members?: string[]
@@ -230,6 +230,33 @@ function ConvoyDetailPage() {
     }
   }
 
+  const handleStartConvoy = async () => {
+    if (!id || !convoy) return
+    try {
+      await supabase.from('convoys').update({ status: 'active' }).eq('id', id)
+      setConvoy({ ...convoy, status: 'active' })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to start convoy')
+    }
+  }
+
+  const handleDeleteConvoy = async () => {
+    if (!id) return
+    if (
+      !window.confirm(
+        'Delete this convoy permanently? All members, positions and messages will be removed.',
+      )
+    ) {
+      return
+    }
+    try {
+      await supabase.from('convoys').delete().eq('id', id)
+      navigate('/convoy')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete convoy')
+    }
+  }
+
   const handleEndSession = async () => {
     if (!id) return
     try {
@@ -259,6 +286,10 @@ function ConvoyDetailPage() {
       await startSimulation(id, simSpeed, 2, waitAtMeeting)
       setSimRunning(true)
       notifySimulationStarted(id)
+      if (convoy && convoy.status !== 'active') {
+        await supabase.from('convoys').update({ status: 'active' }).eq('id', id)
+        setConvoy({ ...convoy, status: 'active' })
+      }
     } catch (err) {
       setSimError(err instanceof Error ? err.message : 'Failed to start simulation')
     } finally {
@@ -288,6 +319,10 @@ function ConvoyDetailPage() {
     try {
       await restartSimulation(id, simSpeed, 2, waitAtMeeting)
       setSimRunning(true)
+      if (convoy && convoy.status !== 'active') {
+        await supabase.from('convoys').update({ status: 'active' }).eq('id', id)
+        setConvoy({ ...convoy, status: 'active' })
+      }
     } catch (err) {
       setSimError(err instanceof Error ? err.message : 'Failed to restart simulation')
     } finally {
@@ -403,6 +438,23 @@ function ConvoyDetailPage() {
 
       {error && <div className="mb-4 p-3 rounded-xl text-sm error-banner">{error}</div>}
 
+      {convoy.status === 'not_started' && (
+        <div className="mb-4 p-3 rounded-xl text-sm info-banner flex justify-between items-center gap-3">
+          <span>
+            This convoy hasn't started yet. Live positions are only shared after the owner starts
+            it.
+          </span>
+          {isHost && (
+            <button
+              onClick={handleStartConvoy}
+              className="shrink-0 inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg text-white bg-green-600 hover:bg-green-500 transition-colors"
+            >
+              Start Convoy
+            </button>
+          )}
+        </div>
+      )}
+
       {showNotifications && notifications.length > 0 && (
         <div className="mb-4 p-3 rounded-xl text-sm info-banner flex justify-between items-center">
           <span>{notifications[0].message}</span>
@@ -512,11 +564,25 @@ function ConvoyDetailPage() {
             <div className="rounded-xl p-4 card">
               <h2 className="text-lg font-medium text-[var(--text)] mb-4">Host Controls</h2>
               <div className="flex space-x-3 mb-4">
+                {convoy.status === 'not_started' && (
+                  <button
+                    onClick={handleStartConvoy}
+                    className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg text-[var(--success-text)] hover:bg-[var(--success-bg)] transition-colors border border-[var(--success-border-light)]"
+                  >
+                    Start Convoy
+                  </button>
+                )}
                 <button
                   onClick={handleEndSession}
                   className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg text-[var(--error-text)] hover:bg-[var(--error-bg)] transition-colors border border-[var(--danger-border-light)]"
                 >
                   End Session
+                </button>
+                <button
+                  onClick={handleDeleteConvoy}
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg text-[var(--error-text)] hover:bg-[var(--error-bg)] transition-colors border border-[var(--danger-border-light)]"
+                >
+                  Delete Convoy
                 </button>
               </div>
 
