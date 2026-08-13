@@ -5,6 +5,9 @@ on:
     branches: [main]
     paths:
       - 'apps/web/**'
+      - 'sprint-board.html'
+      - 'sprint-data.json'
+      - 'sprint.md'
       - '.github/workflows/deploy-pages.yml'
   workflow_dispatch:
 
@@ -41,6 +44,9 @@ jobs:
           VITE_VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
           VITE_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
           VITE_OSRM_URL: ${{ secrets.OSRM_URL }}
+
+      - name: Include sprint board files in artifact
+        run: cp sprint-board.html sprint-data.json sprint.md apps/web/dist/
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
