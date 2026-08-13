@@ -350,6 +350,10 @@
 
 ## Sprint 15: V2 GitHub Pages + Voice Removal + Edge Functions (Week 29-30)
 
+### 🔄 In Progress
+
+- [-] [TASK-205] Rewire simulation service to Supabase (service role) or GitHub Actions scheduled job
+
 ### ✅ Completed
 
 - [x] [TASK-215] Convoy lifecycle: 'not_started' initial status + owner Start Convoy button
@@ -373,7 +377,6 @@
 
 - [ ] [TASK-201] Remove voice chat module (VoicePanel, voiceChannel.ts, mediasoup, voice-server)
 - [ ] [TASK-204] Create Supabase Edge Function for push notifications (web-push sender)
-- [ ] [TASK-205] Rewire simulation service to Supabase (service role) or GitHub Actions scheduled job
 - [ ] [TASK-207] Remove obsolete Docker/nginx/voice-server infra files
 
 ---

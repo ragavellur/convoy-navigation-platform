@@ -1457,7 +1457,7 @@
         {
           "id": "TASK-205",
           "title": "Rewire simulation service to Supabase (service role writes) or GitHub Actions scheduled job",
-          "status": "backlog",
+          "status": "in-progress",
           "priority": "medium"
         },
         {
