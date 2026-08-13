@@ -8,6 +8,7 @@ function RegisterPage() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
+  const [confirmationSent, setConfirmationSent] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const { register } = useAuth()
   const navigate = useNavigate()
@@ -37,7 +38,11 @@ function RegisterPage() {
     setIsLoading(true)
 
     try {
-      await register(email, password, name.trim())
+      const result = await register(email, password, name.trim())
+      if (result.requiresEmailConfirmation) {
+        setConfirmationSent(true)
+        return
+      }
       navigate('/')
     } catch (err: unknown) {
       const message =
@@ -73,6 +78,13 @@ function RegisterPage() {
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          {confirmationSent && (
+            <div className="success-banner rounded-xl p-4">
+              <div className="text-sm text-[var(--success-text)]">
+                Account created! Please check your email to confirm your address, then sign in.
+              </div>
+            </div>
+          )}
           {error && (
             <div className="error-banner rounded-xl p-4">
               <div className="text-sm text-[var(--error-text)]">{error}</div>

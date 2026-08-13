@@ -26,9 +26,13 @@ export default function ChatPanel() {
       if (isMounted) setMessages(msgs)
     })
 
-    subscribeToMessages(convoyId, (msg) => {
-      if (isMounted) setMessages((prev) => [...prev, msg])
-    })
+    subscribeToMessages(
+      convoyId,
+      (msg) => {
+        if (isMounted) setMessages((prev) => [...prev, msg])
+      },
+      user?.id,
+    )
 
     return () => {
       isMounted = false

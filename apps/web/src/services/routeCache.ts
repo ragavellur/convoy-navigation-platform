@@ -1,10 +1,8 @@
-import PocketBase from 'pocketbase'
-
-const POCKETBASE_URL = import.meta.env.VITE_POCKETBASE_URL || 'http://localhost:8090'
+import supabase from './supabaseClient'
 
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000
 
-interface CachedRoute {
+export interface CachedRoute {
   origin_lat: number
   origin_lng: number
   dest_lat: number
@@ -14,10 +12,6 @@ interface CachedRoute {
   geometry: string
   alternatives_json: string
   created: string
-}
-
-function getPb(): PocketBase {
-  return new PocketBase(POCKETBASE_URL)
 }
 
 function roundCoord(n: number): number {
@@ -41,21 +35,33 @@ export async function getCachedRoute(
   dest: [number, number],
 ): Promise<CachedRoute | null> {
   try {
-    const pb = getPb()
     const key = cacheKey(origin, dest)
-    const results = await pb.collection('cached_routes').getFullList({
-      filter: `origin_lat = ${key.origin_lat} && origin_lng = ${key.origin_lng} && dest_lat = ${key.dest_lat} && dest_lng = ${key.dest_lng}`,
-      sort: '-created',
-      limit: 1,
-    })
+    const { data } = await supabase
+      .from('cached_routes')
+      .select('*')
+      .eq('origin_lat', key.origin_lat)
+      .eq('origin_lng', key.origin_lng)
+      .eq('dest_lat', key.dest_lat)
+      .eq('dest_lng', key.dest_lng)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
 
-    if (results.length === 0) return null
-
-    const cached = results[0]
-    const age = Date.now() - new Date(cached.created).getTime()
+    if (!data) return null
+    const age = Date.now() - new Date(data.created_at).getTime()
     if (age > CACHE_TTL_MS) return null
 
-    return cached as unknown as CachedRoute
+    return {
+      origin_lat: data.origin_lat,
+      origin_lng: data.origin_lng,
+      dest_lat: data.dest_lat,
+      dest_lng: data.dest_lng,
+      distance: data.distance,
+      duration: data.duration,
+      geometry: data.geometry,
+      alternatives_json: data.alternatives_json || '',
+      created: data.created_at,
+    }
   } catch {
     return null
   }
@@ -70,30 +76,17 @@ export async function cacheRoute(
   alternativesJson: string,
 ): Promise<void> {
   try {
-    const pb = getPb()
     const key = cacheKey(origin, dest)
-
-    const existing = await pb.collection('cached_routes').getFullList({
-      filter: `origin_lat = ${key.origin_lat} && origin_lng = ${key.origin_lng} && dest_lat = ${key.dest_lat} && dest_lng = ${key.dest_lng}`,
-      limit: 1,
-    })
-
-    if (existing.length > 0) {
-      await pb.collection('cached_routes').update(existing[0].id, {
-        distance,
-        duration,
-        geometry,
-        alternatives_json: alternativesJson,
-      })
-    } else {
-      await pb.collection('cached_routes').create({
+    await supabase.from('cached_routes').upsert(
+      {
         ...key,
         distance,
         duration,
         geometry,
         alternatives_json: alternativesJson,
-      })
-    }
+      },
+      { onConflict: 'origin_lat,origin_lng,dest_lat,dest_lng' },
+    )
   } catch {
     // silently fail — caching is non-critical
   }

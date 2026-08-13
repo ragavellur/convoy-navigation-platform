@@ -1,4 +1,4 @@
-import pb from './pocketbase'
+import supabase from './supabaseClient'
 import { haversineDistance } from './positionTracking'
 
 export interface GpsReading {
@@ -89,11 +89,14 @@ export async function flushBuffer(vehicleId: string, convoyId: string): Promise<
   buffers.set(key, [])
   if (!summary) return
   try {
-    await pb.collection('telemetry_aggregated').create({
-      vehicle: vehicleId,
-      hour_bucket: new Date().toISOString().slice(0, 13),
-      ...summary,
-    })
+    await supabase.from('telemetry_aggregated').upsert(
+      {
+        vehicle: vehicleId,
+        hour_bucket: new Date().toISOString().slice(0, 13),
+        ...summary,
+      },
+      { onConflict: 'vehicle,hour_bucket' },
+    )
   } catch {
     // non-critical
   }

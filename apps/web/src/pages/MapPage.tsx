@@ -22,7 +22,8 @@ import {
 } from '../services/positionTracking'
 import { MarkerAnimator } from '../services/markerAnimation'
 import { createVehicleMarkerElement, getDistinctColor } from '../components/VehicleMarker'
-import pb from '../services/pocketbase'
+import supabase from '../services/supabaseClient'
+import { useAuth } from '../hooks/useAuth'
 import { useConvoyRoster, haversineDistance } from '../stores/ConvoyRosterContext'
 import { useTheme, getMapStyleUrl } from '../stores/ThemeContext'
 import { notifyOffRoute } from '../services/pushSender'
@@ -98,6 +99,7 @@ function MapPage() {
 
   const { position } = useGeolocation()
   const geoStream = useGeolocationStream({ isInConvoy: !!convoyId })
+  const { user } = useAuth()
   const { members, focusMemberId, joinConvoy, leaveConvoy } = useConvoyRoster()
   const computedAssemblyPoint: { lat: number; lng: number } | null = useMemo(() => {
     return assemblyPoint
@@ -427,14 +429,17 @@ function MapPage() {
 
     const init = async () => {
       try {
-        const userId = pb.authStore.record?.id
+        const userId = user?.id
         if (!userId) return
-        const memberRecord = await pb
-          .collection('convoy_members')
-          .getFirstListItem(`convoy = "${convoyId}" && user = "${userId}" && status = "active"`, {
-            expand: 'vehicle',
-          })
-        vehicleId = memberRecord.vehicle || null
+        const { data: memberRecord } = await supabase
+          .from('convoy_members')
+          .select('vehicle')
+          .eq('convoy', convoyId)
+          .eq('user', userId)
+          .eq('status', 'active')
+          .limit(1)
+          .maybeSingle()
+        vehicleId = memberRecord?.vehicle || null
         if (vehicleId) {
           startHeartbeat(vehicleId, convoyId)
         }
@@ -448,7 +453,7 @@ function MapPage() {
     return () => {
       stopHeartbeat()
     }
-  }, [convoyId])
+  }, [convoyId, user])
 
   const hideRoutePanel = useCallback(() => {
     setShowRoutePanel(false)
@@ -606,10 +611,10 @@ function MapPage() {
     setIsOffRoute(offNow)
     if (offNow && convoyId && !offRoutePushSentRef.current) {
       offRoutePushSentRef.current = true
-      notifyOffRoute(convoyId, pb.authStore.model?.name || 'A member')
+      notifyOffRoute(convoyId, user?.name || 'A member')
     }
     if (!offNow) offRoutePushSentRef.current = false
-  }, [position, convoyId, simActive, convoyPositions, routeRef])
+  }, [position, convoyId, simActive, convoyPositions, routeRef, user])
 
   useEffect(() => {
     if (!routeData || !position) return
@@ -627,14 +632,14 @@ function MapPage() {
       setIsOffRoute(offNow)
       if (offNow && convoyId && !offRoutePushSentRef.current) {
         offRoutePushSentRef.current = true
-        notifyOffRoute(convoyId, pb.authStore.model?.name || 'A member')
+        notifyOffRoute(convoyId, user?.name || 'A member')
       }
       if (!offNow) offRoutePushSentRef.current = false
     }, POSITION_CHECK_INTERVAL_MS)
     return () => {
       if (offRouteTimerRef.current) clearInterval(offRouteTimerRef.current)
     }
-  }, [routeData, position, convoyId, simActive, convoyPositions])
+  }, [routeData, position, convoyId, simActive, convoyPositions, user])
 
   useEffect(() => {
     if (!convoyId) return
@@ -644,18 +649,21 @@ function MapPage() {
 
     const resolveVehicleId = async () => {
       try {
-        const userId = pb.authStore.record?.id
+        const userId = user?.id
         if (!userId) {
           vehicleId = null
           userVehicleIdRef.current = null
           return
         }
-        const memberRecord = await pb
-          .collection('convoy_members')
-          .getFirstListItem(`convoy = "${convoyId}" && user = "${userId}" && status = "active"`, {
-            expand: 'vehicle',
-          })
-        vehicleId = memberRecord.vehicle || null
+        const { data: memberRecord } = await supabase
+          .from('convoy_members')
+          .select('vehicle')
+          .eq('convoy', convoyId)
+          .eq('user', userId)
+          .eq('status', 'active')
+          .limit(1)
+          .maybeSingle()
+        vehicleId = memberRecord?.vehicle || null
         userVehicleIdRef.current = vehicleId
       } catch {
         vehicleId = null
@@ -665,12 +673,19 @@ function MapPage() {
 
     const checkSimulation = async () => {
       try {
-        const convoy = await pb.collection('convoys').getOne(convoyId)
-        const settings =
-          typeof convoy.settings === 'string' ? JSON.parse(convoy.settings) : convoy.settings || {}
+        const { data: convoy } = await supabase
+          .from('convoys')
+          .select('settings, convoy_type')
+          .eq('id', convoyId)
+          .maybeSingle()
+        const settings = (
+          typeof convoy?.settings === 'string'
+            ? (JSON.parse(convoy.settings) as Record<string, unknown>)
+            : convoy?.settings || {}
+        ) as Record<string, unknown>
         simulationActive = !!settings.simulation_active
         setSimActive(simulationActive)
-        setConvoyType(convoy.convoy_type || 'vehicle')
+        setConvoyType(convoy?.convoy_type as 'vehicle' | 'trekker')
       } catch {
         simulationActive = false
       }
@@ -682,14 +697,23 @@ function MapPage() {
 
     init()
 
-    const unsubSim = pb.collection('convoys').subscribe(convoyId, (event) => {
-      const settings =
-        typeof event.record.settings === 'string'
-          ? JSON.parse(event.record.settings)
-          : event.record.settings || {}
-      simulationActive = !!settings.simulation_active
-      setSimActive(simulationActive)
-    })
+    const simChannel = supabase
+      .channel(`convoy-sim-${convoyId}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'convoys', filter: `id=eq.${convoyId}` },
+        (payload) => {
+          const record = payload.new as { settings?: unknown }
+          const settings = (
+            typeof record.settings === 'string'
+              ? (JSON.parse(record.settings) as Record<string, unknown>)
+              : record.settings || {}
+          ) as Record<string, unknown>
+          simulationActive = !!settings.simulation_active
+          setSimActive(simulationActive)
+        },
+      )
+      .subscribe()
 
     const publish = async () => {
       if (simulationActive) return
@@ -716,20 +740,25 @@ function MapPage() {
 
     return () => {
       unsub()
-      unsubSim.then?.((fn: (() => void) | undefined) => fn?.())
+      void supabase.removeChannel(simChannel)
     }
-  }, [convoyId])
+  }, [convoyId, user])
 
   useEffect(() => {
     if (!convoyId) return
 
     const fetchConvoy = async () => {
       try {
-        const convoy = await pb.collection('convoys').getOne(convoyId)
+        const { data: convoy } = await supabase
+          .from('convoys')
+          .select('phase, owner, assembled_members, source_lat, source_lng')
+          .eq('id', convoyId)
+          .maybeSingle()
+        if (!convoy) return
         setConvoyPhase(convoy.phase || 'forming')
         setConvoyOwner(convoy.owner)
-        setAssembledMembers(convoy.assembled_members || [])
-        if (convoy.source_lat && convoy.source_lng) {
+        setAssembledMembers((convoy.assembled_members as unknown as string[] | null) || [])
+        if (convoy.source_lat != null && convoy.source_lng != null) {
           setAssemblyPoint({ lat: convoy.source_lat, lng: convoy.source_lng })
         }
       } catch {
@@ -739,23 +768,31 @@ function MapPage() {
 
     fetchConvoy()
 
-    let unsubFn: (() => void) | null = null
-    pb.collection('convoys')
-      .subscribe(convoyId, (event) => {
-        const r = event.record
-        setConvoyPhase(r.phase || 'forming')
-        setConvoyOwner(r.owner)
-        setAssembledMembers(r.assembled_members || [])
-        if (r.source_lat && r.source_lng) {
-          setAssemblyPoint({ lat: r.source_lat, lng: r.source_lng })
-        }
-      })
-      .then((fn) => {
-        unsubFn = fn
-      })
+    const convoyChannel = supabase
+      .channel(`convoy-phase-${convoyId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'convoys', filter: `id=eq.${convoyId}` },
+        (payload) => {
+          const r = payload.new as {
+            phase?: string
+            owner?: string
+            assembled_members?: unknown
+            source_lat?: number | null
+            source_lng?: number | null
+          }
+          setConvoyPhase(r.phase || 'forming')
+          setConvoyOwner(r.owner || null)
+          setAssembledMembers((r.assembled_members as unknown as string[] | null) || [])
+          if (r.source_lat != null && r.source_lng != null) {
+            setAssemblyPoint({ lat: r.source_lat, lng: r.source_lng })
+          }
+        },
+      )
+      .subscribe()
 
     return () => {
-      unsubFn?.()
+      void supabase.removeChannel(convoyChannel)
     }
   }, [convoyId])
 
@@ -1202,8 +1239,12 @@ function MapPage() {
 
     const loadConvoyRoute = async () => {
       try {
-        const convoy = await pb.collection('convoys').getOne(convoyId)
-        if (cancelled) return
+        const { data: convoy } = await supabase
+          .from('convoys')
+          .select('source_lat, source_lng, dest_lat, dest_lng, source_name, dest_name')
+          .eq('id', convoyId)
+          .maybeSingle()
+        if (cancelled || !convoy) return
         if (
           convoy.source_lat == null ||
           convoy.source_lng == null ||
@@ -1241,13 +1282,18 @@ function MapPage() {
         markersRef.current.push(destMarker)
 
         let origin = meetingPoint
-        const userId = pb.authStore.record?.id
+        const userId = user?.id
         if (userId) {
           try {
-            const member = await pb
-              .collection('convoy_members')
-              .getFirstListItem(`convoy = "${convoyId}" && user = "${userId}" && status = "active"`)
-            if (member.join_lat != null && member.join_lng != null) {
+            const { data: member } = await supabase
+              .from('convoy_members')
+              .select('join_lat, join_lng')
+              .eq('convoy', convoyId)
+              .eq('user', userId)
+              .eq('status', 'active')
+              .limit(1)
+              .maybeSingle()
+            if (member && member.join_lat != null && member.join_lng != null) {
               origin = [member.join_lng, member.join_lat]
             }
           } catch {
@@ -1291,7 +1337,7 @@ function MapPage() {
     return () => {
       cancelled = true
     }
-  }, [convoyId, mapLoaded, convoyPhase])
+  }, [convoyId, mapLoaded, convoyPhase, user])
 
   const ownerUserId = convoyOwner
   const { routes: assemblyRoutes } = useAssemblyRoutes({
@@ -1346,9 +1392,13 @@ function MapPage() {
     const timer = setTimeout(() => {
       setAssembledMembers(updated)
     }, 0)
-    pb.collection('convoys')
-      .update(convoyId, { assembled_members: updated })
-      .catch(() => {})
+    supabase
+      .from('convoys')
+      .update({ assembled_members: updated })
+      .eq('id', convoyId)
+      .then(() => {
+        /* persisted */
+      })
     return () => clearTimeout(timer)
   }, [convoyPhase, members, computedAssemblyPoint, convoyOwner, assembledMembers, convoyId])
 

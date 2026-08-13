@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import pb from '../services/pocketbase'
+import supabase from '../services/supabaseClient'
 import { generateDeepLink } from '../services/deepLink'
 import { shareViaWhatsApp, shareViaSMS, shareViaEmail } from '../services/share'
 import ConvoyTypeBadge from '../components/ConvoyTypeBadge'
@@ -41,7 +41,7 @@ interface ConvoyRecord {
   dest_lng?: number
   dest_name?: string
   settings?: Record<string, unknown>
-  created: string
+  created_at: string
 }
 
 interface MemberRecord {
@@ -92,17 +92,75 @@ function ConvoyDetailPage() {
     return !!settings.keep_latest_only
   })()
 
+  const loadMembers = useCallback(async (convoyId: string): Promise<MemberRecord[]> => {
+    const { data: rows, error: rowsError } = await supabase
+      .from('convoy_members')
+      .select('id, convoy, user, role, status, vehicle, joined_at, join_name')
+      .eq('convoy', convoyId)
+      .eq('status', 'active')
+    if (rowsError) throw rowsError
+    const memberRows = rows || []
+
+    const userIds = memberRows.map((m) => m.user)
+    const vehicleIds = memberRows.map((m) => m.vehicle).filter((v): v is string => v !== null)
+
+    const [profiles, vehicles] = await Promise.all([
+      userIds.length > 0
+        ? supabase.from('profiles').select('id, name').in('id', userIds)
+        : Promise.resolve({ data: [] }),
+      vehicleIds.length > 0
+        ? supabase.from('vehicles').select('id, name, type, color').in('id', vehicleIds)
+        : Promise.resolve({ data: [] }),
+    ])
+
+    const userMap = new Map((profiles.data || []).map((p) => [p.id, p]))
+    const vehicleMap = new Map(
+      (
+        (vehicles as { data: { id: string; name: string; type: string; color: string | null }[] })
+          .data || []
+      ).map((v) => [v.id, v]),
+    )
+
+    return memberRows.map((m) => {
+      const profile = userMap.get(m.user)
+      const vehicle = m.vehicle ? vehicleMap.get(m.vehicle) : undefined
+      return {
+        id: m.id,
+        convoy: m.convoy,
+        user: m.user,
+        role: m.role as MemberRecord['role'],
+        status: m.status as MemberRecord['status'],
+        vehicle: m.vehicle ?? undefined,
+        joined_at: m.joined_at ?? '',
+        join_name: m.join_name ?? undefined,
+        expand: {
+          user: profile ? { id: profile.id, name: profile.name ?? '', email: '' } : undefined,
+          vehicle: vehicle
+            ? {
+                id: vehicle.id,
+                name: vehicle.name,
+                type: vehicle.type,
+                color: vehicle.color ?? undefined,
+              }
+            : undefined,
+        },
+      }
+    })
+  }, [])
+
+  const loadConvoy = useCallback(async (convoyId: string): Promise<ConvoyRecord | null> => {
+    const { data } = await supabase.from('convoys').select('*').eq('id', convoyId).maybeSingle()
+    return (data as ConvoyRecord) ?? null
+  }, [])
+
   useEffect(() => {
     if (!id) return
     const fetch = async () => {
       setLoading(true)
       try {
-        const c = await pb.collection('convoys').getOne<ConvoyRecord>(id)
+        const c = await loadConvoy(id)
         setConvoy(c)
-        const m = await pb.collection('convoy_members').getFullList<MemberRecord>({
-          filter: `convoy = "${id}" && status = "active"`,
-          expand: 'user,vehicle',
-        })
+        const m = await loadMembers(id)
         setMembers(m)
 
         try {
@@ -134,17 +192,14 @@ function ConvoyDetailPage() {
     return () => {
       unsubFn?.()
     }
-  }, [id])
+  }, [id, loadConvoy, loadMembers])
 
   const refreshData = async () => {
     if (!id) return
     try {
-      const c = await pb.collection('convoys').getOne<ConvoyRecord>(id)
+      const c = await loadConvoy(id)
       setConvoy(c)
-      const m = await pb.collection('convoy_members').getFullList<MemberRecord>({
-        filter: `convoy = "${id}" && status = "active"`,
-        expand: 'user,vehicle',
-      })
+      const m = await loadMembers(id)
       setMembers(m)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load convoy')
@@ -154,7 +209,7 @@ function ConvoyDetailPage() {
   const handleRemoveMember = async (memberId: string) => {
     try {
       const member = members.find((m) => m.id === memberId)
-      await pb.collection('convoy_members').update(memberId, { status: 'removed' })
+      await supabase.from('convoy_members').update({ status: 'removed' }).eq('id', memberId)
       await refreshData()
       if (id && member?.expand?.user?.name) {
         notifyMemberLeft(id, member.expand.user.name)
@@ -168,7 +223,7 @@ function ConvoyDetailPage() {
     const myMember = members.find((m) => m.user === user?.id)
     if (!myMember) return
     try {
-      await pb.collection('convoy_members').update(myMember.id, { status: 'inactive' })
+      await supabase.from('convoy_members').update({ status: 'inactive' }).eq('id', myMember.id)
       navigate('/convoy')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to leave convoy')
@@ -178,7 +233,7 @@ function ConvoyDetailPage() {
   const handleEndSession = async () => {
     if (!id) return
     try {
-      await pb.collection('convoys').update(id, { status: 'ended' })
+      await supabase.from('convoys').update({ status: 'ended' }).eq('id', id)
       notifyConvoyEnded(id)
       navigate('/convoy')
     } catch (err) {
@@ -261,11 +316,15 @@ function ConvoyDetailPage() {
     setSimError('')
     try {
       const currentSettings =
-        typeof convoy.settings === 'string' ? JSON.parse(convoy.settings) : convoy.settings || {}
+        typeof convoy.settings === 'string'
+          ? (JSON.parse(convoy.settings) as Record<string, unknown>)
+          : convoy.settings || {}
       const newSettings = { ...currentSettings, simulation_active: !isSimulationEnabled }
-      await pb.collection('convoys').update(id, {
-        settings: JSON.stringify(newSettings),
-      })
+      const { error } = await supabase
+        .from('convoys')
+        .update({ settings: newSettings })
+        .eq('id', id)
+      if (error) throw error
       setConvoy({ ...convoy, settings: newSettings })
     } catch (err) {
       setSimError(err instanceof Error ? err.message : 'Failed to toggle simulation mode')
@@ -280,11 +339,15 @@ function ConvoyDetailPage() {
     setSimError('')
     try {
       const currentSettings =
-        typeof convoy.settings === 'string' ? JSON.parse(convoy.settings) : convoy.settings || {}
+        typeof convoy.settings === 'string'
+          ? (JSON.parse(convoy.settings) as Record<string, unknown>)
+          : convoy.settings || {}
       const newSettings = { ...currentSettings, keep_latest_only: !isKeepLatestOnly }
-      await pb.collection('convoys').update(id, {
-        settings: JSON.stringify(newSettings),
-      })
+      const { error } = await supabase
+        .from('convoys')
+        .update({ settings: newSettings })
+        .eq('id', id)
+      if (error) throw error
       setConvoy({ ...convoy, settings: newSettings })
 
       if (!isKeepLatestOnly) {
@@ -646,7 +709,7 @@ function ConvoyDetailPage() {
               <div className="flex justify-between">
                 <dt className="text-[var(--text2)]">Created</dt>
                 <dd className="text-[var(--text)]">
-                  {new Date(convoy.created).toLocaleDateString()}
+                  {new Date(convoy.created_at).toLocaleDateString()}
                 </dd>
               </div>
             </dl>

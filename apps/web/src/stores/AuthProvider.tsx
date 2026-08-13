@@ -1,79 +1,96 @@
 import { useEffect, useState, useCallback, ReactNode } from 'react'
+import { Session } from '@supabase/supabase-js'
 import { User } from '../types'
-import pb from '../services/pocketbase'
-import { AuthContext, AuthContextType } from './AuthContext'
+import supabase from '../services/supabaseClient'
+import { AuthContext, AuthContextType, RegisterResult } from './AuthContext'
 
-function getInitialUser(): User | null {
-  if (pb.authStore.isValid && pb.authStore.record) {
-    return pb.authStore.record as unknown as User
+/** Merge the Supabase session + profiles row into the app's User model. */
+async function buildUser(session: Session | null): Promise<User | null> {
+  if (!session) return null
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('name, phone, role, status, avatar_url')
+    .eq('id', session.user.id)
+    .maybeSingle()
+
+  const meta = session.user.user_metadata as Record<string, unknown>
+  const fallbackName = session.user.email?.split('@')[0] || 'User'
+  return {
+    id: session.user.id,
+    email: session.user.email ?? '',
+    name: profile?.name || (meta.name as string) || fallbackName,
+    avatar: profile?.avatar_url || (meta.avatar as string) || undefined,
+    phone: profile?.phone || (meta.phone as string) || undefined,
+    role: (profile?.role || 'member') as 'admin' | 'member',
+    status: (profile?.status || 'active') as 'active' | 'inactive' | 'banned',
+    created: session.user.created_at,
+    updated: session.user.last_sign_in_at || session.user.created_at,
   }
-  return null
-}
-
-function clearAuthStorage() {
-  localStorage.removeItem('pocketbase_auth')
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(getInitialUser)
-  const [isLoading] = useState(false)
+  const [user, setUser] = useState<User | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
-  const syncUser = useCallback(() => {
-    if (pb.authStore.isValid && pb.authStore.record) {
-      setUser(pb.authStore.record as unknown as User)
-    } else {
-      setUser(null)
-    }
+  const syncUser = useCallback(async (session: Session | null) => {
+    setUser(await buildUser(session))
   }, [])
 
   useEffect(() => {
-    const handleStorage = () => {
-      syncUser()
-    }
-    window.addEventListener('storage', handleStorage)
-    window.addEventListener('popstate', handleStorage)
+    let active = true
+    supabase.auth.getSession().then(({ data }) => {
+      if (!active) return
+      void syncUser(data.session).finally(() => setIsLoading(false))
+    })
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      void syncUser(session)
+    })
+
     return () => {
-      window.removeEventListener('storage', handleStorage)
-      window.removeEventListener('popstate', handleStorage)
+      active = false
+      subscription.unsubscribe()
     }
   }, [syncUser])
 
   const login = async (email: string, password: string) => {
-    const authData = await pb.collection('users').authWithPassword(email, password)
-    setUser(authData.record as unknown as User)
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error) throw error
+    await syncUser(data.session)
   }
 
-  const register = async (email: string, password: string, name: string) => {
-    await pb.collection('users').create({
+  const register = async (
+    email: string,
+    password: string,
+    name: string,
+  ): Promise<RegisterResult> => {
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      passwordConfirm: password,
-      name,
-      role: 'member',
-      status: 'active',
+      options: { data: { name } },
     })
-    await login(email, password)
+    if (error) throw error
+    if (!data.session) {
+      return { requiresEmailConfirmation: true }
+    }
+    await syncUser(data.session)
+    return { requiresEmailConfirmation: false }
   }
 
   const logout = useCallback(() => {
-    pb.authStore.clear()
-    clearAuthStorage()
+    void supabase.auth.signOut()
     setUser(null)
   }, [])
 
   const refreshSession = async (): Promise<boolean> => {
-    if (!pb.authStore.isValid) {
-      return false
-    }
-    try {
-      await pb.collection('users').authRefresh()
-      return true
-    } catch {
-      pb.authStore.clear()
-      clearAuthStorage()
+    const { data, error } = await supabase.auth.getUser()
+    if (error || !data.user) {
       setUser(null)
       return false
     }
+    return true
   }
 
   const value: AuthContextType = {

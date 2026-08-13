@@ -1,4 +1,4 @@
-import pb from './pocketbase'
+import supabase from './supabaseClient'
 import { notifyMemberJoined, notifyMemberLeft } from './pushSender'
 
 export interface ConvoyNotification {
@@ -13,6 +13,12 @@ export interface ConvoyNotification {
 
 let activeUnsub: (() => void) | null = null
 
+/** Resolve a member's display name (cached). */
+async function getMemberName(userId: string): Promise<string> {
+  const { data } = await supabase.from('profiles').select('name').eq('id', userId).maybeSingle()
+  return data?.name || 'A member'
+}
+
 export async function subscribeToConvoyNotifications(
   convoyId: string,
   onNotification: (notification: ConvoyNotification) => void,
@@ -22,33 +28,44 @@ export async function subscribeToConvoyNotifications(
     activeUnsub = null
   }
 
-  const unsub = await pb.collection('convoy_members').subscribe('*', (event) => {
-    if (event.record.convoy !== convoyId) return
-    if (event.action === 'update') return
+  const channel = supabase
+    .channel(`convoy-members-${convoyId}`)
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'convoy_members', filter: `convoy=eq.${convoyId}` },
+      async (payload) => {
+        const isInsert = payload.eventType === 'INSERT'
+        const isDelete = payload.eventType === 'DELETE'
+        if (payload.eventType === 'UPDATE') return
 
-    const notification: ConvoyNotification = {
-      id: event.record.id,
-      convoy: event.record.convoy,
-      user: event.record.user,
-      type: event.action === 'create' ? 'member_joined' : 'member_left',
-      message:
-        event.action === 'create' ? 'A member joined the convoy' : 'A member left the convoy',
-      read: false,
-      created: event.record.created || new Date().toISOString(),
-    }
-    onNotification(notification)
+        const row = (isInsert ? payload.new : payload.old) as {
+          id: string
+          convoy: string
+          user: string
+          created_at?: string
+        }
+        const notification: ConvoyNotification = {
+          id: row.id,
+          convoy: row.convoy,
+          user: row.user,
+          type: isInsert ? 'member_joined' : 'member_left',
+          message: isInsert ? 'A member joined the convoy' : 'A member left the convoy',
+          read: false,
+          created: row.created_at || new Date().toISOString(),
+        }
+        onNotification(notification)
 
-    if (event.action === 'create') {
-      const name = event.record.expand?.user?.name || 'A member'
-      notifyMemberJoined(convoyId, name)
-    } else if (event.action === 'delete') {
-      const name = event.record.expand?.user?.name || 'A member'
-      notifyMemberLeft(convoyId, name)
-    }
-  })
+        if (isInsert) {
+          notifyMemberJoined(convoyId, await getMemberName(row.user))
+        } else if (isDelete) {
+          notifyMemberLeft(convoyId, await getMemberName(row.user))
+        }
+      },
+    )
+    .subscribe()
 
   activeUnsub = () => {
-    unsub()
+    void supabase.removeChannel(channel)
     activeUnsub = null
   }
 
@@ -59,11 +76,21 @@ export async function subscribeToConvoyStatus(
   convoyId: string,
   onStatusChange: (status: string) => void,
 ): Promise<() => void> {
-  const unsub = await pb.collection('convoys').subscribe(convoyId, (event) => {
-    onStatusChange(event.record.status)
-  })
+  const channel = supabase
+    .channel(`convoys-${convoyId}`)
+    .on(
+      'postgres_changes',
+      { event: 'UPDATE', schema: 'public', table: 'convoys', filter: `id=eq.${convoyId}` },
+      (payload) => {
+        const row = payload.new as { status: string }
+        onStatusChange(row.status)
+      },
+    )
+    .subscribe()
 
-  return unsub
+  return () => {
+    void supabase.removeChannel(channel)
+  }
 }
 
 export function unsubscribeAll(): void {
@@ -71,6 +98,5 @@ export function unsubscribeAll(): void {
     activeUnsub()
     activeUnsub = null
   }
-  pb.collection('convoy_members').unsubscribe('*')
-  pb.collection('convoys').unsubscribe('*')
+  void supabase.removeAllChannels()
 }

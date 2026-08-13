@@ -5,7 +5,7 @@ import { formatSpeedKmh } from '../utils/memberStatus'
 import { useAuth } from '../hooks/useAuth'
 import VoicePanel from './VoicePanel'
 import ChatPanel from './ChatPanel'
-import pb from '../services/pocketbase'
+import supabase from '../services/supabaseClient'
 
 const STATUS_COLORS: Record<string, string> = {
   'in-transit': 'bg-[var(--success)]',
@@ -46,17 +46,26 @@ export default function RosterSidebar({ isExpanded, onToggle }: RosterSidebarPro
 
   useEffect(() => {
     if (!convoyId) return
-    pb.collection('convoys')
-      .getOne(convoyId)
-      .then((c) => {
-        setConvoyInfo({
-          name: c.name,
-          description: c.description,
-          source_name: c.source_name,
-          dest_name: c.dest_name,
-        })
-      })
-      .catch(() => {})
+    const load = async () => {
+      try {
+        const { data } = await supabase
+          .from('convoys')
+          .select('name, description, source_name, dest_name')
+          .eq('id', convoyId)
+          .maybeSingle()
+        if (data) {
+          setConvoyInfo({
+            name: data.name,
+            description: data.description ?? undefined,
+            source_name: data.source_name ?? undefined,
+            dest_name: data.dest_name ?? undefined,
+          })
+        }
+      } catch {
+        /* convoy info fetch is non-critical */
+      }
+    }
+    load()
   }, [convoyId])
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {

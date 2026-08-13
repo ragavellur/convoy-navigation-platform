@@ -1,4 +1,4 @@
-import pb from './pocketbase'
+import supabase from './supabaseClient'
 import { queuePendingPosition, getPendingPositions, removePendingPosition } from '../lib/db'
 import { addReading, startAggregation, flushAll as flushTelemetry } from './telemetryAggregator'
 
@@ -48,6 +48,77 @@ export function resetPositionThreshold(): void {
   lastPublished = null
 }
 
+/** Build the row payload shared by create/update paths. */
+function buildPayload(params: {
+  vehicleId: string
+  convoyId: string
+  lat: number
+  lng: number
+  speed?: number | null
+  heading?: number | null
+  accuracy?: number | null
+}) {
+  const data: {
+    vehicle: string
+    convoy: string
+    lat: number
+    lng: number
+    speed?: number
+    heading?: number
+    accuracy?: number
+  } = {
+    vehicle: params.vehicleId,
+    convoy: params.convoyId,
+    lat: params.lat,
+    lng: params.lng,
+  }
+  if (params.speed != null) data.speed = params.speed
+  if (params.heading != null) data.heading = params.heading
+  if (params.accuracy != null) data.accuracy = params.accuracy
+  return data
+}
+
+/** Find the single position row for a (vehicle, convoy) pair. */
+async function findPosition(vehicleId: string, convoyId: string): Promise<{ id: string } | null> {
+  const { data } = await supabase
+    .from('positions')
+    .select('id')
+    .eq('vehicle', vehicleId)
+    .eq('convoy', convoyId)
+    .maybeSingle()
+  return data
+}
+
+/** Upsert the position row (positions has a unique (vehicle, convoy) index). */
+async function upsertPosition(payload: {
+  vehicle: string
+  convoy: string
+  lat: number
+  lng: number
+  speed?: number
+  heading?: number
+  accuracy?: number
+}): Promise<Position> {
+  const { data, error } = await supabase
+    .from('positions')
+    .upsert(payload, { onConflict: 'vehicle,convoy' })
+    .select('*')
+    .single()
+  if (error) throw error
+  return {
+    id: data.id,
+    vehicle: data.vehicle,
+    convoy: data.convoy,
+    lat: data.lat,
+    lng: data.lng,
+    speed: data.speed,
+    heading: data.heading,
+    accuracy: data.accuracy,
+    created: data.created_at,
+    updated: data.updated_at,
+  }
+}
+
 export async function publishPosition(params: {
   vehicleId: string
   convoyId: string
@@ -82,32 +153,37 @@ export async function publishPosition(params: {
     return null
   }
 
-  const data: Record<string, unknown> = {
-    vehicle: params.vehicleId,
-    convoy: params.convoyId,
-    lat: params.lat,
-    lng: params.lng,
-  }
-  if (params.speed != null) data.speed = params.speed
-  if (params.heading != null) data.heading = params.heading
-  if (params.accuracy != null) data.accuracy = params.accuracy
-
-  let existing: Position | null = null
-  try {
-    existing = await pb
-      .collection('positions')
-      .getFirstListItem<Position>(
-        `vehicle = "${params.vehicleId}" && convoy = "${params.convoyId}"`,
-      )
-  } catch {
-    // not found — will create below
-  }
+  const payload = buildPayload(params)
 
   let result: Position
-  if (existing) {
-    result = (await pb.collection('positions').update(existing.id, data)) as unknown as Position
-  } else {
-    result = (await pb.collection('positions').create(data)) as unknown as Position
+  try {
+    const existing = await findPosition(params.vehicleId, params.convoyId)
+    if (existing) {
+      const { data, error } = await supabase
+        .from('positions')
+        .update(payload)
+        .eq('id', existing.id)
+        .select('*')
+        .single()
+      if (error) throw error
+      result = {
+        id: data.id,
+        vehicle: data.vehicle,
+        convoy: data.convoy,
+        lat: data.lat,
+        lng: data.lng,
+        speed: data.speed,
+        heading: data.heading,
+        accuracy: data.accuracy,
+        created: data.created_at,
+        updated: data.updated_at,
+      }
+    } else {
+      result = await upsertPosition(payload)
+    }
+  } catch {
+    // conflict race: another client created it — upsert instead
+    result = await upsertPosition(payload)
   }
   startAggregation(TELEMETRY_INTERVAL_MS)
   addReading(params.vehicleId, params.convoyId, {
@@ -133,29 +209,20 @@ export async function flushPendingPositions(): Promise<number> {
 
   for (const pos of pending) {
     try {
-      const data: Record<string, unknown> = {
-        vehicle: pos.vehicleId,
-        convoy: pos.convoyId,
+      const payload = buildPayload({
+        vehicleId: pos.vehicleId,
+        convoyId: pos.convoyId,
         lat: pos.lat,
         lng: pos.lng,
-      }
-      if (pos.speed != null) data.speed = pos.speed
-      if (pos.heading != null) data.heading = pos.heading
-      if (pos.accuracy != null) data.accuracy = pos.accuracy
-
-      let existing: Position | null = null
-      try {
-        existing = await pb
-          .collection('positions')
-          .getFirstListItem<Position>(`vehicle = "${pos.vehicleId}" && convoy = "${pos.convoyId}"`)
-      } catch {
-        // not found
-      }
-
+        speed: pos.speed ?? null,
+        heading: pos.heading ?? null,
+        accuracy: pos.accuracy ?? null,
+      })
+      const existing = await findPosition(pos.vehicleId, pos.convoyId)
       if (existing) {
-        await pb.collection('positions').update(existing.id, data)
+        await supabase.from('positions').update(payload).eq('id', existing.id)
       } else {
-        await pb.collection('positions').create(data)
+        await supabase.from('positions').upsert(payload, { onConflict: 'vehicle,convoy' })
       }
       await removePendingPosition(pos.id)
       flushed++
@@ -180,13 +247,42 @@ export async function subscribeToConvoyPositions(
     positionUnsub = null
   }
 
-  const unsub = await pb.collection('positions').subscribe('*', (event) => {
-    if (event.record.convoy !== convoyId) return
-    onPosition(event.record as unknown as Position)
-  })
+  const channel = supabase
+    .channel(`positions-${convoyId}`)
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'positions', filter: `convoy=eq.${convoyId}` },
+      (payload) => {
+        const row = payload.new as {
+          id: string
+          vehicle: string
+          lat: number
+          lng: number
+          speed: number | null
+          heading: number | null
+          accuracy: number | null
+          convoy: string
+          created_at: string
+          updated_at: string
+        }
+        onPosition({
+          id: row.id,
+          vehicle: row.vehicle,
+          convoy: row.convoy,
+          lat: row.lat,
+          lng: row.lng,
+          speed: row.speed,
+          heading: row.heading,
+          accuracy: row.accuracy,
+          created: row.created_at,
+          updated: row.updated_at,
+        })
+      },
+    )
+    .subscribe()
 
   positionUnsub = () => {
-    unsub()
+    void supabase.removeChannel(channel)
     positionUnsub = null
   }
 
@@ -194,12 +290,25 @@ export async function subscribeToConvoyPositions(
 }
 
 export async function getLatestPositions(convoyId: string): Promise<Position[]> {
-  const result = await pb.collection('positions').getList<Position>(1, 50, {
-    filter: `convoy = "${convoyId}"`,
-    fields: 'id,vehicle,lat,lng,heading,speed,updated,created',
-    requestKey: null,
-  })
-  return result.items
+  const { data, error } = await supabase
+    .from('positions')
+    .select('id, vehicle, convoy, lat, lng, heading, speed, accuracy, created_at, updated_at')
+    .eq('convoy', convoyId)
+    .order('updated_at', { ascending: false })
+    .limit(50)
+  if (error) throw error
+  return (data || []).map((row) => ({
+    id: row.id,
+    vehicle: row.vehicle,
+    convoy: row.convoy,
+    lat: row.lat,
+    lng: row.lng,
+    speed: row.speed,
+    heading: row.heading,
+    accuracy: row.accuracy,
+    created: row.created_at,
+    updated: row.updated_at,
+  }))
 }
 
 export function startHeartbeat(vehicleId: string, convoyId: string): void {
@@ -210,25 +319,21 @@ export function startHeartbeat(vehicleId: string, convoyId: string): void {
     if (!heartbeatVehicleId || !heartbeatConvoyId) return
     resetPositionThreshold()
     try {
-      const record = await pb
-        .collection('positions')
-        .getFirstListItem<{
-          lat: number
-          lng: number
-          speed: number | null
-          heading: number | null
-          accuracy: number | null
-        }>(`vehicle = "${heartbeatVehicleId}" && convoy = "${heartbeatConvoyId}"`)
-        .catch(() => null)
-      if (record) {
+      const { data } = await supabase
+        .from('positions')
+        .select('lat, lng, speed, heading, accuracy')
+        .eq('vehicle', heartbeatVehicleId)
+        .eq('convoy', heartbeatConvoyId)
+        .maybeSingle()
+      if (data) {
         await publishPosition({
           vehicleId: heartbeatVehicleId,
           convoyId: heartbeatConvoyId,
-          lat: record.lat,
-          lng: record.lng,
-          speed: record.speed,
-          heading: record.heading,
-          accuracy: record.accuracy,
+          lat: data.lat,
+          lng: data.lng,
+          speed: data.speed,
+          heading: data.heading,
+          accuracy: data.accuracy,
         })
       }
     } catch {

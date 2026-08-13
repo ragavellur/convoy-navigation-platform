@@ -1,4 +1,4 @@
-import pb from './pocketbase'
+import supabase from './supabaseClient'
 
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY || ''
 
@@ -58,20 +58,27 @@ export async function unsubscribeFromPush(): Promise<boolean> {
 }
 
 async function saveSubscription(subscription: PushSubscription): Promise<void> {
-  const userId = pb.authStore.record?.id
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  const userId = user?.id
   if (!userId) return
 
   const data = subscription.toJSON()
   const endpoint = data.endpoint
+  if (!endpoint) return
   const keys = data.keys as { p256dh: string; auth: string }
 
   try {
-    const existing = await pb.collection('push_subscriptions').getFullList({
-      filter: `user = "${userId}" && endpoint = "${endpoint}"`,
-    })
-    if (existing.length > 0) return
+    const { data: existing } = await supabase
+      .from('push_subscriptions')
+      .select('id')
+      .eq('user', userId)
+      .eq('endpoint', endpoint)
+      .maybeSingle()
+    if (existing) return
 
-    await pb.collection('push_subscriptions').create({
+    await supabase.from('push_subscriptions').insert({
       user: userId,
       endpoint,
       p256dh: keys.p256dh,
@@ -84,16 +91,14 @@ async function saveSubscription(subscription: PushSubscription): Promise<void> {
 }
 
 async function removeSubscription(): Promise<void> {
-  const userId = pb.authStore.record?.id
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  const userId = user?.id
   if (!userId) return
 
   try {
-    const subs = await pb.collection('push_subscriptions').getFullList({
-      filter: `user = "${userId}"`,
-    })
-    for (const sub of subs) {
-      await pb.collection('push_subscriptions').delete(sub.id)
-    }
+    await supabase.from('push_subscriptions').delete().eq('user', userId)
   } catch {
     // silent fail
   }

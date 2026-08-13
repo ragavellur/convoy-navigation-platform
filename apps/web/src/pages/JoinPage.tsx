@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
-import pb from '../services/pocketbase'
+import supabase from '../services/supabaseClient'
+import { useAuth } from '../hooks/useAuth'
 import SearchBar from '../components/SearchBar'
 import { parseDeepLink, validateConvoyCode } from '../services/deepLink'
 import type { SearchResult } from '../types'
@@ -16,6 +17,7 @@ interface VehicleOption {
 function JoinPage() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [error, setError] = useState('')
   const [vehicles, setVehicles] = useState<VehicleOption[]>([])
   const [selectedVehicleId, setSelectedVehicleId] = useState('')
@@ -41,51 +43,66 @@ function JoinPage() {
         return
       }
 
-      if (!pb.authStore.isValid) {
+      if (!user) {
         const allParams = urlParams.toString()
         navigate(`/login?redirect=/join?${allParams}`)
         return
       }
 
       try {
-        const results = await pb.collection('convoys').getFullList({
-          filter: `code = "${data.code}" && status = "active"`,
-        })
+        const { data: convoys } = await supabase
+          .from('convoys')
+          .select('id, code, name, convoy_type, status')
+          .eq('code', data.code)
+          .eq('status', 'active')
+          .limit(1)
 
-        if (results.length === 0) {
+        if (!convoys || convoys.length === 0) {
           throw new Error('Convoy not found or inactive')
         }
 
-        const convoy = results[0]
+        const convoy = convoys[0]
         setConvoyId(convoy.id)
-        setConvoyType(convoy.convoy_type || 'vehicle')
+        setConvoyType(convoy.convoy_type as 'vehicle' | 'trekker')
         setConvoyName(convoy.name)
 
-        const existing = await pb.collection('convoy_members').getFullList({
-          filter: `convoy = "${convoy.id}" && user = "${pb.authStore.record?.id}" && status = "active"`,
-        })
+        const { data: existing } = await supabase
+          .from('convoy_members')
+          .select('id')
+          .eq('convoy', convoy.id)
+          .eq('user', user.id)
+          .eq('status', 'active')
+          .limit(1)
 
-        if (existing.length > 0) {
+        if (existing && existing.length > 0) {
           navigate(`/convoy`)
           return
         }
 
         if (convoy.convoy_type === 'trekker') {
           let trekkerVehicleId = ''
-          const existingTrekkers = await pb.collection('vehicles').getFullList({
-            filter: `owner = "${pb.authStore.record?.id}" && type = "trekker" && status = "active"`,
-          })
-          if (existingTrekkers.length > 0) {
+          const { data: existingTrekkers } = await supabase
+            .from('vehicles')
+            .select('id')
+            .eq('owner', user.id)
+            .eq('type', 'trekker')
+            .eq('status', 'active')
+            .limit(1)
+          if (existingTrekkers && existingTrekkers.length > 0) {
             trekkerVehicleId = existingTrekkers[0].id
           } else {
-            const trekkerName =
-              pb.authStore.record?.name || pb.authStore.record?.email?.split('@')[0] || 'Trekker'
-            const trekker = await pb.collection('vehicles').create({
-              owner: pb.authStore.record?.id,
-              name: trekkerName,
-              type: 'trekker',
-              status: 'active',
-            })
+            const trekkerName = user.name || user.email?.split('@')[0] || 'Trekker'
+            const { data: trekker, error: trekkerError } = await supabase
+              .from('vehicles')
+              .insert({
+                owner: user.id,
+                name: trekkerName,
+                type: 'trekker',
+                status: 'active',
+              })
+              .select('id')
+              .single()
+            if (trekkerError) throw trekkerError
             trekkerVehicleId = trekker.id
           }
           setSelectedVehicleId(trekkerVehicleId)
@@ -93,23 +110,30 @@ function JoinPage() {
           return
         }
 
-        const userVehicles = await pb.collection('vehicles').getFullList({
-          filter: `owner = "${pb.authStore.record?.id}" && status = "active"`,
-        })
+        const { data: userVehicles } = await supabase
+          .from('vehicles')
+          .select('id, name, type, license_plate, color')
+          .eq('owner', user.id)
+          .eq('status', 'active')
 
-        const activeMembers = await pb.collection('convoy_members').getFullList({
-          filter: `user = "${pb.authStore.record?.id}" && status = "active"`,
-        })
-        const occupiedVehicleIds = new Set(activeMembers.map((m) => m.vehicle).filter(Boolean))
+        const { data: activeMembers } = await supabase
+          .from('convoy_members')
+          .select('vehicle')
+          .eq('user', user.id)
+          .eq('status', 'active')
 
-        const opts: VehicleOption[] = userVehicles
+        const occupiedVehicleIds = new Set(
+          (activeMembers || []).map((m) => m.vehicle).filter(Boolean) as string[],
+        )
+
+        const opts: VehicleOption[] = (userVehicles || [])
           .filter((r) => !occupiedVehicleIds.has(r.id))
           .map((r) => ({
             id: r.id,
             name: r.name,
             type: r.type,
-            license_plate: r.license_plate,
-            color: r.color,
+            license_plate: r.license_plate ?? '',
+            color: r.color ?? undefined,
           }))
         setVehicles(opts)
 
@@ -124,7 +148,7 @@ function JoinPage() {
     }
 
     init()
-  }, [searchParams, navigate])
+  }, [searchParams, navigate, user])
 
   const handleJoin = async () => {
     if (!convoyId) return
@@ -133,26 +157,30 @@ function JoinPage() {
     setError('')
     try {
       if (selectedVehicleId) {
-        const vehicleInConvoy = await pb.collection('convoy_members').getFullList({
-          filter: `vehicle = "${selectedVehicleId}" && status = "active"`,
-        })
-        if (vehicleInConvoy.length > 0) {
+        const { data: vehicleInConvoy } = await supabase
+          .from('convoy_members')
+          .select('id')
+          .eq('vehicle', selectedVehicleId)
+          .eq('status', 'active')
+          .limit(1)
+        if (vehicleInConvoy && vehicleInConvoy.length > 0) {
           throw new Error(
             'This vehicle is already in another active convoy. Leave that convoy first or use a different vehicle.',
           )
         }
       }
-      await pb.collection('convoy_members').create({
+      const { error } = await supabase.from('convoy_members').insert({
         convoy: convoyId,
-        user: pb.authStore.record?.id,
-        vehicle: selectedVehicleId || undefined,
+        user: user?.id ?? '',
+        vehicle: selectedVehicleId || null,
         role: 'member',
         status: 'active',
         joined_at: new Date().toISOString(),
         join_lat: joinSourceLat,
         join_lng: joinSourceLng,
-        join_name: joinSourceName || undefined,
+        join_name: joinSourceName || null,
       })
+      if (error) throw error
       navigate(`/convoy`)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to join convoy')
