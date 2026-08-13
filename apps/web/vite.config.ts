@@ -20,6 +20,7 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     include: ['src/**/*.test.ts'],
+    exclude: ['src/services/__integration__/**'],
     coverage: {
       include: ['src/services/**/*.ts', 'src/utils/**/*.ts'],
       exclude: ['src/services/pocketbase.ts', 'src/services/**/__tests__/**'],

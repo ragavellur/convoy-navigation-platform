@@ -1,20 +1,15 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { harness } from './helpers/supabaseTest'
 
 const mocks = vi.hoisted(() => ({
-  mockSubscribe: vi.fn(),
-  mockUnsubscribe: vi.fn(),
   notifyMemberJoined: vi.fn(),
   notifyMemberLeft: vi.fn(),
 }))
 
-vi.mock('../pocketbase', () => ({
-  default: {
-    collection: () => ({
-      subscribe: mocks.mockSubscribe,
-      unsubscribe: mocks.mockUnsubscribe,
-    }),
-  },
-}))
+vi.mock('../supabaseClient', async () => {
+  const { harness } = await import('./helpers/supabaseTest')
+  return { default: harness.supabase }
+})
 
 vi.mock('../pushSender', () => ({
   notifyMemberJoined: mocks.notifyMemberJoined,
@@ -29,101 +24,99 @@ import {
 
 beforeEach(() => {
   Object.values(mocks).forEach((m) => m.mockReset())
+  harness.reset()
 })
 
 describe('notifications', () => {
   it('subscribeToConvoyNotifications subscribes to convoy_members', async () => {
-    mocks.mockSubscribe.mockResolvedValueOnce(vi.fn())
     const unsub = await subscribeToConvoyNotifications('c1', vi.fn())
-    expect(mocks.mockSubscribe).toHaveBeenCalledWith('*', expect.any(Function))
     expect(typeof unsub).toBe('function')
+    expect(harness.channels).toHaveLength(1)
+    expect(harness.channels[0].name).toBe('convoy-members-c1')
+    expect(harness.channels[0].handlers).toHaveLength(1)
   })
 
-  it('invokes onNotification on create event', async () => {
+  it('invokes onNotification and notifies member joined on INSERT', async () => {
+    harness
+      .mockFor('profiles', 'select')
+      .mockResolvedValueOnce({ data: { name: 'Alice' }, error: null })
     const onNotification = vi.fn()
-    mocks.mockSubscribe.mockResolvedValueOnce(vi.fn())
     await subscribeToConvoyNotifications('c1', onNotification)
-    const handler = mocks.mockSubscribe.mock.calls[0][1]
-    handler({
-      action: 'create',
-      record: {
-        convoy: 'c1',
-        id: 'n1',
-        user: 'u1',
-        created: '2024-01-01',
-        expand: { user: { name: 'Alice' } },
-      },
+    const handler = harness.channels[0].handlers[0].handler
+
+    await handler({
+      eventType: 'INSERT',
+      new: { id: 'n1', convoy: 'c1', user: 'u1', created_at: '2024-01-01T00:00:00Z' },
     })
-    expect(onNotification).toHaveBeenCalled()
-    expect(mocks.notifyMemberJoined).toHaveBeenCalled()
+
+    expect(onNotification).toHaveBeenCalledTimes(1)
+    expect(onNotification.mock.calls[0][0].type).toBe('member_joined')
+    expect(mocks.notifyMemberJoined).toHaveBeenCalledWith('c1', 'Alice')
   })
 
-  it('invokes onNotification on delete event', async () => {
+  it('invokes onNotification and notifies member left on DELETE', async () => {
+    harness
+      .mockFor('profiles', 'select')
+      .mockResolvedValueOnce({ data: { name: 'Bob' }, error: null })
     const onNotification = vi.fn()
-    mocks.mockSubscribe.mockResolvedValueOnce(vi.fn())
     await subscribeToConvoyNotifications('c1', onNotification)
-    const handler = mocks.mockSubscribe.mock.calls[0][1]
-    handler({
-      action: 'delete',
-      record: {
-        convoy: 'c1',
-        id: 'n1',
-        user: 'u1',
-        created: '2024-01-01',
-        expand: { user: { name: 'Bob' } },
-      },
+    const handler = harness.channels[0].handlers[0].handler
+
+    await handler({
+      eventType: 'DELETE',
+      old: { id: 'n1', convoy: 'c1', user: 'u1', created_at: '2024-01-01T00:00:00Z' },
     })
-    expect(onNotification).toHaveBeenCalled()
-    expect(mocks.notifyMemberLeft).toHaveBeenCalled()
+
+    expect(onNotification).toHaveBeenCalledTimes(1)
+    expect(onNotification.mock.calls[0][0].type).toBe('member_left')
+    expect(mocks.notifyMemberLeft).toHaveBeenCalledWith('c1', 'Bob')
   })
 
-  it('skips notification when convoy does not match', async () => {
+  it('ignores UPDATE events', async () => {
     const onNotification = vi.fn()
-    mocks.mockSubscribe.mockResolvedValueOnce(vi.fn())
     await subscribeToConvoyNotifications('c1', onNotification)
-    const handler = mocks.mockSubscribe.mock.calls[0][1]
-    handler({
-      action: 'create',
-      record: { convoy: 'c2', id: 'n1', user: 'u1', created: '2024-01-01' },
-    })
+    const handler = harness.channels[0].handlers[0].handler
+
+    await handler({ eventType: 'UPDATE', new: { id: 'n1', convoy: 'c1', user: 'u1' } })
+
     expect(onNotification).not.toHaveBeenCalled()
+    expect(mocks.notifyMemberJoined).not.toHaveBeenCalled()
+    expect(mocks.notifyMemberLeft).not.toHaveBeenCalled()
   })
 
-  it('uses fallback name when expand is missing', async () => {
+  it('uses fallback name when profile is missing', async () => {
+    harness.mockFor('profiles', 'select').mockResolvedValueOnce({ data: null, error: null })
     const onNotification = vi.fn()
-    mocks.mockSubscribe.mockResolvedValueOnce(vi.fn())
     await subscribeToConvoyNotifications('c1', onNotification)
-    const handler = mocks.mockSubscribe.mock.calls[0][1]
-    handler({
-      action: 'create',
-      record: { convoy: 'c1', id: 'n1', user: 'u1', created: '' },
+    const handler = harness.channels[0].handlers[0].handler
+
+    await handler({
+      eventType: 'INSERT',
+      new: { id: 'n1', convoy: 'c1', user: 'u1', created_at: '2024-01-01T00:00:00Z' },
     })
+
     expect(onNotification).toHaveBeenCalled()
-    expect(mocks.notifyMemberJoined).toHaveBeenCalled()
+    expect(mocks.notifyMemberJoined).toHaveBeenCalledWith('c1', 'A member')
   })
 
   it('subscribeToConvoyStatus calls onStatusChange', async () => {
     const onStatusChange = vi.fn()
-    mocks.mockSubscribe.mockResolvedValueOnce(vi.fn())
     await subscribeToConvoyStatus('c1', onStatusChange)
-    const handler = mocks.mockSubscribe.mock.calls[0][1]
-    handler({ record: { status: 'active' } })
+    expect(harness.channels[0].name).toBe('convoys-c1')
+    const handler = harness.channels[0].handlers[0].handler
+    handler({ eventType: 'UPDATE', new: { status: 'active' } })
     expect(onStatusChange).toHaveBeenCalledWith('active')
   })
 
-  it('unsubscribeAll calls unsubscribe on collections', async () => {
+  it('unsubscribeAll removes all channels', async () => {
+    await subscribeToConvoyNotifications('c1', vi.fn())
     unsubscribeAll()
-    expect(mocks.mockUnsubscribe).toHaveBeenCalledWith('*')
+    expect(harness.channels[0].removed).toBe(true)
   })
 
   it('subscribeToConvoyNotifications cleans up previous subscription', async () => {
-    const prevUnsub = vi.fn()
-    mocks.mockSubscribe.mockResolvedValueOnce(prevUnsub)
     await subscribeToConvoyNotifications('c1', vi.fn())
-    const onNotification = vi.fn()
-    const nextUnsub = vi.fn()
-    mocks.mockSubscribe.mockResolvedValueOnce(nextUnsub)
-    await subscribeToConvoyNotifications('c1', onNotification)
-    expect(prevUnsub).toHaveBeenCalled()
+    await subscribeToConvoyNotifications('c1', vi.fn())
+    expect(harness.channels[0].removed).toBe(true)
   })
 })

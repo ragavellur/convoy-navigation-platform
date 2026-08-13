@@ -1,7 +1,13 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { harness } from './helpers/supabaseTest'
 
 vi.hoisted(() => {
   process.env.VITE_VAPID_PUBLIC_KEY = 'test-key'
+})
+
+vi.mock('../supabaseClient', async () => {
+  const { harness } = await import('./helpers/supabaseTest')
+  return { default: harness.supabase }
 })
 
 const mockUnsubscribe = vi.fn()
@@ -18,20 +24,6 @@ const mockReady = Promise.resolve({
     subscribe: mockSubscribe,
   },
 })
-const mockGetFullList = vi.fn()
-const mockCreate = vi.fn()
-const mockDelete = vi.fn()
-
-vi.mock('../pocketbase', () => ({
-  default: {
-    authStore: { record: { id: 'user-1' } },
-    collection: () => ({
-      getFullList: mockGetFullList,
-      create: mockCreate,
-      delete: mockDelete,
-    }),
-  },
-}))
 
 globalThis.atob = vi.fn((s: string) => s)
 
@@ -44,12 +36,11 @@ import {
 } from '../pushNotifications'
 
 beforeEach(() => {
+  harness.reset()
+  harness.auth.user = { id: 'user-1' }
   mockGetSubscription.mockReset()
   mockSubscribe.mockReset()
   mockUnsubscribe.mockReset()
-  mockGetFullList.mockReset()
-  mockCreate.mockReset()
-  mockDelete.mockReset()
   vi.stubGlobal('navigator', {
     serviceWorker: { ready: mockReady },
   })
@@ -89,17 +80,52 @@ describe('pushNotifications', () => {
     mockGetSubscription.mockResolvedValueOnce(mockSubscriptionObj)
     const result = await subscribeToPush()
     expect(result).not.toBeNull()
+    expect(mockSubscribe).not.toHaveBeenCalled()
+  })
+
+  it('subscribeToPush creates new subscription when none exists', async () => {
+    mockGetSubscription.mockResolvedValueOnce(null)
+    mockSubscribe.mockResolvedValueOnce(mockSubscriptionObj)
+    harness
+      .mockFor('push_subscriptions', 'select')
+      .mockResolvedValueOnce({ data: null, error: null })
+    const insert = harness.mockFor('push_subscriptions', 'insert')
+
+    const result = await subscribeToPush()
+    expect(result).not.toBeNull()
+    expect(mockSubscribe).toHaveBeenCalled()
+    expect(insert).toHaveBeenCalledTimes(1)
+    expect(insert.mock.calls[0][0].payload).toMatchObject({
+      user: 'user-1',
+      endpoint: 'https://example.com',
+      p256dh: 'key1',
+      auth: 'auth1',
+    })
+  })
+
+  it('subscribeToPush skips saving an existing subscription', async () => {
+    mockGetSubscription.mockResolvedValueOnce(null)
+    mockSubscribe.mockResolvedValueOnce(mockSubscriptionObj)
+    harness
+      .mockFor('push_subscriptions', 'select')
+      .mockResolvedValueOnce({ data: { id: 'sub-1' }, error: null })
+    const insert = harness.mockFor('push_subscriptions', 'insert')
+
+    const result = await subscribeToPush()
+    expect(result).not.toBeNull()
+    expect(insert).not.toHaveBeenCalled()
   })
 
   it('unsubscribeFromPush unsubscribes and removes', async () => {
     const sub = { unsubscribe: mockUnsubscribe }
     mockGetSubscription.mockResolvedValueOnce(sub)
-    mockGetFullList.mockResolvedValueOnce([{ id: 'sub-1' }])
-    mockDelete.mockResolvedValueOnce({})
+    const remove = harness.mockFor('push_subscriptions', 'delete')
+
     const result = await unsubscribeFromPush()
     expect(result).toBe(true)
     expect(mockUnsubscribe).toHaveBeenCalled()
-    expect(mockDelete).toHaveBeenCalledWith('sub-1')
+    expect(remove).toHaveBeenCalledTimes(1)
+    expect(remove.mock.calls[0][0].filters).toEqual({ user: 'user-1' })
   })
 
   it('unsubscribeFromPush returns false when no subscription', async () => {
@@ -108,26 +134,16 @@ describe('pushNotifications', () => {
     expect(result).toBe(false)
   })
 
-  it('getPermissionState returns current permission', () => {
-    expect(getPermissionState()).toBe('granted')
-  })
-
-  it('subscribeToPush creates new subscription when none exists', async () => {
-    mockGetSubscription.mockResolvedValueOnce(null)
-    mockSubscribe.mockResolvedValueOnce(mockSubscriptionObj)
-    mockGetFullList.mockResolvedValueOnce([])
-    mockCreate.mockResolvedValueOnce({ id: 'sub-1' })
-    const result = await subscribeToPush()
-    expect(result).not.toBeNull()
-    expect(mockSubscribe).toHaveBeenCalled()
-    expect(mockCreate).toHaveBeenCalled()
-  })
-
-  it('unsubscribeFromPush does nothing when getFullList fails', async () => {
+  it('unsubscribeFromPush still returns true when removal fails', async () => {
     const sub = { unsubscribe: mockUnsubscribe }
     mockGetSubscription.mockResolvedValueOnce(sub)
-    mockGetFullList.mockRejectedValueOnce(new Error('DB error'))
+    harness.mockFor('push_subscriptions', 'delete').mockRejectedValueOnce(new Error('DB error'))
+
     const result = await unsubscribeFromPush()
     expect(result).toBe(true)
+  })
+
+  it('getPermissionState returns current permission', () => {
+    expect(getPermissionState()).toBe('granted')
   })
 })
