@@ -273,14 +273,19 @@ describe('buildMemberDisplayPositions', () => {
     expect(result.has('v2')).toBe(false)
   })
 
-  it('uses join location in simulation mode', () => {
+  it('uses simulated position in simulation mode', () => {
     const result = buildMemberDisplayPositions(members, true)
-    expect(result.get('v1')).toEqual({ lat: 10, lng: 20, heading: null, speed: null })
+    expect(result.get('v1')).toEqual({ lat: 12.34, lng: 56.78, heading: 90, speed: 42 })
   })
 
-  it('skips members without join location in simulation mode', () => {
+  it('falls back to join location in simulation mode when no position yet', () => {
     const result = buildMemberDisplayPositions(members, true)
-    expect(result.has('v3')).toBe(false)
+    expect(result.get('v2')).toEqual({ lat: 30, lng: 40, heading: null, speed: null })
+  })
+
+  it('uses position in simulation mode when join location is missing', () => {
+    const result = buildMemberDisplayPositions(members, true)
+    expect(result.get('v3')).toEqual({ lat: 1, lng: 2, heading: 90, speed: 42 })
   })
 
   it('skips members without a vehicleId', () => {

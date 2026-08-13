@@ -77,6 +77,7 @@ function MapPage() {
   const vectorFeaturesRef = useRef<GeoJSON.Feature[]>([])
   const meetingPointRef = useRef<{ lat: number; lng: number } | null>(null)
   const simActiveRef = useRef(false)
+  const simCheckedRef = useRef(false)
   const convoyStatusRef = useRef<'not_started' | 'active' | 'paused' | 'ended'>('active')
 
   const offRoutePushSentRef = useRef(false)
@@ -90,6 +91,7 @@ function MapPage() {
   const [selectedAltIndex, setSelectedAltIndex] = useState(0)
   const [showRoutePanel, setShowRoutePanel] = useState(true)
   const [simActive, setSimActive] = useState(false)
+  const [simChecked, setSimChecked] = useState(false)
   const [convoyType, setConvoyType] = useState<'vehicle' | 'trekker'>('vehicle')
   const [convoyPhase, setConvoyPhase] = useState<string>('forming')
   const [convoyOwner, setConvoyOwner] = useState<string | null>(null)
@@ -133,6 +135,17 @@ function MapPage() {
 
   useEffect(() => {
     simActiveRef.current = simActive
+  }, [simActive])
+
+  useEffect(() => {
+    simCheckedRef.current = simChecked
+  }, [simChecked])
+
+  useEffect(() => {
+    if (simActive) {
+      setIsOffRoute(false)
+      offRoutePushSentRef.current = false
+    }
   }, [simActive])
 
   const MAP_VIEW_KEY = 'convoy-map-view'
@@ -616,7 +629,7 @@ function MapPage() {
   )
 
   useEffect(() => {
-    if (simActiveRef.current) return
+    if (!simChecked || simActiveRef.current) return
     if (!position || !routeRef.current) return
     const geometry = routeRef.current.geometry as RouteGeometry
     const offNow = checkOffRoute(position.lat, position.lng, geometry)
@@ -626,13 +639,13 @@ function MapPage() {
       notifyOffRoute(convoyId, user?.name || 'A member')
     }
     if (!offNow) offRoutePushSentRef.current = false
-  }, [position, convoyId, simActive, routeRef, user])
+  }, [position, convoyId, simActive, simChecked, routeRef, user])
 
   useEffect(() => {
     if (!routeData || !position) return
     if (offRouteTimerRef.current) clearInterval(offRouteTimerRef.current)
     offRouteTimerRef.current = setInterval(() => {
-      if (simActiveRef.current) return
+      if (!simCheckedRef.current || simActiveRef.current) return
       if (!routeRef.current) return
       const geometry = routeRef.current.geometry as RouteGeometry
       const offNow = checkOffRoute(position.lat, position.lng, geometry)
@@ -646,7 +659,7 @@ function MapPage() {
     return () => {
       if (offRouteTimerRef.current) clearInterval(offRouteTimerRef.current)
     }
-  }, [routeData, position, convoyId, simActive, user])
+  }, [routeData, position, convoyId, simActive, simChecked, user])
 
   useEffect(() => {
     if (!convoyId) return
@@ -689,12 +702,14 @@ function MapPage() {
         ) as Record<string, unknown>
         simulationActive = !!settings.simulation_active
         setSimActive(simulationActive)
+        setSimChecked(true)
         setConvoyType(convoy?.convoy_type as 'vehicle' | 'trekker')
         convoyStatusRef.current =
           (convoy?.status as 'not_started' | 'active' | 'paused' | 'ended' | undefined) ?? 'active'
         setPositionPublishingEnabled(convoyStatusRef.current === 'active' && !simulationActive)
       } catch {
         simulationActive = false
+        setSimChecked(true)
       }
     }
 
@@ -718,6 +733,7 @@ function MapPage() {
           ) as Record<string, unknown>
           simulationActive = !!settings.simulation_active
           setSimActive(simulationActive)
+          setSimChecked(true)
           if (record.status) {
             convoyStatusRef.current = record.status as 'not_started' | 'active' | 'paused' | 'ended'
             setPositionPublishingEnabled(convoyStatusRef.current === 'active' && !simulationActive)

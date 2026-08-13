@@ -35,9 +35,11 @@ export interface MemberPositionSource {
 
 /**
  * Resolve where each convoy member should be rendered on the map.
- * In simulation mode the member is pinned to the location they joined from
- * (join_lat/join_lng) because no live GPS is being broadcast. Otherwise the
- * latest reported position is used.
+ * In simulation mode the simulated position written by the simulation
+ * function is used so the vehicle visibly drives along its route; when no
+ * simulated position has been written yet the member is pinned to the
+ * location they joined from (join_lat/join_lng). Otherwise the latest
+ * reported position is used.
  */
 export function buildMemberDisplayPositions(
   members: MemberPositionSource[],
@@ -47,13 +49,21 @@ export function buildMemberDisplayPositions(
   for (const member of members) {
     if (!member.vehicleId) continue
     if (simulationActive) {
-      if (member.joinLat == null || member.joinLng == null) continue
-      result.set(member.vehicleId, {
-        lat: member.joinLat,
-        lng: member.joinLng,
-        heading: null,
-        speed: null,
-      })
+      if (member.position) {
+        result.set(member.vehicleId, {
+          lat: member.position.lat,
+          lng: member.position.lng,
+          heading: member.position.heading,
+          speed: member.position.speed,
+        })
+      } else if (member.joinLat != null && member.joinLng != null) {
+        result.set(member.vehicleId, {
+          lat: member.joinLat,
+          lng: member.joinLng,
+          heading: null,
+          speed: null,
+        })
+      }
     } else if (member.position) {
       result.set(member.vehicleId, {
         lat: member.position.lat,
