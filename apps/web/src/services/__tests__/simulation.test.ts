@@ -1,7 +1,15 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { harness } from './helpers/supabaseTest'
+
+vi.mock('../supabaseClient', async () => {
+  const { harness } = await import('./helpers/supabaseTest')
+  return { default: harness.supabase }
+})
+
 import {
   getSimulationStatus,
   startSimulation,
+  simulationTick,
   stopSimulation,
   restartSimulation,
   clearSimulationPositions,
@@ -14,6 +22,8 @@ globalThis.fetch = mockFetch
 
 beforeEach(() => {
   mockFetch.mockReset()
+  harness.reset()
+  harness.auth.session = { access_token: 'tok-123' }
 })
 
 describe('getSimulationStatus', () => {
@@ -24,12 +34,44 @@ describe('getSimulationStatus', () => {
     })
     const result = await getSimulationStatus('c1')
     expect(result.running).toBe(true)
-    expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining('/api/simulation/status/c1'))
+    expect(mockFetch).toHaveBeenCalledWith(
+      expect.stringContaining('/api/simulation/status/c1'),
+      expect.objectContaining({
+        headers: expect.objectContaining({ Authorization: 'Bearer tok-123' }),
+      }),
+    )
   })
 
   it('throws on error', async () => {
     mockFetch.mockResolvedValueOnce({ ok: false, status: 404 })
     await expect(getSimulationStatus('c1')).rejects.toThrow('Failed to get simulation status')
+  })
+})
+
+describe('simulationTick', () => {
+  it('ticks the simulation', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () =>
+        Promise.resolve({ success: true, running: true, phase: 'assembling', positions: [] }),
+    })
+    const result = await simulationTick('c1')
+    expect(result.running).toBe(true)
+    expect(result.phase).toBe('assembling')
+    const [url, init] = mockFetch.mock.calls[0]
+    expect(url).toContain('/api/simulation/tick')
+    expect(init.method).toBe('POST')
+    expect(init.headers.Authorization).toBe('Bearer tok-123')
+    expect(JSON.parse(init.body)).toEqual({ convoyId: 'c1' })
+  })
+
+  it('throws with server error message', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 403,
+      json: () => Promise.resolve({ error: 'Not a member' }),
+    })
+    await expect(simulationTick('c1')).rejects.toThrow('Not a member')
   })
 })
 

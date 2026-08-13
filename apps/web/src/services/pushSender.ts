@@ -7,7 +7,9 @@ export interface PushPayload {
 }
 
 async function getSimulationServiceUrl(): Promise<string> {
-  return window.location.origin
+  const envUrl = import.meta.env.VITE_SIMULATION_API_URL
+  if (envUrl) return envUrl
+  return `${window.location.origin}/functions/v1/simulation`
 }
 
 async function sendPushNotification(convoyId: string, payload: PushPayload): Promise<void> {
@@ -18,7 +20,7 @@ async function sendPushNotification(convoyId: string, payload: PushPayload): Pro
 
   try {
     const baseUrl = await getSimulationServiceUrl()
-    await fetch(`${baseUrl}/simulation/api/push/send`, {
+    await fetch(`${baseUrl}/api/push/send`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

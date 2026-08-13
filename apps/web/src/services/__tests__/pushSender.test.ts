@@ -22,12 +22,14 @@ beforeEach(() => {
   harness.reset()
   harness.auth.session = { access_token: 'tok-123' }
   mockFetch.mockReset()
+  vi.stubEnv('VITE_SIMULATION_API_URL', '')
   vi.stubGlobal('fetch', mockFetch)
   vi.stubGlobal('window', { location: { origin: 'https://convoy.test' } })
 })
 
 afterEach(() => {
   vi.unstubAllGlobals()
+  vi.unstubAllEnvs()
 })
 
 async function expectPushCall(fn: () => Promise<void>, expectedTitleSubstring: string) {
@@ -35,7 +37,7 @@ async function expectPushCall(fn: () => Promise<void>, expectedTitleSubstring: s
   await fn()
   expect(mockFetch).toHaveBeenCalledTimes(1)
   const [url, init] = mockFetch.mock.calls[0]
-  expect(url).toBe('https://convoy.test/simulation/api/push/send')
+  expect(url).toBe('https://convoy.test/functions/v1/simulation/api/push/send')
   expect(init.method).toBe('POST')
   expect(init.headers.Authorization).toBe('Bearer tok-123')
   const body = JSON.parse(init.body)

@@ -9,6 +9,7 @@ import { subscribeToConvoyNotifications, type ConvoyNotification } from '../serv
 import { useAuth } from '../hooks/useAuth'
 import {
   getSimulationStatus,
+  simulationTick,
   startSimulation,
   stopSimulation,
   restartSimulation,
@@ -193,6 +194,16 @@ function ConvoyDetailPage() {
       unsubFn?.()
     }
   }, [id, loadConvoy, loadMembers])
+
+  useEffect(() => {
+    if (!id || !simRunning) return
+    const tick = () => {
+      simulationTick(id).catch(() => {})
+    }
+    tick()
+    const timer = setInterval(tick, 2000)
+    return () => clearInterval(timer)
+  }, [id, simRunning])
 
   const refreshData = async () => {
     if (!id) return
