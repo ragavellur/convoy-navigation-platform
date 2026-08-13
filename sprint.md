@@ -291,6 +291,86 @@
 
 ---
 
+## V2 MIGRATION: PocketBase + VPS → Supabase + GitHub Pages
+
+**Goal:** Eliminate VPS/Docker/Cloudflare costs. Host frontend on GitHub Pages (free), backend on Supabase (free tier). Remove voice chat (mediasoup) — keep text chat. No UDP/STUN/TURN needed.
+
+| Component  | Old (VPS/Docker)          | New (Free)                            |
+| ---------- | ------------------------- | ------------------------------------- |
+| Frontend   | Nginx container on VPS    | GitHub Pages                          |
+| Backend    | PocketBase container      | Supabase (Postgres + Auth + Realtime) |
+| Voice      | mediasoup SFU (UDP)       | **Removed** (text chat only)          |
+| Routing    | OSRM Docker / public      | Public OSRM API                       |
+| Geocoding  | Nominatim Docker / public | Public Nominatim API                  |
+| Push       | simulation-service (VPS)  | Supabase Edge Function                |
+| Deployment | SSH + docker compose      | GitHub Actions → Pages                |
+
+---
+
+## Sprint 13: V2 Foundation - Supabase Backend & Schema (Week 25-26)
+
+### 🔄 In Progress
+
+- [-] [TASK-182] Publish V2 sprint plan (Supabase + GitHub Pages migration)
+
+### 📌 Backlog
+
+- [ ] [TASK-183] Link Supabase CLI to project pbvcbomojmnxukyypvrm + verify connection
+- [ ] [TASK-184] Design Postgres schema in Supabase (tables mirroring PB collections)
+- [ ] [TASK-185] Apply schema migrations + RLS policies (mirror PB API rules)
+- [ ] [TASK-186] Enable Supabase Realtime on positions, messages, convoy_members, convoys
+- [ ] [TASK-187] Configure Supabase Auth (email/password) + profiles sync from auth.users
+- [ ] [TASK-188] Configure Supabase Storage buckets (avatars, vehicle images) + policies
+- [ ] [TASK-189] Generate TypeScript types from Supabase schema
+- [ ] [TASK-190] Data migration script (PocketBase export -> Supabase import)
+
+---
+
+## Sprint 14: V2 Frontend Data Layer - PocketBase to Supabase (Week 27-28)
+
+### 📌 Backlog
+
+- [ ] [TASK-191] Install @supabase/supabase-js + create supabaseClient service
+- [ ] [TASK-192] Migrate auth: LoginPage, RegisterPage, ProtectedRoute, session persistence
+- [ ] [TASK-193] Migrate ProfilePage vehicles CRUD to Supabase (delete = hard delete)
+- [ ] [TASK-194] Migrate convoy lifecycle (sessionState.ts) to Supabase
+- [ ] [TASK-195] Migrate position tracking (positionTracking.ts) to Supabase Realtime
+- [ ] [TASK-196] Migrate chat (chatService.ts + ChatPanel) to Supabase Realtime
+- [ ] [TASK-197] Migrate notifications.ts + pushNotifications.ts to Supabase
+- [ ] [TASK-198] Migrate routeCache.ts + telemetryAggregator.ts to Supabase
+- [ ] [TASK-199] Migrate ConvoyRosterContext + useAssemblyRoutes + useOfflineConvoy to Supabase
+- [ ] [TASK-200] Remove PocketBase SDK + all pb.* references
+
+---
+
+## Sprint 15: V2 GitHub Pages + Voice Removal + Edge Functions (Week 29-30)
+
+### 📌 Backlog
+
+- [ ] [TASK-201] Remove voice chat module (VoicePanel, voiceChannel.ts, mediasoup, voice-server)
+- [ ] [TASK-202] Configure Vite base path + 404.html SPA fallback for GitHub Pages
+- [ ] [TASK-203] Create GitHub Actions workflow for Pages deployment
+- [ ] [TASK-204] Create Supabase Edge Function for push notifications (web-push sender)
+- [ ] [TASK-205] Rewire simulation service to Supabase (service role) or GitHub Actions scheduled job
+- [ ] [TASK-206] Configure env/secrets for Pages build (SUPABASE_URL, ANON_KEY, VAPID)
+- [ ] [TASK-207] Remove obsolete Docker/nginx/voice-server infra files
+
+---
+
+## Sprint 16: V2 Validation, Data Migration & Launch (Week 31-32)
+
+### 📌 Backlog
+
+- [ ] [TASK-208] Update unit tests to mock @supabase/supabase-js
+- [ ] [TASK-209] Update integration tests to target Supabase project
+- [ ] [TASK-210] E2E smoke test on GitHub Pages + Supabase (login, convoy, chat, positions)
+- [ ] [TASK-211] Migrate production PocketBase data to Supabase
+- [ ] [TASK-212] Update docs (DEPLOYMENT.md, README, OpenAPI spec) for V2 architecture
+- [ ] [TASK-213] Configure custom domain / CNAME for GitHub Pages
+- [ ] [TASK-214] Tag v2.0.0 + production smoke test
+
+---
+
 ## Sprint 12: Deploy & Launch (Week 23-24)
 
 ### 📌 Backlog
@@ -328,7 +408,11 @@
 | Sprint 10 | 8           | 0       | 0           | 8       | Web CSS Refactor   |
 | Sprint 11 | 38          | 13      | 0           | 25      | All                |
 | Sprint 12 | 14          | 14      | 0           | 0       | All                |
-| **Total** | **192**     | **28**  | **0**       | **164** |                    |
+| Sprint 13 | 9           | 8       | 1           | 0       | V2 Supabase        |
+| Sprint 14 | 10          | 10      | 0           | 0       | V2 Frontend        |
+| Sprint 15 | 7           | 7       | 0           | 0       | V2 Pages + Voice   |
+| Sprint 16 | 7           | 7       | 0           | 0       | V2 Launch          |
+| **Total** | **229**     | **59**  | **1**       | **169** |                    |
 
 ---
 
@@ -354,6 +438,7 @@
 Sprint 1-8:   [████████████████████████████] Web (PWA) - Full Feature Parity
 Sprint 9-10:  [████████████████] Web CSS Refactoring
 Sprint 11-12: [████████████████] Polish & Deploy (All Platforms)
+Sprint 13-16: [████████████████] V2 Migration (Supabase + GitHub Pages)
 ```
 
 ---

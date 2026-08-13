@@ -1,8 +1,8 @@
 {
   "projectName": "Real-Time Convoy Navigation & Communication Platform",
-  "testSuite": "E2E Verification \u2014 Post-Sprint 4",
-  "created": "2026-07-26",
-  "baseUrl": "http://localhost:5173",
+  "testSuite": "E2E Verification \u2014 V2 (Supabase + GitHub Pages)",
+  "created": "2026-08-13",
+  "baseUrl": "https://ragavellur.github.io/convoy-navigation-platform/",
   "categories": [
     {
       "id": "infrastructure",
@@ -474,8 +474,8 @@
         },
         {
           "id": "P-9",
-          "title": "Smooth dead reckoning — Google Maps-like vehicle movement",
-          "steps": "Start simulation → observe vehicle markers between 4s poll intervals",
+          "title": "Smooth dead reckoning \u2014 Google Maps-like vehicle movement",
+          "steps": "Start simulation \u2192 observe vehicle markers between 4s poll intervals",
           "expected": "Vehicles move smoothly along roads at 60fps with no visible jumps or teleportation",
           "status": "pending",
           "sprint": "Sprint 11",
@@ -606,7 +606,7 @@
         {
           "id": "R-12",
           "title": "Distance-to-viewer + distance-to-destination + ETA in Convoy roster",
-          "steps": "Join convoy with multiple members and active destination → Open roster → Check member entries",
+          "steps": "Join convoy with multiple members and active destination \u2192 Open roster \u2192 Check member entries",
           "expected": "Each member shows viewer-distance (icon label) and destination-distance + ETA (flag icon), updated in real-time, clear visual distinction",
           "status": "pending",
           "sprint": "Sprint 11",
@@ -1046,7 +1046,7 @@
         {
           "id": "E2-2",
           "title": "Sentry captures unhandled exceptions",
-          "steps": "Trigger unhandled JS exception → check Sentry dashboard",
+          "steps": "Trigger unhandled JS exception \u2192 check Sentry dashboard",
           "expected": "Error logged to Sentry with stack trace, user context, URL",
           "status": "passed",
           "sprint": "Sprint 11",
@@ -1057,7 +1057,7 @@
         {
           "id": "E2-3",
           "title": "Sentry captures API errors",
-          "steps": "Force PocketBase request failure → check Sentry",
+          "steps": "Force PocketBase request failure \u2192 check Sentry",
           "expected": "API error captured with request URL and status code",
           "status": "passed",
           "sprint": "Sprint 11",
@@ -1068,13 +1068,179 @@
         {
           "id": "E2-4",
           "title": "Error boundary recovers on retry",
-          "steps": "Crashed component → click 'Try Again'",
+          "steps": "Crashed component \u2192 click 'Try Again'",
           "expected": "Component remounts and app continues without full reload",
           "status": "passed",
           "sprint": "Sprint 11",
           "taskId": "TASK-151",
           "priority": "medium",
           "notes": "ErrorFallback resetError() remounts app, no full reload needed"
+        }
+      ]
+    },
+    {
+      "id": "v2-migration",
+      "name": "V2 Migration (Supabase + GitHub Pages)",
+      "tests": [
+        {
+          "id": "V2-1",
+          "title": "Supabase project healthy",
+          "steps": "GET https://pbvcbomojmnxukyypvrm.supabase.co/rest/v1/",
+          "expected": "HTTP 200 (or auth challenge) from Supabase",
+          "status": "pending",
+          "sprint": "Sprint 13",
+          "taskId": "TASK-183",
+          "priority": "high"
+        },
+        {
+          "id": "V2-2",
+          "title": "Supabase tables exist",
+          "steps": "Query information_schema for vehicles, convoys, convoy_members, positions, messages, push_subscriptions, profiles",
+          "expected": "All 7+ tables present",
+          "status": "pending",
+          "sprint": "Sprint 13",
+          "taskId": "TASK-185",
+          "priority": "high"
+        },
+        {
+          "id": "V2-3",
+          "title": "RLS policies enforce owner rules",
+          "steps": "Attempt to update vehicle owned by another user",
+          "expected": "Policy blocks (no rows affected)",
+          "status": "pending",
+          "sprint": "Sprint 13",
+          "taskId": "TASK-185",
+          "priority": "high"
+        },
+        {
+          "id": "V2-4",
+          "title": "Realtime enabled on positions",
+          "steps": "Insert a position row",
+          "expected": "postgres_changes event received via Supabase Realtime",
+          "status": "pending",
+          "sprint": "Sprint 13",
+          "taskId": "TASK-186",
+          "priority": "high"
+        },
+        {
+          "id": "V2-5",
+          "title": "Register via Supabase Auth",
+          "steps": "POST signup to supabase.auth",
+          "expected": "User created, profile row auto-created",
+          "status": "pending",
+          "sprint": "Sprint 13",
+          "taskId": "TASK-187",
+          "priority": "high"
+        },
+        {
+          "id": "V2-6",
+          "title": "Login via Supabase Auth",
+          "steps": "POST sign-in to supabase.auth",
+          "expected": "Access token returned, session persists",
+          "status": "pending",
+          "sprint": "Sprint 14",
+          "taskId": "TASK-192",
+          "priority": "high"
+        },
+        {
+          "id": "V2-7",
+          "title": "Vehicle CRUD on Supabase (hard delete)",
+          "steps": "Add vehicle in ProfilePage, then Remove",
+          "expected": "DELETE removes row entirely from Supabase",
+          "status": "pending",
+          "sprint": "Sprint 14",
+          "taskId": "TASK-193",
+          "priority": "high"
+        },
+        {
+          "id": "V2-8",
+          "title": "Position publish + subscribe via Realtime",
+          "steps": "Open map with two browsers in a convoy",
+          "expected": "Both markers update in <1s via Realtime (no polling)",
+          "status": "pending",
+          "sprint": "Sprint 14",
+          "taskId": "TASK-195",
+          "priority": "high"
+        },
+        {
+          "id": "V2-9",
+          "title": "Chat via Supabase Realtime",
+          "steps": "User A sends message, User B has chat open",
+          "expected": "Message appears instantly for User B, persisted in messages table",
+          "status": "pending",
+          "sprint": "Sprint 14",
+          "taskId": "TASK-196",
+          "priority": "high"
+        },
+        {
+          "id": "V2-10",
+          "title": "Voice chat removed",
+          "steps": "Open convoy map page",
+          "expected": "No voice panel, no PTT button, no mediasoup code",
+          "status": "pending",
+          "sprint": "Sprint 15",
+          "taskId": "TASK-201",
+          "priority": "high"
+        },
+        {
+          "id": "V2-11",
+          "title": "GitHub Pages serves app",
+          "steps": "Open ragavellur.github.io/convoy-navigation-platform/",
+          "expected": "App loads without blank page",
+          "status": "pending",
+          "sprint": "Sprint 15",
+          "taskId": "TASK-203",
+          "priority": "high"
+        },
+        {
+          "id": "V2-12",
+          "title": "SPA routing on GitHub Pages",
+          "steps": "Visit /map or deep link path directly",
+          "expected": "404.html fallback serves index.html, route renders",
+          "status": "pending",
+          "sprint": "Sprint 15",
+          "taskId": "TASK-202",
+          "priority": "high"
+        },
+        {
+          "id": "V2-13",
+          "title": "Push notification via Edge Function",
+          "steps": "Trigger convoy event with push_subscriptions present",
+          "expected": "Browser push notification received via Supabase Edge Function",
+          "status": "pending",
+          "sprint": "Sprint 15",
+          "taskId": "TASK-204",
+          "priority": "high"
+        },
+        {
+          "id": "V2-14",
+          "title": "Production data migrated",
+          "steps": "Compare row counts PocketBase vs Supabase",
+          "expected": "All records migrated (users, vehicles, convoys, messages)",
+          "status": "pending",
+          "sprint": "Sprint 16",
+          "taskId": "TASK-211",
+          "priority": "high"
+        },
+        {
+          "id": "V2-15",
+          "title": "Full E2E on Pages + Supabase",
+          "steps": "Login \u2192 create convoy \u2192 join \u2192 chat \u2192 track positions",
+          "expected": "All core flows work without VPS",
+          "status": "pending",
+          "sprint": "Sprint 16",
+          "taskId": "TASK-210",
+          "priority": "high"
+        },
+        {
+          "id": "V2-16",
+          "title": "v2.0.0 tag deployed",
+          "steps": "Check latest release",
+          "expected": "Tag v2.0.0 exists, Pages serves latest build",
+          "status": "pending",
+          "sprint": "Sprint 16",
+          "taskId": "TASK-214",
+          "priority": "high"
         }
       ]
     }

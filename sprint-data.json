@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-07-30T03:15:00Z",
+  "lastUpdated": "2026-08-13T09:00:00Z",
   "sprints": [
     {
       "id": 1,
@@ -1050,31 +1050,31 @@
         },
         {
           "id": "TASK-160",
-          "title": "Phase 1: data model — add phase field + assembled_members to convoys collection + TypeScript types",
+          "title": "Phase 1: data model \u2014 add phase field + assembled_members to convoys collection + TypeScript types",
           "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-161",
-          "title": "Phase 2: assembly route engine — per-member OSRM routes from position to assembly point",
+          "title": "Phase 2: assembly route engine \u2014 per-member OSRM routes from position to assembly point",
           "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-162",
-          "title": "Phase 3: map visualization — colored dashed assembly routes + progress HUD + arrival detection",
+          "title": "Phase 3: map visualization \u2014 colored dashed assembly routes + progress HUD + arrival detection",
           "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-163",
-          "title": "Phase 4: phase management — host controls (Assemble/Depart/Complete) + phase transitions",
+          "title": "Phase 4: phase management \u2014 host controls (Assemble/Depart/Complete) + phase transitions",
           "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-164",
-          "title": "Phase 5: 2-phase simulation — assemble (scatter) then transit all vehicles together",
+          "title": "Phase 5: 2-phase simulation \u2014 assemble (scatter) then transit all vehicles together",
           "status": "backlog",
           "priority": "medium"
         },
@@ -1086,21 +1086,21 @@
         },
         {
           "id": "TASK-166",
-          "title": "Option A: Process India PBF inside Docker OSRM (v5.26.0) — match container version",
+          "title": "Option A: Process India PBF inside Docker OSRM (v5.26.0) \u2014 match container version",
           "status": "backlog",
           "priority": "medium",
           "description": "Run osrm-extract/osrm-partition/osrm-customize steps inside Docker with amd64 emulation. Update docker-compose.yml line 51 to point to india-260728.osrm. Provides self-hosted routing matching the container image version."
         },
         {
           "id": "TASK-167",
-          "title": "Option B: Run OSRM natively via Homebrew (v26.7.3) — use pre-processed data",
+          "title": "Option B: Run OSRM natively via Homebrew (v26.7.3) \u2014 use pre-processed data",
           "status": "backlog",
           "priority": "medium",
           "description": "Start osrm-routed natively from /Users/Shared/OSM/osrm_extract on port 5001. Add OSRM_URL=http://host.docker.internal:5001 to simulation-service env. Faster on ARM Mac, runs outside Docker."
         },
         {
           "id": "TASK-168",
-          "title": "v0.1.3: fix simulation exits immediately — auto-calc OSRM routes for members missing route_geometry",
+          "title": "v0.1.3: fix simulation exits immediately \u2014 auto-calc OSRM routes for members missing route_geometry",
           "status": "done",
           "priority": "high",
           "description": "Added fetchOsrmRoute() to calc routes on-the-fly, fallback to straight line. No more 'No vehicles with route_geometry found' exit."
@@ -1173,7 +1173,7 @@
           "title": "v0.1.5: PocketBase v0.23.1 upgrade + batch API fix + auth endpoint update",
           "status": "done",
           "priority": "high",
-          "description": "Upgraded PB 0.21.3→0.23.1, enabled batch API, updated auth to /api/collections/_superusers, batch requests use 'url' not 'path'."
+          "description": "Upgraded PB 0.21.3\u21920.23.1, enabled batch API, updated auth to /api/collections/_superusers, batch requests use 'url' not 'path'."
         },
         {
           "id": "TASK-179",
@@ -1184,7 +1184,7 @@
         },
         {
           "id": "TASK-180",
-          "title": "Google Maps-smooth vehicle dead reckoning — GeoJSON Source+Layer, derive heading from position deltas, route-following DR",
+          "title": "Google Maps-smooth vehicle dead reckoning \u2014 GeoJSON Source+Layer, derive heading from position deltas, route-following DR",
           "status": "backlog",
           "priority": "high",
           "description": "Replace 4s HTTP polling in MapPage with existing subscribeToConvoyPositions() for sub-second position updates via PocketBase Realtime. Wire subscription events into MarkerAnimator instead of setConvoyPositions. Convert DOM markers to GeoJSON Source+Layer for WebGL rendering. Derive heading from position deltas (eliminate routeGeometry dependency). Linear DR fallback using derived heading. Route-following DR using walkRouteForward when geometry available. Adaptive error blending for seamless position corrections."
@@ -1194,7 +1194,7 @@
           "title": "Show distance-to-viewer + distance-to-destination + ETA per member in Convoy roster",
           "status": "backlog",
           "priority": "medium",
-          "description": "In the Convoy Members roster, show two distance metrics per member: (1) distance from viewer to member (e.g. '2.3 km away') and (2) distance from member to the convoy destination with ETA (e.g. '12 km - ETA 9 min'). Calculate using haversine for distance, use speed + distance for ETA. Update in real-time. Design the UI to avoid confusion — consider icon labels (eye icon for viewer-distance, flag icon for destination-distance) and compact single-line layout."
+          "description": "In the Convoy Members roster, show two distance metrics per member: (1) distance from viewer to member (e.g. '2.3 km away') and (2) distance from member to the convoy destination with ETA (e.g. '12 km - ETA 9 min'). Calculate using haversine for distance, use speed + distance for ETA. Update in real-time. Design the UI to avoid confusion \u2014 consider icon labels (eye icon for viewer-distance, flag icon for destination-distance) and compact single-line layout."
         }
       ]
     },
@@ -1288,6 +1288,240 @@
           "title": "Post-launch monitoring setup",
           "status": "backlog",
           "priority": "medium"
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "name": "Sprint 13: V2 Foundation - Supabase Backend & Schema",
+      "platform": "Web",
+      "startDate": "2026-08-13",
+      "endDate": "2026-08-27",
+      "tasks": [
+        {
+          "id": "TASK-182",
+          "title": "Publish V2 sprint plan (Supabase + GitHub Pages migration)",
+          "status": "in-progress",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-183",
+          "title": "Link Supabase CLI to project pbvcbomojmnxukyypvrm + verify connection",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-184",
+          "title": "Design Postgres schema in Supabase (tables mirroring PB collections: vehicles, convoys, convoy_members, positions, messages, cached_routes, telemetry_aggregated, push_subscriptions, profiles)",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-185",
+          "title": "Apply schema migrations + RLS policies (mirror PB API rules)",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-186",
+          "title": "Enable Supabase Realtime on positions, messages, convoy_members, convoys",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-187",
+          "title": "Configure Supabase Auth (email/password) + profiles sync from auth.users",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-188",
+          "title": "Configure Supabase Storage buckets (avatars, vehicle images) + policies",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-189",
+          "title": "Generate TypeScript types from Supabase schema (supabase gen types)",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-190",
+          "title": "Data migration script (PocketBase export -> Supabase import)",
+          "status": "backlog",
+          "priority": "medium"
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "name": "Sprint 14: V2 Frontend Data Layer - PocketBase to Supabase",
+      "platform": "Web",
+      "startDate": "2026-08-27",
+      "endDate": "2026-09-10",
+      "tasks": [
+        {
+          "id": "TASK-191",
+          "title": "Install @supabase/supabase-js + create supabaseClient service with env config",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-192",
+          "title": "Migrate auth: LoginPage, RegisterPage, ProtectedRoute, session persistence to supabase.auth",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-193",
+          "title": "Migrate ProfilePage vehicles CRUD to Supabase (delete = hard delete)",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-194",
+          "title": "Migrate convoy lifecycle (sessionState.ts) to Supabase",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-195",
+          "title": "Migrate position tracking (positionTracking.ts) to Supabase Realtime subscribe + upsert",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-196",
+          "title": "Migrate chat (chatService.ts + ChatPanel) to Supabase Realtime",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-197",
+          "title": "Migrate notifications.ts + pushNotifications.ts (push_subscriptions) to Supabase",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-198",
+          "title": "Migrate routeCache.ts + telemetryAggregator.ts to Supabase",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-199",
+          "title": "Migrate ConvoyRosterContext + useAssemblyRoutes + useOfflineConvoy to Supabase",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-200",
+          "title": "Remove PocketBase SDK + all pb.* references from codebase",
+          "status": "backlog",
+          "priority": "high"
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "name": "Sprint 15: V2 GitHub Pages + Voice Removal + Edge Functions",
+      "platform": "Web",
+      "startDate": "2026-09-10",
+      "endDate": "2026-09-24",
+      "tasks": [
+        {
+          "id": "TASK-201",
+          "title": "Remove voice chat module (VoicePanel, voiceChannel.ts, mediasoup deps, voice-server app)",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-202",
+          "title": "Configure Vite base path + 404.html SPA fallback for GitHub Pages",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-203",
+          "title": "Create GitHub Actions workflow for Pages deployment (build + deploy)",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-204",
+          "title": "Create Supabase Edge Function for push notifications (web-push sender)",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-205",
+          "title": "Rewire simulation service to Supabase (service role writes) or GitHub Actions scheduled job",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-206",
+          "title": "Configure env/secrets for Pages build (SUPABASE_URL, ANON_KEY, VAPID)",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-207",
+          "title": "Remove obsolete Docker/nginx/voice-server infra files",
+          "status": "backlog",
+          "priority": "medium"
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "name": "Sprint 16: V2 Validation, Data Migration & Launch",
+      "platform": "All",
+      "startDate": "2026-09-24",
+      "endDate": "2026-10-08",
+      "tasks": [
+        {
+          "id": "TASK-208",
+          "title": "Update unit tests to mock @supabase/supabase-js",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-209",
+          "title": "Update integration tests to target Supabase project",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-210",
+          "title": "E2E smoke test on GitHub Pages + Supabase (login, convoy, chat, positions)",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-211",
+          "title": "Migrate production PocketBase data to Supabase",
+          "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-212",
+          "title": "Update docs (DEPLOYMENT.md, README, OpenAPI spec) for V2 architecture",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-213",
+          "title": "Configure custom domain / CNAME for GitHub Pages",
+          "status": "backlog",
+          "priority": "medium"
+        },
+        {
+          "id": "TASK-214",
+          "title": "Tag v2.0.0 + production smoke test",
+          "status": "backlog",
+          "priority": "high"
         }
       ]
     }
