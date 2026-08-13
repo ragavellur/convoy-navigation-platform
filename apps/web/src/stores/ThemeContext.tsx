@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
+import type { StyleSpecification } from 'maplibre-gl'
 
 export type Theme = 'light' | 'dark'
 
@@ -9,8 +10,65 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 
-const LIGHT_MAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty'
-const DARK_MAP_STYLE = 'https://tiles.openfreemap.org/styles/dark'
+export type MapStyleName = 'carto-positron' | 'carto-dark-matter'
+
+const CARTO_SUBDOMAINS = ['a', 'b', 'c', 'd']
+
+function buildCartoTiles(dark: boolean): string[] {
+  const base = dark ? 'dark_all' : 'light_all'
+  return CARTO_SUBDOMAINS.map(
+    (s) => `https://${s}.basemaps.cartocdn.com/${base}/{z}/{x}/{y}{ratio}.png`,
+  )
+}
+
+const MAP_STYLES: Record<MapStyleName, StyleSpecification> = {
+  'carto-positron': {
+    version: 8,
+    sources: {
+      carto: {
+        type: 'raster',
+        tiles: buildCartoTiles(false),
+        tileSize: 256,
+        attribution: '© OpenStreetMap contributors © CARTO',
+      },
+    },
+    layers: [
+      {
+        id: 'carto-bg',
+        type: 'background',
+        paint: { 'background-color': '#f8f4f0' },
+      },
+      {
+        id: 'carto-tiles',
+        type: 'raster',
+        source: 'carto',
+      },
+    ],
+  },
+  'carto-dark-matter': {
+    version: 8,
+    sources: {
+      carto: {
+        type: 'raster',
+        tiles: buildCartoTiles(true),
+        tileSize: 256,
+        attribution: '© OpenStreetMap contributors © CARTO',
+      },
+    },
+    layers: [
+      {
+        id: 'carto-bg',
+        type: 'background',
+        paint: { 'background-color': '#0f1419' },
+      },
+      {
+        id: 'carto-tiles',
+        type: 'raster',
+        source: 'carto',
+      },
+    ],
+  },
+}
 
 const DARK_THEME_COLOR = '#071320'
 const LIGHT_THEME_COLOR = '#e9edf4'
@@ -21,8 +79,8 @@ export function useTheme() {
   return ctx
 }
 
-export function getMapStyleUrl(theme: Theme): string {
-  return theme === 'dark' ? DARK_MAP_STYLE : LIGHT_MAP_STYLE
+export function getMapStyleUrl(theme: Theme): StyleSpecification {
+  return MAP_STYLES[theme === 'dark' ? 'carto-dark-matter' : 'carto-positron']
 }
 
 function applyTheme(theme: Theme) {

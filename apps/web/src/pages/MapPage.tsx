@@ -20,6 +20,7 @@ import {
   setPositionPublishingEnabled,
   startHeartbeat,
   stopHeartbeat,
+  buildMemberDisplayPositions,
 } from '../services/positionTracking'
 import { MarkerAnimator } from '../services/markerAnimation'
 import { createVehicleMarkerElement, getDistinctColor } from '../components/VehicleMarker'
@@ -29,7 +30,7 @@ import { useConvoyRoster, haversineDistance } from '../stores/ConvoyRosterContex
 import { useTheme, getMapStyleUrl } from '../stores/ThemeContext'
 import { notifyOffRoute } from '../services/pushSender'
 import { clearAssemblyPoint } from '../services/sessionState'
-import { calculateAssemblyPoint } from '../services/simulation'
+import { calculateAssemblyPoint, simulationTick } from '../services/simulation'
 import { useAssemblyRoutes } from '../hooks/useAssemblyRoutes'
 import type { AssemblyRoute } from '../services/assemblyRoutes'
 import type { SearchResult, RouteResponse, RouteGeometry } from '../types'
@@ -76,7 +77,6 @@ function MapPage() {
   const vectorFeaturesRef = useRef<GeoJSON.Feature[]>([])
   const meetingPointRef = useRef<{ lat: number; lng: number } | null>(null)
   const simActiveRef = useRef(false)
-  const userVehicleIdRef = useRef<string | null>(null)
   const convoyStatusRef = useRef<'not_started' | 'active' | 'paused' | 'ended'>('active')
 
   const offRoutePushSentRef = useRef(false)
@@ -89,9 +89,6 @@ function MapPage() {
   const [selectedStepIndex, setSelectedStepIndex] = useState<number | null>(null)
   const [selectedAltIndex, setSelectedAltIndex] = useState(0)
   const [showRoutePanel, setShowRoutePanel] = useState(true)
-  const [convoyPositions, setConvoyPositions] = useState<
-    Map<string, { lat: number; lng: number; heading: number | null; speed: number | null }>
-  >(new Map())
   const [simActive, setSimActive] = useState(false)
   const [convoyType, setConvoyType] = useState<'vehicle' | 'trekker'>('vehicle')
   const [convoyPhase, setConvoyPhase] = useState<string>('forming')
@@ -103,6 +100,18 @@ function MapPage() {
   const geoStream = useGeolocationStream({ isInConvoy: !!convoyId })
   const { user } = useAuth()
   const { members, focusMemberId, joinConvoy, leaveConvoy } = useConvoyRoster()
+  const displayPositions = useMemo(
+    () => buildMemberDisplayPositions(members, simActive),
+    [members, simActive],
+  )
+  const locateTarget = useMemo(() => {
+    if (!simActive || !user) return null
+    const me = members.find((m) => m.userId === user.id)
+    if (me?.joinLat != null && me?.joinLng != null) {
+      return { lat: me.joinLat, lng: me.joinLng }
+    }
+    return null
+  }, [simActive, user, members])
   const computedAssemblyPoint: { lat: number; lng: number } | null = useMemo(() => {
     return assemblyPoint
   }, [assemblyPoint])
@@ -608,35 +617,25 @@ function MapPage() {
 
   useEffect(() => {
     if (simActiveRef.current) return
-    const effectivePos =
-      simActiveRef.current && userVehicleIdRef.current
-        ? (convoyPositions.get(userVehicleIdRef.current) ?? null)
-        : null
-    const pos = effectivePos ?? position
-    if (!pos || !routeRef.current) return
+    if (!position || !routeRef.current) return
     const geometry = routeRef.current.geometry as RouteGeometry
-    const offNow = checkOffRoute(pos.lat, pos.lng, geometry)
+    const offNow = checkOffRoute(position.lat, position.lng, geometry)
     setIsOffRoute(offNow)
     if (offNow && convoyId && !offRoutePushSentRef.current) {
       offRoutePushSentRef.current = true
       notifyOffRoute(convoyId, user?.name || 'A member')
     }
     if (!offNow) offRoutePushSentRef.current = false
-  }, [position, convoyId, simActive, convoyPositions, routeRef, user])
+  }, [position, convoyId, simActive, routeRef, user])
 
   useEffect(() => {
     if (!routeData || !position) return
     if (offRouteTimerRef.current) clearInterval(offRouteTimerRef.current)
     offRouteTimerRef.current = setInterval(() => {
       if (simActiveRef.current) return
-      const effectivePos =
-        simActiveRef.current && userVehicleIdRef.current
-          ? (convoyPositions.get(userVehicleIdRef.current) ?? null)
-          : null
-      const pos = effectivePos ?? position
-      if (!routeRef.current || !pos) return
+      if (!routeRef.current) return
       const geometry = routeRef.current.geometry as RouteGeometry
-      const offNow = checkOffRoute(pos.lat, pos.lng, geometry)
+      const offNow = checkOffRoute(position.lat, position.lng, geometry)
       setIsOffRoute(offNow)
       if (offNow && convoyId && !offRoutePushSentRef.current) {
         offRoutePushSentRef.current = true
@@ -647,7 +646,7 @@ function MapPage() {
     return () => {
       if (offRouteTimerRef.current) clearInterval(offRouteTimerRef.current)
     }
-  }, [routeData, position, convoyId, simActive, convoyPositions, user])
+  }, [routeData, position, convoyId, simActive, user])
 
   useEffect(() => {
     if (!convoyId) return
@@ -660,7 +659,6 @@ function MapPage() {
         const userId = user?.id
         if (!userId) {
           vehicleId = null
-          userVehicleIdRef.current = null
           return
         }
         const { data: memberRecord } = await supabase
@@ -672,10 +670,8 @@ function MapPage() {
           .limit(1)
           .maybeSingle()
         vehicleId = memberRecord?.vehicle || null
-        userVehicleIdRef.current = vehicleId
       } catch {
         vehicleId = null
-        userVehicleIdRef.current = null
       }
     }
 
@@ -696,7 +692,7 @@ function MapPage() {
         setConvoyType(convoy?.convoy_type as 'vehicle' | 'trekker')
         convoyStatusRef.current =
           (convoy?.status as 'not_started' | 'active' | 'paused' | 'ended' | undefined) ?? 'active'
-        setPositionPublishingEnabled(convoyStatusRef.current === 'active')
+        setPositionPublishingEnabled(convoyStatusRef.current === 'active' && !simulationActive)
       } catch {
         simulationActive = false
       }
@@ -724,7 +720,7 @@ function MapPage() {
           setSimActive(simulationActive)
           if (record.status) {
             convoyStatusRef.current = record.status as 'not_started' | 'active' | 'paused' | 'ended'
-            setPositionPublishingEnabled(convoyStatusRef.current === 'active')
+            setPositionPublishingEnabled(convoyStatusRef.current === 'active' && !simulationActive)
           }
         },
       )
@@ -759,6 +755,16 @@ function MapPage() {
       void supabase.removeChannel(simChannel)
     }
   }, [convoyId, user])
+
+  useEffect(() => {
+    if (!convoyId || !simActive) return
+    const tick = () => {
+      simulationTick(convoyId).catch(() => {})
+    }
+    tick()
+    const timer = setInterval(tick, 2000)
+    return () => clearInterval(timer)
+  }, [convoyId, simActive])
 
   useEffect(() => {
     if (!convoyId) return
@@ -860,14 +866,18 @@ function MapPage() {
       }
     })
 
-    if (member.position) {
+    const displayPos =
+      simActive && member.joinLat != null && member.joinLng != null
+        ? { lat: member.joinLat, lng: member.joinLng }
+        : member.position
+    if (displayPos) {
       map.current.flyTo({
-        center: [member.position.lng, member.position.lat],
+        center: [displayPos.lng, displayPos.lat],
         zoom: 16,
         essential: true,
       })
     }
-  }, [focusMemberId, members])
+  }, [focusMemberId, members, simActive])
 
   useEffect(() => {
     if (focusMemberId) return
@@ -887,45 +897,6 @@ function MapPage() {
     convoyMarkersRef.current.clear()
     animatorRef.current?.destroy()
     animatorRef.current = null
-
-    setConvoyPositions(new Map())
-
-    let cancelled = false
-
-    const poll = async () => {
-      try {
-        const { getLatestPositions } = await import('../services/positionTracking')
-        if (cancelled) return
-        const positions = await getLatestPositions(convoyId)
-        if (cancelled) return
-        setConvoyPositions(() => {
-          const next = new Map<
-            string,
-            { lat: number; lng: number; heading: number | null; speed: number | null }
-          >()
-          for (const pos of positions) {
-            if (!Number.isFinite(pos.lat) || !Number.isFinite(pos.lng)) continue
-            next.set(pos.vehicle, {
-              lat: pos.lat,
-              lng: pos.lng,
-              heading: pos.heading,
-              speed: pos.speed,
-            })
-          }
-          return next
-        })
-      } catch {
-        // ignore poll errors
-      }
-    }
-
-    poll()
-    const intervalId = setInterval(poll, 4000)
-
-    return () => {
-      cancelled = true
-      clearInterval(intervalId)
-    }
   }, [convoyId])
 
   useEffect(() => {
@@ -945,16 +916,23 @@ function MapPage() {
 
     const vectorFeatures: GeoJSON.Feature[] = []
 
-    const vehicleIds = Array.from(convoyPositions.keys())
+    convoyMarkersRef.current.forEach((marker, vid) => {
+      if (!displayPositions.has(vid)) {
+        marker.remove()
+        convoyMarkersRef.current.delete(vid)
+      }
+    })
+
+    const vehicleIds = Array.from(displayPositions.keys())
     const positionGroups = new Map<string, string[]>()
     for (const vid of vehicleIds) {
-      const pos = convoyPositions.get(vid)!
+      const pos = displayPositions.get(vid)!
       const key = `${pos.lat.toFixed(5)},${pos.lng.toFixed(5)}`
       if (!positionGroups.has(key)) positionGroups.set(key, [])
       positionGroups.get(key)!.push(vid)
     }
 
-    convoyPositions.forEach((pos, vehicleId) => {
+    displayPositions.forEach((pos, vehicleId) => {
       if (!Number.isFinite(pos.lat) || !Number.isFinite(pos.lng)) return
 
       const key = `${pos.lat.toFixed(5)},${pos.lng.toFixed(5)}`
@@ -1051,7 +1029,7 @@ function MapPage() {
         features: vectorFeatures,
       })
     }
-  }, [convoyPositions, mapLoaded])
+  }, [displayPositions, mapLoaded])
 
   useEffect(() => {
     return () => {
@@ -1449,6 +1427,7 @@ function MapPage() {
 
   useEffect(() => {
     if (!map.current || !mapLoaded) return
+    if (simActive) return
 
     joinMarkersRef.current.forEach((m) => m.remove())
     joinMarkersRef.current.clear()
@@ -1482,7 +1461,7 @@ function MapPage() {
 
       joinMarkersRef.current.set(m.userId, marker)
     }
-  }, [convoyPhase, members, mapLoaded, convoyOwner])
+  }, [convoyPhase, members, mapLoaded, convoyOwner, simActive])
 
   const firstStep = routeData?.legs[0]?.steps[0]
   const alternatives = routeResponse?.routes || []
@@ -1739,9 +1718,11 @@ function MapPage() {
       <button
         onClick={() => {
           if (!map.current) return
-          if (position) {
+          const target =
+            locateTarget ?? (position ? { lat: position.lat, lng: position.lng } : null)
+          if (target) {
             map.current.flyTo({
-              center: [position.lng, position.lat],
+              center: [target.lng, target.lat],
               zoom: 15,
               duration: 1000,
             })

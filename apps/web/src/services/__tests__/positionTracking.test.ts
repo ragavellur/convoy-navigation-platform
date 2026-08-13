@@ -27,6 +27,7 @@ import {
   getLatestPositions,
   setPositionPublishingEnabled,
   unsubscribePositions,
+  buildMemberDisplayPositions,
 } from '../positionTracking'
 
 const positionRow = {
@@ -212,5 +213,80 @@ describe('unsubscribePositions', () => {
   it('does nothing when no active subscription', () => {
     const result = unsubscribePositions()
     expect(result).toBeUndefined()
+  })
+})
+
+describe('buildMemberDisplayPositions', () => {
+  const gpsPosition = {
+    id: 'p1',
+    vehicle: 'v1',
+    convoy: 'c1',
+    lat: 12.34,
+    lng: 56.78,
+    speed: 42,
+    heading: 90,
+    accuracy: null,
+    created: '2024-01-01T00:00:00Z',
+    updated: '2024-01-01T00:00:00Z',
+  }
+
+  const members = [
+    {
+      vehicleId: 'v1',
+      position: gpsPosition,
+      joinLat: 10,
+      joinLng: 20,
+    },
+    {
+      vehicleId: 'v2',
+      position: null,
+      joinLat: 30,
+      joinLng: 40,
+    },
+    {
+      vehicleId: 'v3',
+      position: {
+        ...gpsPosition,
+        vehicle: 'v3',
+        id: 'p3',
+        lat: 1,
+        lng: 2,
+      },
+      joinLat: undefined,
+      joinLng: undefined,
+    },
+    {
+      vehicleId: undefined,
+      position: gpsPosition,
+      joinLat: 50,
+      joinLng: 60,
+    },
+  ]
+
+  it('uses GPS position in real mode', () => {
+    const result = buildMemberDisplayPositions(members, false)
+    expect(result.get('v1')).toEqual({ lat: 12.34, lng: 56.78, heading: 90, speed: 42 })
+  })
+
+  it('skips members without a reported position in real mode', () => {
+    const result = buildMemberDisplayPositions(members, false)
+    expect(result.has('v2')).toBe(false)
+  })
+
+  it('uses join location in simulation mode', () => {
+    const result = buildMemberDisplayPositions(members, true)
+    expect(result.get('v1')).toEqual({ lat: 10, lng: 20, heading: null, speed: null })
+  })
+
+  it('skips members without join location in simulation mode', () => {
+    const result = buildMemberDisplayPositions(members, true)
+    expect(result.has('v3')).toBe(false)
+  })
+
+  it('skips members without a vehicleId', () => {
+    const real = buildMemberDisplayPositions(members, false)
+    const sim = buildMemberDisplayPositions(members, true)
+    expect(real.has('undefined')).toBe(false)
+    expect(sim.has('undefined')).toBe(false)
   })
 })

@@ -19,6 +19,53 @@ const DISTANCE_THRESHOLD_M = 75
 const MIN_PUBLISH_INTERVAL_MS = 3000
 const TELEMETRY_INTERVAL_MS = 60000
 
+export interface MemberDisplayPosition {
+  lat: number
+  lng: number
+  heading: number | null
+  speed: number | null
+}
+
+export interface MemberPositionSource {
+  vehicleId?: string
+  position: Position | null
+  joinLat?: number
+  joinLng?: number
+}
+
+/**
+ * Resolve where each convoy member should be rendered on the map.
+ * In simulation mode the member is pinned to the location they joined from
+ * (join_lat/join_lng) because no live GPS is being broadcast. Otherwise the
+ * latest reported position is used.
+ */
+export function buildMemberDisplayPositions(
+  members: MemberPositionSource[],
+  simulationActive: boolean,
+): Map<string, MemberDisplayPosition> {
+  const result = new Map<string, MemberDisplayPosition>()
+  for (const member of members) {
+    if (!member.vehicleId) continue
+    if (simulationActive) {
+      if (member.joinLat == null || member.joinLng == null) continue
+      result.set(member.vehicleId, {
+        lat: member.joinLat,
+        lng: member.joinLng,
+        heading: null,
+        speed: null,
+      })
+    } else if (member.position) {
+      result.set(member.vehicleId, {
+        lat: member.position.lat,
+        lng: member.position.lng,
+        heading: member.position.heading,
+        speed: member.position.speed,
+      })
+    }
+  }
+  return result
+}
+
 export function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 6371000
   const dLat = ((lat2 - lat1) * Math.PI) / 180
