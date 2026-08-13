@@ -1433,7 +1433,7 @@
         {
           "id": "TASK-201",
           "title": "Remove voice chat module (VoicePanel, voiceChannel.ts, mediasoup deps, voice-server app)",
-          "status": "in-progress",
+          "status": "done",
           "priority": "high"
         },
         {
