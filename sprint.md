@@ -333,26 +333,30 @@
 
 ## Sprint 14: V2 Frontend Data Layer - PocketBase to Supabase (Week 27-28)
 
-### 🔄 In Progress
+### ✅ Completed
 
-- [ ] [TASK-191] Install @supabase/supabase-js + create supabaseClient service — [**in progress**]
-
-### 📌 Backlog
-
-- [ ] [TASK-191] Install @supabase/supabase-js + create supabaseClient service
-- [ ] [TASK-192] Migrate auth: LoginPage, RegisterPage, ProtectedRoute, session persistence
-- [ ] [TASK-193] Migrate ProfilePage vehicles CRUD to Supabase (delete = hard delete)
-- [ ] [TASK-194] Migrate convoy lifecycle (sessionState.ts) to Supabase
-- [ ] [TASK-195] Migrate position tracking (positionTracking.ts) to Supabase Realtime
-- [ ] [TASK-196] Migrate chat (chatService.ts + ChatPanel) to Supabase Realtime
-- [ ] [TASK-197] Migrate notifications.ts + pushNotifications.ts to Supabase
-- [ ] [TASK-198] Migrate routeCache.ts + telemetryAggregator.ts to Supabase
-- [ ] [TASK-199] Migrate ConvoyRosterContext + useAssemblyRoutes + useOfflineConvoy to Supabase
-- [ ] [TASK-200] Remove PocketBase SDK + all pb.* references
+- [x] [TASK-191] Install @supabase/supabase-js + create supabaseClient service
+- [x] [TASK-192] Migrate auth: LoginPage, RegisterPage, ProtectedRoute, session persistence
+- [x] [TASK-193] Migrate ProfilePage vehicles CRUD to Supabase (delete = hard delete)
+- [x] [TASK-194] Migrate convoy lifecycle (sessionState.ts) to Supabase
+- [x] [TASK-195] Migrate position tracking (positionTracking.ts) to Supabase Realtime
+- [x] [TASK-196] Migrate chat (chatService.ts + ChatPanel) to Supabase Realtime
+- [x] [TASK-197] Migrate notifications.ts + pushNotifications.ts to Supabase
+- [x] [TASK-198] Migrate routeCache.ts + telemetryAggregator.ts to Supabase
+- [x] [TASK-199] Migrate ConvoyRosterContext + useAssemblyRoutes + useOfflineConvoy to Supabase
+- [x] [TASK-200] Remove PocketBase SDK + all pb.* references
 
 ---
 
 ## Sprint 15: V2 GitHub Pages + Voice Removal + Edge Functions (Week 29-30)
+
+### ✅ Completed
+
+- [x] [TASK-215] Convoy lifecycle: 'not_started' initial status + owner Start Convoy button
+- [x] [TASK-216] Gate position publishing until convoy started (client + positions RLS)
+- [x] [TASK-217] Owner-only delete convoy (UI + cascade)
+- [x] [TASK-218] Simulation start auto-starts convoy
+- [x] [TASK-219] Unit tests for position publishing gate
 
 ### 📌 Backlog
 
@@ -403,25 +407,25 @@
 
 ## Progress Summary
 
-| Sprint    | Total Tasks | Backlog | In Progress | Done    | Platform           |
-| --------- | ----------- | ------- | ----------- | ------- | ------------------ |
-| Sprint 1  | 31          | 0       | 0           | 31      | Web + Docker       |
-| Sprint 2  | 10          | 0       | 0           | 10      | Web                |
-| Sprint 3  | 12          | 0       | 0           | 12      | Web                |
-| Sprint 4  | 10          | 0       | 0           | 10      | Web                |
-| Sprint 5  | 11          | 0       | 0           | 11      | Web                |
-| Sprint 6  | 14          | 0       | 0           | 14      | Web                |
-| Sprint 7  | 12          | 0       | 0           | 12      | Web Critical Fixes |
-| Sprint 8  | 27          | 1       | 0           | 26      | Web PWA + Trekker  |
-| Sprint 9  | 5           | 0       | 0           | 5       | Web CSS Refactor   |
-| Sprint 10 | 8           | 0       | 0           | 8       | Web CSS Refactor   |
-| Sprint 11 | 38          | 13      | 0           | 25      | All                |
-| Sprint 12 | 14          | 14      | 0           | 0       | All                |
-| Sprint 13 | 9           | 8       | 1           | 0       | V2 Supabase        |
-| Sprint 14 | 10          | 10      | 0           | 0       | V2 Frontend        |
-| Sprint 15 | 7           | 7       | 0           | 0       | V2 Pages + Voice   |
-| Sprint 16 | 7           | 7       | 0           | 0       | V2 Launch          |
-| **Total** | **229**     | **59**  | **1**       | **169** |                    |
+| Sprint    | Total Tasks | Backlog | In Progress | Done   | Platform           |
+| --------- | ----------- | ------- | ----------- | ------ | ------------------ |
+| Sprint 1  | 31          | 0       | 0           | 31     | Web + Docker       |
+| Sprint 2  | 10          | 0       | 0           | 10     | Web                |
+| Sprint 3  | 12          | 0       | 0           | 12     | Web                |
+| Sprint 4  | 10          | 0       | 0           | 10     | Web                |
+| Sprint 5  | 11          | 0       | 0           | 11     | Web                |
+| Sprint 6  | 14          | 0       | 0           | 14     | Web                |
+| Sprint 7  | 12          | 0       | 0           | 12     | Web Critical Fixes |
+| Sprint 8  | 27          | 1       | 0           | 26     | Web PWA + Trekker  |
+| Sprint 9  | 5           | 0       | 0           | 5      | Web CSS Refactor   |
+| Sprint 10 | 8           | 0       | 0           | 8      | Web CSS Refactor   |
+| Sprint 11 | 38          | 13      | 0           | 25     | All                |
+| Sprint 12 | 14          | 14      | 0           | 0      | All                |
+| Sprint 13 | 9           | 8       | 1           | 0      | V2 Supabase        |
+| Sprint 14 | 10          | 0       | 0           | 10     | V2 Frontend        |
+| Sprint 15 | 12          | 7       | 0           | 5      | V2 Pages + Voice   |
+| Sprint 16 | 7           | 7       | 0           | 0      | V2 Launch          |
+| **Total** | **234**     | **159** | **0**       | **74** |                    |
 
 ---
 
