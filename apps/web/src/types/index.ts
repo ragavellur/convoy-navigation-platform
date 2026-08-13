@@ -39,7 +39,6 @@ export interface ConvoySettings {
   time_fallback_sec?: number
   heading_threshold_deg?: number
   sample_rate_sec?: number
-  voice_enabled?: boolean
   geofence_alerts?: boolean
 }
 
@@ -97,9 +96,8 @@ export interface Message {
   id: string
   convoy: string
   sender: string
-  type: 'text' | 'voice' | 'system'
+  type: 'text' | 'system'
   content: string
-  duration?: number
   location_lat?: number
   location_lng?: number
   created: string

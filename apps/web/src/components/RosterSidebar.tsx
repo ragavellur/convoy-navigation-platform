@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom'
 import { useConvoyRoster, type RosterMember } from '../stores/ConvoyRosterContext'
 import { formatSpeedKmh } from '../utils/memberStatus'
 import { useAuth } from '../hooks/useAuth'
-import VoicePanel from './VoicePanel'
 import ChatPanel from './ChatPanel'
 import supabase from '../services/supabaseClient'
 
@@ -226,7 +225,6 @@ export default function RosterSidebar({ isExpanded, onToggle }: RosterSidebarPro
             </div>
 
             <div className="p-3 border-t border-[var(--border)] space-y-3">
-              <VoicePanel />
               <ChatPanel />
               <Link
                 to="/convoy"
@@ -388,7 +386,6 @@ export default function RosterSidebar({ isExpanded, onToggle }: RosterSidebarPro
           </div>
 
           <div className="p-3 border-t border-[var(--border)] space-y-3">
-            <VoicePanel />
             <ChatPanel />
             <Link
               to="/convoy"
