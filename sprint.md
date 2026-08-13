@@ -358,11 +358,16 @@
 - [x] [TASK-218] Simulation start auto-starts convoy
 - [x] [TASK-219] Unit tests for position publishing gate
 
-### 🔄 In Progress
+### ✅ Completed
 
-- [-] [TASK-202] Configure Vite base path + 404.html SPA fallback for GitHub Pages
-- [-] [TASK-203] Create GitHub Actions workflow for Pages deployment
-- [-] [TASK-206] Configure env/secrets for Pages build (SUPABASE_URL, ANON_KEY, VAPID)
+- [x] [TASK-215] Convoy lifecycle: 'not_started' initial status + owner Start Convoy button
+- [x] [TASK-216] Gate position publishing until convoy started (client + positions RLS)
+- [x] [TASK-217] Owner-only delete convoy (UI + cascade)
+- [x] [TASK-218] Simulation start auto-starts convoy
+- [x] [TASK-219] Unit tests for position publishing gate
+- [x] [TASK-202] Configure Vite base path + 404.html SPA fallback for GitHub Pages
+- [x] [TASK-203] Create GitHub Actions workflow for Pages deployment
+- [x] [TASK-206] Configure env/secrets for Pages build (SUPABASE_URL, ANON_KEY, VAPID)
 
 ### 📌 Backlog
 
@@ -426,9 +431,9 @@
 | Sprint 12 | 14          | 14      | 0           | 0      | All                |
 | Sprint 13 | 9           | 8       | 1           | 0      | V2 Supabase        |
 | Sprint 14 | 10          | 0       | 0           | 10     | V2 Frontend        |
-| Sprint 15 | 12          | 4       | 3           | 5      | V2 Pages + Voice   |
+| Sprint 15 | 12          | 4       | 0           | 8      | V2 Pages + Voice   |
 | Sprint 16 | 7           | 7       | 0           | 0      | V2 Launch          |
-| **Total** | **234**     | **156** | **3**       | **74** |                    |
+| **Total** | **234**     | **156** | **0**       | **77** |                    |
 
 ---
 
