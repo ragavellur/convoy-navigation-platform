@@ -319,17 +319,23 @@
 
 - [x] [TASK-185] Apply schema migrations + RLS policies (mirror PB API rules)
 
-### 📌 Backlog
+- [x] [TASK-186] Enable Supabase Realtime on positions, messages, convoy_members, convoys (verified on hosted)
 
-- [ ] [TASK-186] Enable Supabase Realtime on positions, messages, convoy_members, convoys — [**in progress**]
-- [ ] [TASK-187] Configure Supabase Auth (email/password) + profiles sync from auth.users
-- [ ] [TASK-188] Configure Supabase Storage buckets (avatars, vehicle images) + policies
-- [ ] [TASK-189] Generate TypeScript types from Supabase schema
-- [ ] [TASK-190] Data migration script (PocketBase export -> Supabase import)
+- [x] [TASK-187] Configure Supabase Auth (email/password) + profiles sync from auth.users (verified on hosted)
+
+- [x] [TASK-188] Configure Supabase Storage buckets (avatars, vehicle images) + policies (verified on hosted)
+
+- [x] [TASK-189] Generate TypeScript types from Supabase schema
+
+- [~] [TASK-190] ~~Data migration script (PocketBase export -> Supabase import)~~ — **CANCELLED: fresh start in V2**
 
 ---
 
 ## Sprint 14: V2 Frontend Data Layer - PocketBase to Supabase (Week 27-28)
+
+### 🔄 In Progress
+
+- [ ] [TASK-191] Install @supabase/supabase-js + create supabaseClient service — [**in progress**]
 
 ### 📌 Backlog
 

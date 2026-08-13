@@ -1325,31 +1325,31 @@
         {
           "id": "TASK-186",
           "title": "Enable Supabase Realtime on positions, messages, convoy_members, convoys",
-          "status": "in-progress",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-187",
           "title": "Configure Supabase Auth (email/password) + profiles sync from auth.users",
-          "status": "backlog",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-188",
           "title": "Configure Supabase Storage buckets (avatars, vehicle images) + policies",
-          "status": "backlog",
+          "status": "done",
           "priority": "medium"
         },
         {
           "id": "TASK-189",
           "title": "Generate TypeScript types from Supabase schema (supabase gen types)",
-          "status": "backlog",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-190",
           "title": "Data migration script (PocketBase export -> Supabase import)",
-          "status": "backlog",
+          "status": "cancelled",
           "priority": "medium"
         }
       ]
@@ -1364,7 +1364,7 @@
         {
           "id": "TASK-191",
           "title": "Install @supabase/supabase-js + create supabaseClient service with env config",
-          "status": "backlog",
+          "status": "in-progress",
           "priority": "high"
         },
         {
