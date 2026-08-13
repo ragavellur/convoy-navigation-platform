@@ -1451,7 +1451,7 @@
         {
           "id": "TASK-204",
           "title": "Create Supabase Edge Function for push notifications (web-push sender)",
-          "status": "in-progress",
+          "status": "done",
           "priority": "high"
         },
         {
@@ -1469,7 +1469,7 @@
         {
           "id": "TASK-207",
           "title": "Remove obsolete Docker/nginx/voice-server infra files",
-          "status": "backlog",
+          "status": "done",
           "priority": "medium"
         },
         {
