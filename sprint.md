@@ -375,7 +375,7 @@
 
 ### 📌 Backlog
 
-- [ ] [TASK-201] Remove voice chat module (VoicePanel, voiceChannel.ts, mediasoup, voice-server)
+- [~] [TASK-201] Remove voice chat module (VoicePanel, voiceChannel.ts, mediasoup, voice-server)
 - [x] [TASK-204] Create Supabase Edge Function for push notifications (web-push sender)
 - [x] [TASK-207] Remove obsolete Docker/nginx/voice-server infra files
 
