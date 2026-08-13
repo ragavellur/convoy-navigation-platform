@@ -315,12 +315,12 @@
 
 - [-] [TASK-183] Link Supabase CLI to project pbvcbomojmnxukyypvrm + verify connection
 
-- [-] [TASK-183] Link Supabase CLI to project pbvcbomojmnxukyypvrm + verify connection
+- [x] [TASK-184] Design Postgres schema in Supabase (tables mirroring PB collections)
+
+- [x] [TASK-185] Apply schema migrations + RLS policies (mirror PB API rules)
 
 ### 📌 Backlog
 
-- [ ] [TASK-184] Design Postgres schema in Supabase (tables mirroring PB collections)
-- [ ] [TASK-185] Apply schema migrations + RLS policies (mirror PB API rules)
 - [ ] [TASK-186] Enable Supabase Realtime on positions, messages, convoy_members, convoys
 - [ ] [TASK-187] Configure Supabase Auth (email/password) + profiles sync from auth.users
 - [ ] [TASK-188] Configure Supabase Storage buckets (avatars, vehicle images) + policies

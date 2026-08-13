@@ -1307,19 +1307,19 @@
         {
           "id": "TASK-183",
           "title": "Link Supabase CLI to project pbvcbomojmnxukyypvrm + verify connection",
-          "status": "in-progress",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-184",
           "title": "Design Postgres schema in Supabase (tables mirroring PB collections: vehicles, convoys, convoy_members, positions, messages, cached_routes, telemetry_aggregated, push_subscriptions, profiles)",
-          "status": "backlog",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-185",
           "title": "Apply schema migrations + RLS policies (mirror PB API rules)",
-          "status": "backlog",
+          "status": "done",
           "priority": "high"
         },
         {
