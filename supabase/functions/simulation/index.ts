@@ -8,16 +8,12 @@ import {
   type LatLng,
   type SimulationPlan,
 } from './_shared/movement.ts'
-import { sendWebPush, type VapidKeys } from './_shared/webpush.ts'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? ''
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
 const OSRM_URL = Deno.env.get('OSRM_URL') ?? ''
 const PUBLIC_OSRM = 'https://router.project-osrm.org'
-const VAPID_PUBLIC_KEY = Deno.env.get('VAPID_PUBLIC_KEY') ?? ''
-const VAPID_PRIVATE_KEY = Deno.env.get('VAPID_PRIVATE_KEY') ?? ''
-const VAPID_EMAIL = Deno.env.get('VAPID_EMAIL') ?? 'mailto:raga.vellur@gmail.com'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -440,71 +436,6 @@ async function handleSimulationCleanup(userId: string, body: Record<string, unkn
   return { success: true, convoyId: body.convoyId, deleted: 0, kept: rows?.length ?? 0 }
 }
 
-async function handlePushSend(userId: string, body: Record<string, unknown>) {
-  const {
-    convoyId,
-    title,
-    body: bodyText,
-    url,
-  } = body as {
-    convoyId: string
-    title: string
-    body: string
-    url?: string
-  }
-  if (!convoyId || !title || !bodyText) {
-    throw new HttpError(400, 'convoyId, title, and body are required')
-  }
-  await requireOwner(userId, convoyId)
-  if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
-    throw new HttpError(503, 'Push notifications not configured (missing VAPID keys)')
-  }
-
-  const subscriptions = (await rest('/push_subscriptions?select=id,endpoint,p256dh,auth')) as {
-    id: string
-    endpoint: string
-    p256dh: string
-    auth: string
-  }[]
-  if (!subscriptions.length) {
-    return { success: true, sent: 0, total: 0, message: 'No active subscribers' }
-  }
-
-  const payload = JSON.stringify({
-    title,
-    body: bodyText,
-    icon: '/icons/logo.png',
-    badge: '/icons/icon-192x192.png',
-    url: url || '/map?convoy=' + convoyId,
-    convoyId,
-  })
-
-  const vapid: VapidKeys = { publicKey: VAPID_PUBLIC_KEY, privateKey: VAPID_PRIVATE_KEY }
-  let sent = 0
-  let failed = 0
-  let deletedInvalid = 0
-  for (const sub of subscriptions) {
-    try {
-      await sendWebPush(
-        { endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth },
-        payload,
-        vapid,
-        VAPID_EMAIL,
-      )
-      sent++
-    } catch (err) {
-      failed++
-      const status = (err as { statusCode?: number }).statusCode
-      if (status === 404 || status === 410) {
-        await rest(`/push_subscriptions?id=eq.${sub.id}`, { method: 'DELETE' }).catch(() => {})
-        deletedInvalid++
-      }
-    }
-  }
-
-  return { success: true, sent, failed, deletedInvalid, total: subscriptions.length }
-}
-
 async function route(req: Request, parts: string[]): Promise<Response> {
   const path = parts.join('/')
 
@@ -536,9 +467,6 @@ async function route(req: Request, parts: string[]): Promise<Response> {
   }
   if (req.method === 'POST' && path === 'api/simulation/cleanup') {
     return json(await handleSimulationCleanup(userId, body))
-  }
-  if (req.method === 'POST' && path === 'api/push/send') {
-    return json(await handlePushSend(userId, body))
   }
   if (
     req.method === 'GET' &&
