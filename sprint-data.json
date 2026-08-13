@@ -1451,7 +1451,7 @@
         {
           "id": "TASK-204",
           "title": "Create Supabase Edge Function for push notifications (web-push sender)",
-          "status": "backlog",
+          "status": "in-progress",
           "priority": "high"
         },
         {
