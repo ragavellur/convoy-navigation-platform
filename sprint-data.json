@@ -1439,13 +1439,13 @@
         {
           "id": "TASK-202",
           "title": "Configure Vite base path + 404.html SPA fallback for GitHub Pages",
-          "status": "backlog",
+          "status": "in-progress",
           "priority": "high"
         },
         {
           "id": "TASK-203",
           "title": "Create GitHub Actions workflow for Pages deployment (build + deploy)",
-          "status": "backlog",
+          "status": "in-progress",
           "priority": "high"
         },
         {
@@ -1463,7 +1463,7 @@
         {
           "id": "TASK-206",
           "title": "Configure env/secrets for Pages build (SUPABASE_URL, ANON_KEY, VAPID)",
-          "status": "backlog",
+          "status": "in-progress",
           "priority": "high"
         },
         {
