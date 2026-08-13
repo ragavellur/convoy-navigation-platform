@@ -1325,7 +1325,7 @@
         {
           "id": "TASK-186",
           "title": "Enable Supabase Realtime on positions, messages, convoy_members, convoys",
-          "status": "backlog",
+          "status": "in-progress",
           "priority": "high"
         },
         {

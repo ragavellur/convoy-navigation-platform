@@ -321,7 +321,7 @@
 
 ### 📌 Backlog
 
-- [ ] [TASK-186] Enable Supabase Realtime on positions, messages, convoy_members, convoys
+- [ ] [TASK-186] Enable Supabase Realtime on positions, messages, convoy_members, convoys — [**in progress**]
 - [ ] [TASK-187] Configure Supabase Auth (email/password) + profiles sync from auth.users
 - [ ] [TASK-188] Configure Supabase Storage buckets (avatars, vehicle images) + policies
 - [ ] [TASK-189] Generate TypeScript types from Supabase schema
