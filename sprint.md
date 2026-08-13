@@ -352,7 +352,7 @@
 
 ### 🔄 In Progress
 
-- [-] [TASK-205] Rewire simulation service to Supabase (service role) or GitHub Actions scheduled job
+- [x] [TASK-205] Rewire simulation service to Supabase (service role) or GitHub Actions scheduled job
 
 ### ✅ Completed
 
@@ -392,6 +392,7 @@
 - [ ] [TASK-212] Update docs (DEPLOYMENT.md, README, OpenAPI spec) for V2 architecture
 - [ ] [TASK-213] Configure custom domain / CNAME for GitHub Pages
 - [ ] [TASK-214] Tag v2.0.0 + production smoke test
+- [x] [TASK-215] Simulation mode: render convoy members at join locations (no GPS publish, no join dots, locate/focus use join point)
 
 ---
 

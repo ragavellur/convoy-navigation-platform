@@ -1457,7 +1457,7 @@
         {
           "id": "TASK-205",
           "title": "Rewire simulation service to Supabase (service role writes) or GitHub Actions scheduled job",
-          "status": "in-progress",
+          "status": "done",
           "priority": "medium"
         },
         {
@@ -1551,6 +1551,12 @@
           "id": "TASK-214",
           "title": "Tag v2.0.0 + production smoke test",
           "status": "backlog",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-215",
+          "title": "Simulation mode: render convoy members at join locations (no GPS publish, no join dots, locate/focus use join point)",
+          "status": "done",
           "priority": "high"
         }
       ]
