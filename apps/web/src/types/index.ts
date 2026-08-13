@@ -18,7 +18,7 @@ export interface Convoy {
   code: string
   description?: string
   owner: string
-  status: 'active' | 'paused' | 'ended'
+  status: 'not_started' | 'active' | 'paused' | 'ended'
   convoy_type: 'vehicle' | 'trekker'
   phase: ConvoyPhase
   assembled_members?: string[]

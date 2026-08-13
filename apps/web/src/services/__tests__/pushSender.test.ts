@@ -1,4 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { harness } from './helpers/supabaseTest'
+
+vi.mock('../supabaseClient', async () => {
+  const { harness } = await import('./helpers/supabaseTest')
+  return { default: harness.supabase }
+})
+
 import {
   notifyMemberJoined,
   notifyMemberLeft,
@@ -10,16 +17,12 @@ import {
 } from '../pushSender'
 
 const mockFetch = vi.fn()
-globalThis.fetch = mockFetch
-
-vi.mock('../pocketbase', () => ({
-  default: {
-    authStore: { isValid: true },
-  },
-}))
 
 beforeEach(() => {
+  harness.reset()
+  harness.auth.session = { access_token: 'tok-123' }
   mockFetch.mockReset()
+  vi.stubGlobal('fetch', mockFetch)
   vi.stubGlobal('window', { location: { origin: 'https://convoy.test' } })
 })
 
@@ -31,8 +34,13 @@ async function expectPushCall(fn: () => Promise<void>, expectedTitleSubstring: s
   mockFetch.mockResolvedValueOnce({ ok: true })
   await fn()
   expect(mockFetch).toHaveBeenCalledTimes(1)
-  const callBody = JSON.parse(mockFetch.mock.calls[0][1].body)
-  expect(callBody.title).toContain(expectedTitleSubstring)
+  const [url, init] = mockFetch.mock.calls[0]
+  expect(url).toBe('https://convoy.test/simulation/api/push/send')
+  expect(init.method).toBe('POST')
+  expect(init.headers.Authorization).toBe('Bearer tok-123')
+  const body = JSON.parse(init.body)
+  expect(body.title).toContain(expectedTitleSubstring)
+  expect(body.convoyId).toBe('c1')
 }
 
 describe('pushSender', () => {
@@ -76,5 +84,12 @@ describe('pushSender', () => {
   it('handles fetch failure gracefully', async () => {
     mockFetch.mockRejectedValueOnce(new Error('Network error'))
     await expect(notifyConvoyEnded('c1')).resolves.not.toThrow()
+  })
+
+  it('does nothing when there is no session', async () => {
+    harness.auth.session = null
+    mockFetch.mockResolvedValueOnce({ ok: true })
+    await notifyConvoyEnded('c1')
+    expect(mockFetch).not.toHaveBeenCalled()
   })
 })

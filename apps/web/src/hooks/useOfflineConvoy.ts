@@ -12,7 +12,7 @@ import {
   type OfflineMember,
   type OfflinePosition,
 } from '../lib/db'
-import { pb } from '../services/pocketbase'
+import supabase from '../services/supabaseClient'
 
 export function useOfflineConvoy() {
   const cacheConvoy = useCallback(async (convoyId: string) => {
@@ -33,29 +33,75 @@ export function useOfflineConvoy() {
   const syncConvoyToCache = useCallback(async (convoyId: string) => {
     if (!navigator.onLine) return
     try {
-      const [convoy, members, positions] = await Promise.all([
-        pb.collection('convoys').getOne(convoyId),
-        pb.collection('convoy_members').getFullList({
-          filter: `convoy = "${convoyId}"`,
-          expand: 'user,vehicle',
-        }),
-        pb.collection('positions').getFullList({
-          filter: `convoy = "${convoyId}"`,
-        }),
+      const [convoyQuery, membersQuery, positionsQuery] = await Promise.all([
+        supabase.from('convoys').select('*').eq('id', convoyId).maybeSingle(),
+        supabase
+          .from('convoy_members')
+          .select('id, convoy, user, vehicle, role, status, joined_at')
+          .eq('convoy', convoyId),
+        supabase
+          .from('positions')
+          .select('id, vehicle, convoy, lat, lng, speed, heading, accuracy, updated_at')
+          .eq('convoy', convoyId),
       ])
+      if (convoyQuery.error) throw convoyQuery.error
+      if (membersQuery.error) throw membersQuery.error
+      if (positionsQuery.error) throw positionsQuery.error
+      const convoy = convoyQuery.data
+      const members = membersQuery.data || []
+      const positions = positionsQuery.data || []
+
+      if (!convoy) return
+
+      const memberRows = members as {
+        id: string
+        convoy: string
+        user: string
+        vehicle: string | null
+        role: string
+        status: string
+        joined_at: string | null
+      }[]
+
+      const [profiles, vehicles] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('id, name')
+          .in(
+            'id',
+            memberRows.map((m) => m.user),
+          ),
+        memberRows.some((m) => m.vehicle)
+          ? supabase
+              .from('vehicles')
+              .select('id, type')
+              .in(
+                'id',
+                memberRows.map((m) => m.vehicle).filter((v): v is string => v !== null),
+              )
+          : Promise.resolve({ data: [] }),
+      ])
+
+      const nameMap = new Map((profiles.data || []).map((p) => [p.id, p.name]))
+      const typeMap = new Map(
+        ((vehicles as { data: { id: string; type: string }[] }).data || []).map((v) => [
+          v.id,
+          v.type,
+        ]),
+      )
 
       await saveConvoy(convoy as unknown as OfflineConvoy)
 
-      const membersData: OfflineMember[] = members.map((m) => ({
+      const membersData: OfflineMember[] = memberRows.map((m) => ({
         id: m.id,
         convoy: m.convoy,
         user: m.user,
-        vehicle: m.vehicle,
+        vehicle: m.vehicle ?? undefined,
         role: m.role,
         status: m.status,
-        joined_at: m.joined_at,
-        userName: (m.expand?.user as Record<string, string>)?.name,
-        vehicleType: (m.expand?.vehicle as Record<string, string>)?.type,
+        joined_at: m.joined_at ?? undefined,
+        userName: nameMap.get(m.user) ?? undefined,
+        vehicleType: m.vehicle ? typeMap.get(m.vehicle) : undefined,
       }))
       await saveMembers(membersData)
 
@@ -65,10 +111,10 @@ export function useOfflineConvoy() {
         convoy: p.convoy,
         lat: p.lat,
         lng: p.lng,
-        speed: p.speed,
-        heading: p.heading,
-        accuracy: p.accuracy,
-        updated: p.updated,
+        speed: p.speed ?? undefined,
+        heading: p.heading ?? undefined,
+        accuracy: p.accuracy ?? undefined,
+        updated: p.updated_at,
       }))
       await savePositions(positionsData)
     } catch {
@@ -82,13 +128,26 @@ export function useOfflineConvoy() {
       const pending = await getPendingPositions()
       for (const pos of pending) {
         try {
-          await pb.collection('positions').update(pos.id, {
+          const payload = {
+            vehicle: pos.vehicleId,
+            convoy: pos.convoyId,
             lat: pos.lat,
             lng: pos.lng,
-            speed: pos.speed ?? undefined,
-            heading: pos.heading ?? undefined,
-            accuracy: pos.accuracy ?? undefined,
-          })
+            speed: pos.speed ?? null,
+            heading: pos.heading ?? null,
+            accuracy: pos.accuracy ?? null,
+          }
+          const { data: existing } = await supabase
+            .from('positions')
+            .select('id')
+            .eq('vehicle', pos.vehicleId)
+            .eq('convoy', pos.convoyId)
+            .maybeSingle()
+          if (existing) {
+            await supabase.from('positions').update(payload).eq('id', existing.id)
+          } else {
+            await supabase.from('positions').upsert(payload, { onConflict: 'vehicle,convoy' })
+          }
           await removePendingPosition(pos.id)
         } catch {
           // keep in queue for next attempt

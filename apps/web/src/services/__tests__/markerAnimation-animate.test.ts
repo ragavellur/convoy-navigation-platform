@@ -7,8 +7,9 @@ afterEach(() => {
 
 describe('MarkerAnimator updateTarget', () => {
   it('schedules animation when position changes significantly', () => {
-    const rafSpy = vi.fn()
+    const rafSpy = vi.fn(() => 1)
     vi.stubGlobal('requestAnimationFrame', rafSpy)
+    vi.stubGlobal('cancelAnimationFrame', vi.fn())
 
     const onUpdate = vi.fn()
     const animator = new MarkerAnimator(onUpdate)
@@ -23,14 +24,16 @@ describe('MarkerAnimator updateTarget', () => {
   })
 
   it('does not schedule animation for small distance changes', () => {
-    const rafSpy = vi.fn()
+    const rafSpy = vi.fn(() => 1)
     vi.stubGlobal('requestAnimationFrame', rafSpy)
+    vi.stubGlobal('cancelAnimationFrame', vi.fn())
 
     const onUpdate = vi.fn()
     const animator = new MarkerAnimator(onUpdate)
 
     animator.updateTarget('v1', 12.34, 56.78, null, null)
     onUpdate.mockClear()
+    rafSpy.mockClear()
 
     animator.updateTarget('v1', 12.3400001, 56.7800001, null, null)
     expect(rafSpy).not.toHaveBeenCalled()

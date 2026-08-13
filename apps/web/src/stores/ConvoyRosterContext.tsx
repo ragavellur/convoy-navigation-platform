@@ -7,7 +7,7 @@ import {
   useRef,
   type ReactNode,
 } from 'react'
-import pb from '../services/pocketbase'
+import supabase from '../services/supabaseClient'
 import type { Position } from '../services/positionTracking'
 import { getLatestPositions, subscribeToConvoyPositions } from '../services/positionTracking'
 import { deriveMemberStatus, type MemberStatus, haversineDistance } from '../utils/memberStatus'
@@ -50,6 +50,18 @@ export function useConvoyRoster() {
   return ctx
 }
 
+interface MemberRow {
+  id: string
+  user: string
+  vehicle: string | null
+  role: string
+  join_lat: number | null
+  join_lng: number | null
+  join_name: string | null
+  assembly_route_geometry: unknown
+  route_geometry: unknown
+}
+
 export function ConvoyRosterProvider({ children }: { children: ReactNode }) {
   const [convoyId, setConvoyId] = useState<string | null>(null)
   const [members, setMembers] = useState<RosterMember[]>([])
@@ -61,40 +73,71 @@ export function ConvoyRosterProvider({ children }: { children: ReactNode }) {
   const fetchMembers = useCallback(async (id: string) => {
     setIsLoading(true)
     try {
-      const [memberRecords, positions] = await Promise.all([
-        pb.collection('convoy_members').getFullList({
-          filter: `convoy = "${id}" && status = "active"`,
-          expand: 'user,vehicle',
-        }),
+      const [memberQuery, positions] = await Promise.all([
+        supabase
+          .from('convoy_members')
+          .select(
+            'id, user, vehicle, role, join_lat, join_lng, join_name, assembly_route_geometry, route_geometry',
+          )
+          .eq('convoy', id)
+          .eq('status', 'active'),
         getLatestPositions(id),
+      ])
+      if (memberQuery.error) throw memberQuery.error
+      const memberRows = (memberQuery.data || []) as MemberRow[]
+
+      const [profiles, vehicles] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('id, name, avatar_url')
+          .in(
+            'id',
+            memberRows.map((m) => m.user),
+          ),
+        memberRows.some((m) => m.vehicle)
+          ? supabase
+              .from('vehicles')
+              .select('id, name, type, color')
+              .in(
+                'id',
+                memberRows.map((m) => m.vehicle).filter((v): v is string => v !== null),
+              )
+          : Promise.resolve({ data: [] }),
       ])
 
       const posMap = new Map<string, Position>()
       for (const pos of positions) {
         posMap.set(pos.vehicle, pos)
       }
+      const nameMap = new Map((profiles.data || []).map((p) => [p.id, p]))
+      const vehicleMap = new Map(
+        (
+          (vehicles as { data: { id: string; name: string; type: string; color: string | null }[] })
+            .data || []
+        ).map((v) => [v.id, v]),
+      )
 
-      const roster: RosterMember[] = memberRecords.map((m: any) => {
-        const vehicle = m.expand?.vehicle
+      const roster: RosterMember[] = memberRows.map((m) => {
+        const profile = nameMap.get(m.user)
+        const vehicle = m.vehicle ? vehicleMap.get(m.vehicle) : undefined
         const position = vehicle ? (posMap.get(vehicle.id) ?? null) : null
-        const user = m.expand?.user
         return {
           id: m.id,
           userId: m.user,
-          userName: user?.name ?? 'Unknown',
-          userAvatar: user?.avatar,
-          role: m.role,
+          userName: profile?.name || 'Unknown',
+          userAvatar: profile?.avatar_url || undefined,
+          role: m.role as RosterMember['role'],
           vehicleId: vehicle?.id,
-          vehicleType: vehicle?.type,
-          vehicleColor: vehicle?.color,
+          vehicleType: vehicle?.type as RosterMember['vehicleType'],
+          vehicleColor: vehicle?.color || undefined,
           vehicleName: vehicle?.name,
           position,
           status: deriveMemberStatus(position),
           joinLat: m.join_lat ?? undefined,
           joinLng: m.join_lng ?? undefined,
           joinName: m.join_name ?? undefined,
-          assemblyRouteGeometry: m.assembly_route_geometry ?? undefined,
-          routeGeometry: m.route_geometry ?? undefined,
+          assemblyRouteGeometry: (m.assembly_route_geometry as number[][]) || undefined,
+          routeGeometry: (m.route_geometry as number[][]) || undefined,
         }
       })
 
@@ -123,19 +166,19 @@ export function ConvoyRosterProvider({ children }: { children: ReactNode }) {
       try {
         unsubRef.current?.()
         unsubRef.current = await subscribeToConvoyPositions(id, handlePositionUpdate)
-        pb.collection('convoy_members')
-          .subscribe?.('*', (e) => {
-            if (e.record?.convoy === id || e.record?.convoy?.id === id) {
-              fetchMembers(id)
-            }
-          })
-          .then((unsub) => {
-            const prev = unsubRef.current
-            unsubRef.current = () => {
-              prev?.()
-              unsub()
-            }
-          })
+        const memberChannel = supabase
+          .channel(`convoy-members-roster-${id}`)
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'convoy_members', filter: `convoy=eq.${id}` },
+            () => fetchMembers(id),
+          )
+          .subscribe()
+        const prev = unsubRef.current
+        unsubRef.current = () => {
+          prev?.()
+          void supabase.removeChannel(memberChannel)
+        }
         await fetchMembers(id)
         intervalRef.current = setInterval(() => fetchMembers(id), 60_000)
       } catch (err) {

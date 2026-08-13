@@ -28,8 +28,13 @@ function LoginPage() {
       navigate(redirectTo)
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : ''
-      if (message.includes('Failed to authenticate')) {
+      if (
+        message.includes('Invalid login credentials') ||
+        message.includes('Failed to authenticate')
+      ) {
         setError('Invalid email or password')
+      } else if (message.includes('Email not confirmed')) {
+        setError('Please confirm your email address before signing in.')
       } else if (message.includes('network')) {
         setError('Network error. Please check your connection.')
       } else {

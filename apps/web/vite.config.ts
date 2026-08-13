@@ -20,9 +20,10 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     include: ['src/**/*.test.ts'],
+    exclude: ['src/services/__integration__/**'],
     coverage: {
       include: ['src/services/**/*.ts', 'src/utils/**/*.ts'],
-      exclude: ['src/services/pocketbase.ts', 'src/services/**/__tests__/**'],
+      exclude: ['src/services/**/__tests__/**'],
     },
   },
   plugins: [
@@ -61,14 +62,7 @@ export default defineConfig({
       workbox: {
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        navigateFallbackDenylist: [
-          /^\/api\//,
-          /^\/api-docs\//,
-          /^\/pb\//,
-          /^\/voice\//,
-          /^\/routing\//,
-          /^\/geocode\//,
-        ],
+        navigateFallbackDenylist: [/^\/api\//, /^\/voice\//, /^\/routing\//, /^\/geocode\//],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/tile\.openstreetmap\.org\/.*/i,
@@ -82,10 +76,10 @@ export default defineConfig({
             },
           },
           {
-            urlPattern: /^https?:\/\/(localhost:8090|convoy\.vellur\.in)\/api\/.*/i,
+            urlPattern: /^https:\/\/[a-z]+\.supabase\.co\/rest\/.*/i,
             handler: 'NetworkFirst',
             options: {
-              cacheName: 'pocketbase-api',
+              cacheName: 'supabase-rest',
               expiration: {
                 maxEntries: 100,
                 maxAgeSeconds: 60 * 60,

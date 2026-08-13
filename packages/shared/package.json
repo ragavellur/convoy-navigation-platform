@@ -7,9 +7,6 @@
   "scripts": {
     "lint": "eslint src --ext ts,tsx"
   },
-  "dependencies": {
-    "pocketbase": "^0.27.0"
-  },
   "devDependencies": {
     "typescript": "^5.0.0"
   }

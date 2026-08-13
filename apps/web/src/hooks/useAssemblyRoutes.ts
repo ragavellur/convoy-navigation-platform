@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { computeAssemblyRoutes, type AssemblyRoute } from '../services/assemblyRoutes'
 import type { RosterMember } from '../stores/ConvoyRosterContext'
-import pb from '../services/pocketbase'
+import supabase from '../services/supabaseClient'
 import type { RouteGeometry } from '../types'
 
 interface UseAssemblyRoutesOptions {
@@ -89,9 +89,13 @@ export function useAssemblyRoutes(options: UseAssemblyRoutesOptions) {
           if (coords && coords.length > 1) {
             const member = members.find((m) => m.id === cr.memberId)
             if (member) {
-              pb.collection('convoy_members')
-                .update(cr.memberId, { assembly_route_geometry: coords } as any)
-                .catch(() => {})
+              supabase
+                .from('convoy_members')
+                .update({ assembly_route_geometry: coords })
+                .eq('id', cr.memberId)
+                .then(() => {
+                  /* persisted */
+                })
             }
           }
         }

@@ -1,6 +1,7 @@
-type ConvoyStatus = 'active' | 'paused' | 'ended'
+type ConvoyStatus = 'not_started' | 'active' | 'paused' | 'ended'
 
 const STATUS_STYLES: Record<ConvoyStatus, { bg: string; text: string }> = {
+  not_started: { bg: 'var(--surface-hover)', text: 'var(--text2)' },
   active: { bg: 'var(--success-bg)', text: 'var(--success-text)' },
   paused: { bg: 'var(--warning-bg)', text: 'var(--warning-text)' },
   ended: { bg: 'var(--error-bg)', text: 'var(--error-text)' },

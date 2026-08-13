@@ -1307,49 +1307,49 @@
         {
           "id": "TASK-183",
           "title": "Link Supabase CLI to project pbvcbomojmnxukyypvrm + verify connection",
-          "status": "in-progress",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-184",
           "title": "Design Postgres schema in Supabase (tables mirroring PB collections: vehicles, convoys, convoy_members, positions, messages, cached_routes, telemetry_aggregated, push_subscriptions, profiles)",
-          "status": "backlog",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-185",
           "title": "Apply schema migrations + RLS policies (mirror PB API rules)",
-          "status": "backlog",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-186",
           "title": "Enable Supabase Realtime on positions, messages, convoy_members, convoys",
-          "status": "backlog",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-187",
           "title": "Configure Supabase Auth (email/password) + profiles sync from auth.users",
-          "status": "backlog",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-188",
           "title": "Configure Supabase Storage buckets (avatars, vehicle images) + policies",
-          "status": "backlog",
+          "status": "done",
           "priority": "medium"
         },
         {
           "id": "TASK-189",
           "title": "Generate TypeScript types from Supabase schema (supabase gen types)",
-          "status": "backlog",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-190",
           "title": "Data migration script (PocketBase export -> Supabase import)",
-          "status": "backlog",
+          "status": "cancelled",
           "priority": "medium"
         }
       ]
@@ -1364,61 +1364,61 @@
         {
           "id": "TASK-191",
           "title": "Install @supabase/supabase-js + create supabaseClient service with env config",
-          "status": "backlog",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-192",
           "title": "Migrate auth: LoginPage, RegisterPage, ProtectedRoute, session persistence to supabase.auth",
-          "status": "backlog",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-193",
           "title": "Migrate ProfilePage vehicles CRUD to Supabase (delete = hard delete)",
-          "status": "backlog",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-194",
           "title": "Migrate convoy lifecycle (sessionState.ts) to Supabase",
-          "status": "backlog",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-195",
           "title": "Migrate position tracking (positionTracking.ts) to Supabase Realtime subscribe + upsert",
-          "status": "backlog",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-196",
           "title": "Migrate chat (chatService.ts + ChatPanel) to Supabase Realtime",
-          "status": "backlog",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-197",
           "title": "Migrate notifications.ts + pushNotifications.ts (push_subscriptions) to Supabase",
-          "status": "backlog",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-198",
           "title": "Migrate routeCache.ts + telemetryAggregator.ts to Supabase",
-          "status": "backlog",
+          "status": "done",
           "priority": "medium"
         },
         {
           "id": "TASK-199",
           "title": "Migrate ConvoyRosterContext + useAssemblyRoutes + useOfflineConvoy to Supabase",
-          "status": "backlog",
+          "status": "done",
           "priority": "high"
         },
         {
           "id": "TASK-200",
           "title": "Remove PocketBase SDK + all pb.* references from codebase",
-          "status": "backlog",
+          "status": "done",
           "priority": "high"
         }
       ]
@@ -1439,13 +1439,13 @@
         {
           "id": "TASK-202",
           "title": "Configure Vite base path + 404.html SPA fallback for GitHub Pages",
-          "status": "backlog",
+          "status": "in-progress",
           "priority": "high"
         },
         {
           "id": "TASK-203",
           "title": "Create GitHub Actions workflow for Pages deployment (build + deploy)",
-          "status": "backlog",
+          "status": "in-progress",
           "priority": "high"
         },
         {
@@ -1463,7 +1463,7 @@
         {
           "id": "TASK-206",
           "title": "Configure env/secrets for Pages build (SUPABASE_URL, ANON_KEY, VAPID)",
-          "status": "backlog",
+          "status": "in-progress",
           "priority": "high"
         },
         {
@@ -1471,6 +1471,36 @@
           "title": "Remove obsolete Docker/nginx/voice-server infra files",
           "status": "backlog",
           "priority": "medium"
+        },
+        {
+          "id": "TASK-215",
+          "title": "Convoy lifecycle: 'not_started' initial status + owner Start Convoy button",
+          "status": "done",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-216",
+          "title": "Gate position publishing until convoy started (client + positions RLS)",
+          "status": "done",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-217",
+          "title": "Owner-only delete convoy (UI + cascade)",
+          "status": "done",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-218",
+          "title": "Simulation start auto-starts convoy",
+          "status": "done",
+          "priority": "high"
+        },
+        {
+          "id": "TASK-219",
+          "title": "Unit tests for position publishing gate",
+          "status": "done",
+          "priority": "high"
         }
       ]
     },

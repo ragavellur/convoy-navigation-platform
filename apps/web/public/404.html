@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Convoy Navigation Platform</title>
+    <script>
+      ;(function () {
+        var path = location.pathname.replace(/^\//, '')
+        var target = path ? '/?p=' + path.split('/').map(encodeURIComponent).join('/') : '/'
+        location.replace(location.origin + target)
+      })()
+    </script>
+  </head>
+  <body>
+    <p>Redirecting to Convoy Navigation Platform…</p>
+  </body>
+</html>

@@ -1,4 +1,4 @@
-import pb from './pocketbase'
+import supabase from './supabaseClient'
 import { getRoute } from './osrm'
 import type { RosterMember } from '../stores/ConvoyRosterContext'
 import type { RouteGeometry } from '../types'
@@ -9,21 +9,22 @@ const INACTIVE_THRESHOLD_MS = 30 * 60 * 1000
 let cleanupTimer: ReturnType<typeof setInterval> | null = null
 
 export async function pauseConvoy(convoyId: string): Promise<void> {
-  await pb.collection('convoys').update(convoyId, { status: 'paused' })
+  await supabase.from('convoys').update({ status: 'paused' }).eq('id', convoyId)
 }
 
 export async function resumeConvoy(convoyId: string): Promise<void> {
-  await pb.collection('convoys').update(convoyId, { status: 'active' })
+  await supabase.from('convoys').update({ status: 'active' }).eq('id', convoyId)
 }
 
 export async function autoCalculateAssemblyPoint(
   convoyId: string,
   members: RosterMember[],
 ): Promise<void> {
-  const convoy = await pb
-    .collection('convoys')
-    .getOne(convoyId)
-    .catch(() => null)
+  const { data: convoy } = await supabase
+    .from('convoys')
+    .select('dest_lat, dest_lng')
+    .eq('id', convoyId)
+    .maybeSingle()
   if (!convoy) return
   const destLat = convoy.dest_lat
   const destLng = convoy.dest_lng
@@ -61,56 +62,63 @@ export async function autoCalculateAssemblyPoint(
     // fall back to centroid
   }
 
-  await pb.collection('convoys').update(convoyId, {
-    source_lat: meetingPoint.lat,
-    source_lng: meetingPoint.lng,
-    source_name: 'Auto-calculated meeting point',
-    phase: 'assembling',
-    assembled_members: [],
-  })
+  await supabase
+    .from('convoys')
+    .update({
+      source_lat: meetingPoint.lat,
+      source_lng: meetingPoint.lng,
+      source_name: 'Auto-calculated meeting point',
+      phase: 'assembling',
+      assembled_members: [],
+    })
+    .eq('id', convoyId)
 }
 
 export async function clearAssemblyPoint(convoyId: string): Promise<void> {
-  await pb.collection('convoys').update(convoyId, {
-    source_lat: null,
-    source_lng: null,
-    source_name: '',
-    phase: 'forming',
-    assembled_members: [],
-  })
+  await supabase
+    .from('convoys')
+    .update({
+      source_lat: null,
+      source_lng: null,
+      source_name: '',
+      phase: 'forming',
+      assembled_members: [],
+    })
+    .eq('id', convoyId)
 }
 
 export async function transitionPhase(convoyId: string, phase: string): Promise<void> {
-  const data: Record<string, unknown> = { phase }
-  if (phase === 'assembling') {
-    data.assembled_members = []
-  }
-  await pb.collection('convoys').update(convoyId, data)
+  const update = phase === 'assembling' ? { phase, assembled_members: [] } : { phase }
+  await supabase.from('convoys').update(update).eq('id', convoyId)
 }
 
 export async function endConvoy(convoyId: string): Promise<void> {
-  await pb.collection('convoys').update(convoyId, { status: 'ended', phase: 'completed' })
-  const members = await pb.collection('convoy_members').getFullList({
-    filter: `convoy = "${convoyId}" && status = "active"`,
-  })
-  for (const member of members) {
-    await pb.collection('convoy_members').update(member.id, { status: 'inactive' })
+  await supabase.from('convoys').update({ status: 'ended', phase: 'completed' }).eq('id', convoyId)
+  const { data: members } = await supabase
+    .from('convoy_members')
+    .select('id')
+    .eq('convoy', convoyId)
+    .eq('status', 'active')
+  for (const member of members || []) {
+    await supabase.from('convoy_members').update({ status: 'inactive' }).eq('id', member.id)
   }
 }
 
 export async function markMemberInactive(memberId: string): Promise<void> {
-  await pb.collection('convoy_members').update(memberId, { status: 'inactive' })
+  await supabase.from('convoy_members').update({ status: 'inactive' }).eq('id', memberId)
 }
 
 export async function cleanupStaleConvoys(): Promise<number> {
   const threshold = new Date(Date.now() - INACTIVE_THRESHOLD_MS).toISOString()
-  const stale = await pb.collection('convoys').getFullList({
-    filter: `status = "active" && created < "${threshold}"`,
-  })
-  for (const convoy of stale) {
+  const { data: stale } = await supabase
+    .from('convoys')
+    .select('id')
+    .eq('status', 'active')
+    .lt('created_at', threshold)
+  for (const convoy of stale || []) {
     await endConvoy(convoy.id)
   }
-  return stale.length
+  return (stale || []).length
 }
 
 export function startSessionCleanup(): void {

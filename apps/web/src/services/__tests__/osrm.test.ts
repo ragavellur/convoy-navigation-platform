@@ -1,5 +1,6 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { formatDistance, formatDuration, getRouteSummary, getRoute } from '../osrm'
+import type { RouteResponse } from '../../types'
 
 describe('formatDistance', () => {
   it('formats meters under 1000', () => expect(formatDistance(500)).toBe('500 m'))
@@ -15,14 +16,14 @@ describe('formatDuration', () => {
 
 describe('getRouteSummary', () => {
   it('extracts summary from route', () => {
-    const route = {
+    const route: RouteResponse['routes'][0] = {
       distance: 50000,
       duration: 1800,
       legs: [
         { steps: [{ name: 'Start', distance: 100, duration: 10 }], distance: 100, duration: 10 },
       ],
-    }
-    const summary = getRouteSummary(route as any)
+    } as RouteResponse['routes'][0]
+    const summary = getRouteSummary(route)
     expect(summary.distance).toBe(50000)
     expect(summary.duration).toBe(1800)
     expect(summary.steps).toHaveLength(1)
@@ -34,6 +35,10 @@ describe('getRoute', () => {
   beforeEach(() => {
     vi.stubGlobal('fetch', mockFetch)
     mockFetch.mockReset()
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
   })
 
   const validResponse = {
@@ -50,7 +55,7 @@ describe('getRoute', () => {
     waypoints: [{ location: [0, 0], name: 'Start' }],
   }
 
-  it('fetches from local OSRM', async () => {
+  it('fetches from public OSRM with coordinates and timeout signal', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: () => Promise.resolve(validResponse),
@@ -58,32 +63,33 @@ describe('getRoute', () => {
     const result = await getRoute({ origin: [12, 34], destination: [56, 78] })
     expect(result.code).toBe('Ok')
     expect(mockFetch).toHaveBeenCalledWith(
-      expect.stringContaining('localhost:5001'),
+      expect.stringContaining('router.project-osrm.org'),
       expect.objectContaining({ signal: expect.any(AbortSignal) }),
     )
   })
 
-  it('falls back to public OSRM when local returns 0 distance', async () => {
-    mockFetch
-      .mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ code: 'Ok', routes: [{ distance: 0 }] }),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(validResponse),
-      })
-    const result = await getRoute({ origin: [12, 34], destination: [56, 78] })
-    expect(result.code).toBe('Ok')
+  it('throws when the OSRM request fails', async () => {
+    mockFetch.mockRejectedValueOnce(new Error('Network error'))
+    await expect(getRoute({ origin: [12, 34], destination: [56, 78] })).rejects.toThrow()
   })
 
-  it('falls back to public when local fails', async () => {
-    mockFetch.mockRejectedValueOnce(new Error('Local error')).mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve(validResponse),
+  it('throws on non-OK HTTP response', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 500,
+      json: () => Promise.resolve({}),
     })
-    const result = await getRoute({ origin: [12, 34], destination: [56, 78] })
-    expect(result.code).toBe('Ok')
+    await expect(getRoute({ origin: [12, 34], destination: [56, 78] })).rejects.toThrow('OSRM')
+  })
+
+  it('throws when OSRM returns an error code', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ code: 'NoRoute' }),
+    })
+    await expect(getRoute({ origin: [12, 34], destination: [56, 78] })).rejects.toThrow(
+      'OSRM error: NoRoute',
+    )
   })
 
   it('uses foot profile for walking routes', async () => {

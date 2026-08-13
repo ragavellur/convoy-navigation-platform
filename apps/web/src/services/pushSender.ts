@@ -1,4 +1,4 @@
-import pb from './pocketbase'
+import supabase from './supabaseClient'
 
 export interface PushPayload {
   title: string
@@ -11,13 +11,19 @@ async function getSimulationServiceUrl(): Promise<string> {
 }
 
 async function sendPushNotification(convoyId: string, payload: PushPayload): Promise<void> {
-  if (!pb.authStore.isValid) return
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+  if (!session) return
 
   try {
     const baseUrl = await getSimulationServiceUrl()
     await fetch(`${baseUrl}/simulation/api/push/send`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`,
+      },
       body: JSON.stringify({ convoyId, ...payload }),
     })
   } catch (err) {

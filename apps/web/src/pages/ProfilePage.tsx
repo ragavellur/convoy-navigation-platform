@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../hooks/useAuth'
-import pb from '../services/pocketbase'
+import supabase from '../services/supabaseClient'
 import {
   isPushSupported,
   getPushSubscription,
@@ -42,11 +42,12 @@ function ProfilePage() {
       if (!user) return
       setLoadingVehicles(true)
       try {
-        const records = await pb.collection('vehicles').getFullList({
-          filter: `owner = "${user.id}"`,
-          sort: '-created',
-        })
-        setVehicles(records as unknown as Vehicle[])
+        const { data } = await supabase
+          .from('vehicles')
+          .select('id, name, type, color, license_plate, status')
+          .eq('owner', user.id)
+          .order('created_at', { ascending: false })
+        setVehicles((data || []) as unknown as Vehicle[])
       } catch {
         // Collection may not exist yet
       } finally {
@@ -91,21 +92,23 @@ function ProfilePage() {
     setSavingVehicle(true)
     setError('')
     try {
-      await pb.collection('vehicles').create({
+      const { error } = await supabase.from('vehicles').insert({
         name: newVehicle.name.trim(),
         type: newVehicle.type,
-        color: newVehicle.color.trim() || undefined,
-        license_plate: newVehicle.type === 'trekker' ? undefined : newVehicle.license_plate.trim(),
-        owner: user?.id,
+        color: newVehicle.color.trim() || null,
+        license_plate: newVehicle.type === 'trekker' ? null : newVehicle.license_plate.trim(),
+        owner: user?.id ?? '',
         status: 'active',
       })
+      if (error) throw error
       setNewVehicle({ name: '', type: 'car', color: '', license_plate: '' })
       setShowAddVehicle(false)
-      const records = await pb.collection('vehicles').getFullList({
-        filter: `owner = "${user?.id}"`,
-        sort: '-created',
-      })
-      setVehicles(records as unknown as Vehicle[])
+      const { data } = await supabase
+        .from('vehicles')
+        .select('id, name, type, color, license_plate, status')
+        .eq('owner', user?.id ?? '')
+        .order('created_at', { ascending: false })
+      setVehicles((data || []) as unknown as Vehicle[])
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to add vehicle')
     } finally {
@@ -115,7 +118,8 @@ function ProfilePage() {
 
   const handleDeleteVehicle = async (vehicleId: string) => {
     try {
-      await pb.collection('vehicles').delete(vehicleId)
+      const { error } = await supabase.from('vehicles').delete().eq('id', vehicleId)
+      if (error) throw error
       setVehicles((prev) => prev.filter((v) => v.id !== vehicleId))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to remove vehicle')
