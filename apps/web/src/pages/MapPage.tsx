@@ -18,6 +18,7 @@ import {
   unsubscribePositions,
   resetPositionThreshold,
   setPositionPublishingEnabled,
+  isSimulationMode,
   startHeartbeat,
   stopHeartbeat,
   buildMemberDisplayPositions,
@@ -474,10 +475,10 @@ function MapPage() {
             ? (JSON.parse(rawSettings) as Record<string, unknown>)
             : rawSettings || {}
         ) as Record<string, unknown>
-        const simActive = settings.simulation_active === true
-        setPositionPublishingEnabled(convoyStatusRef.current === 'active' && !simActive)
+        const simMode = isSimulationMode(settings)
+        setPositionPublishingEnabled(convoyStatusRef.current === 'active' && !simMode)
         vehicleId = memberRecord?.vehicle || null
-        if (vehicleId && convoyStatusRef.current === 'active' && !simActive) {
+        if (vehicleId && convoyStatusRef.current === 'active' && !simMode) {
           startHeartbeat(vehicleId, convoyId)
         }
       } catch {
@@ -673,6 +674,7 @@ function MapPage() {
 
     let vehicleId: string | null = null
     let simulationActive = false
+    let simMode = false
 
     const resolveVehicleId = async () => {
       try {
@@ -708,12 +710,13 @@ function MapPage() {
             : convoy?.settings || {}
         ) as Record<string, unknown>
         simulationActive = !!settings.simulation_active
+        simMode = isSimulationMode(settings)
         setSimActive(simulationActive)
         setSimChecked(true)
         setConvoyType(convoy?.convoy_type as 'vehicle' | 'trekker')
         convoyStatusRef.current =
           (convoy?.status as 'not_started' | 'active' | 'paused' | 'ended' | undefined) ?? 'active'
-        setPositionPublishingEnabled(convoyStatusRef.current === 'active' && !simulationActive)
+        setPositionPublishingEnabled(convoyStatusRef.current === 'active' && !simMode)
       } catch {
         simulationActive = false
         setSimChecked(true)
@@ -740,18 +743,19 @@ function MapPage() {
               : record.settings || {}
           ) as Record<string, unknown>
           simulationActive = !!settings.simulation_active
+          simMode = isSimulationMode(settings)
           setSimActive(simulationActive)
           setSimChecked(true)
           if (record.status) {
             convoyStatusRef.current = record.status as 'not_started' | 'active' | 'paused' | 'ended'
           }
-          setPositionPublishingEnabled(convoyStatusRef.current === 'active' && !simulationActive)
+          setPositionPublishingEnabled(convoyStatusRef.current === 'active' && !simMode)
         },
       )
       .subscribe()
 
     const publish = async () => {
-      if (simulationActive) return
+      if (simMode) return
       if (convoyStatusRef.current !== 'active') return
       if (!vehicleId) {
         await resolveVehicleId()

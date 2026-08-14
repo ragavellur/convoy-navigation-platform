@@ -340,6 +340,7 @@ async function handleSimulationStart(userId: string, body: Record<string, unknow
   })
   const settings = parseSettings(convoy.settings)
   settings.simulation_active = true
+  settings.simulation_mode = true
   settings.simulation = plan
   await patchConvoy(convoy.id, { settings })
 

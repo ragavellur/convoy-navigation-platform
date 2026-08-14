@@ -195,7 +195,9 @@ function ConvoyPage() {
         destName && destLat !== null && destLng !== null
           ? { ...baseData, dest_name: destName, dest_lat: destLat, dest_lng: destLng }
           : baseData
-      const settingsData = enableSimulation ? { settings: { simulation_active: false } } : {}
+      const settingsData = enableSimulation
+        ? { settings: { simulation_mode: true, simulation_active: false } }
+        : {}
       const { data: newConvoy, error: convoyError } = await supabase
         .from('convoys')
         .insert({ ...insertData, ...settingsData })

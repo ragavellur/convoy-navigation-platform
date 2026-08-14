@@ -103,6 +103,19 @@ export function setPositionPublishingEnabled(enabled: boolean): void {
 }
 
 /**
+ * Determine whether a convoy is a simulation convoy based on its settings.
+ * A convoy is simulation-mode when it was created (or marked) for simulation
+ * via `simulation_mode`, or when the `simulation_active` key is present at
+ * all — the flag that the simulation UI writes when a convoy is created with
+ * "Enable simulation mode" or has run a simulation. Simulation convoys must
+ * never publish real GPS positions, even while the simulation is not running.
+ */
+export function isSimulationMode(settings: Record<string, unknown> | null | undefined): boolean {
+  if (!settings || typeof settings !== 'object') return false
+  return settings.simulation_mode === true || settings.simulation_active !== undefined
+}
+
+/**
  * Check whether a convoy's simulation is currently active by reading the
  * convoy's settings directly. This is the authoritative gate for GPS
  * publishing so that no client-local state (stale realtime, mount races)
@@ -120,7 +133,7 @@ export async function isConvoySimulationActive(convoyId: string): Promise<boolea
       typeof data.settings === 'string'
         ? (JSON.parse(data.settings) as Record<string, unknown>)
         : (data.settings as Record<string, unknown>)
-    return settings.simulation_active === true
+    return isSimulationMode(settings)
   } catch {
     return false
   }

@@ -28,6 +28,7 @@ import {
   setPositionPublishingEnabled,
   unsubscribePositions,
   buildMemberDisplayPositions,
+  isSimulationMode,
 } from '../positionTracking'
 
 const positionRow = {
@@ -162,14 +163,32 @@ describe('position publishing gate', () => {
     expect(harness.findOps('positions')).toHaveLength(0)
   })
 
-  it('publishes when the convoy simulation is not active', async () => {
+  it('publishes when the convoy is a real convoy without sim markers', async () => {
     harness
       .mockFor('convoys', 'select')
-      .mockResolvedValueOnce({ data: { settings: { simulation_active: false } }, error: null })
+      .mockResolvedValueOnce({ data: { settings: {} }, error: null })
     harness.mockFor('positions', 'select').mockResolvedValueOnce({ data: null, error: null })
     harness.mockFor('positions', 'upsert').mockResolvedValueOnce({ data: positionRow, error: null })
     const result = await publishPosition({ vehicleId: 'v1', convoyId: 'c1', lat: 10, lng: 20 })
     expect(result).not.toBeNull()
+  })
+
+  it('blocks publishPosition for a simulation-mode convoy even when the sim is off', async () => {
+    harness
+      .mockFor('convoys', 'select')
+      .mockResolvedValueOnce({ data: { settings: { simulation_active: false } }, error: null })
+    const result = await publishPosition({ vehicleId: 'v1', convoyId: 'c1', lat: 10, lng: 20 })
+    expect(result).toBeNull()
+    expect(harness.findOps('positions')).toHaveLength(0)
+  })
+
+  it('blocks publishPosition for a convoy marked with simulation_mode', async () => {
+    harness
+      .mockFor('convoys', 'select')
+      .mockResolvedValueOnce({ data: { settings: { simulation_mode: true } }, error: null })
+    const result = await publishPosition({ vehicleId: 'v1', convoyId: 'c1', lat: 10, lng: 20 })
+    expect(result).toBeNull()
+    expect(harness.findOps('positions')).toHaveLength(0)
   })
 
   it('does not queue pending positions while the convoy simulation is active', async () => {
@@ -213,6 +232,40 @@ describe('flushPendingPositions', () => {
     expect(count).toBe(0)
     expect(mocks.mockRemovePendingPosition).toHaveBeenCalledWith('p1')
     expect(harness.findOps('positions')).toHaveLength(0)
+  })
+
+  it('drops pending positions for a simulation-mode convoy even when the sim is off', async () => {
+    mocks.mockGetPendingPositions.mockResolvedValueOnce([
+      { id: 'p1', vehicleId: 'v1', convoyId: 'c1', lat: 10, lng: 20 },
+    ])
+    harness
+      .mockFor('convoys', 'select')
+      .mockResolvedValueOnce({ data: { settings: { simulation_active: false } }, error: null })
+    mocks.mockRemovePendingPosition.mockResolvedValueOnce(undefined)
+    const count = await flushPendingPositions()
+    expect(count).toBe(0)
+    expect(mocks.mockRemovePendingPosition).toHaveBeenCalledWith('p1')
+    expect(harness.findOps('positions')).toHaveLength(0)
+  })
+})
+
+describe('isSimulationMode', () => {
+  it('returns false for null or empty settings', () => {
+    expect(isSimulationMode(null)).toBe(false)
+    expect(isSimulationMode(undefined)).toBe(false)
+    expect(isSimulationMode({})).toBe(false)
+  })
+
+  it('returns true when simulation is actively running', () => {
+    expect(isSimulationMode({ simulation_active: true })).toBe(true)
+  })
+
+  it('returns true when the sim key is present but the sim is off', () => {
+    expect(isSimulationMode({ simulation_active: false })).toBe(true)
+  })
+
+  it('returns true when explicitly marked as simulation_mode', () => {
+    expect(isSimulationMode({ simulation_mode: true, simulation_active: false })).toBe(true)
   })
 })
 

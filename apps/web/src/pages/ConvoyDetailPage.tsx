@@ -622,7 +622,7 @@ function ConvoyDetailPage() {
 
               <div className="border-t border-[var(--border)] pt-4 mt-4">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-medium text-[var(--text)]">Simulation Mode</h3>
+                  <h3 className="text-sm font-medium text-[var(--text)]">Simulation Convoy</h3>
                   <button
                     onClick={handleToggleSimulationMode}
                     disabled={simLoading}
@@ -641,7 +641,8 @@ function ConvoyDetailPage() {
                 {isSimulationEnabled && (
                   <div className="space-y-3">
                     <p className="text-xs text-[var(--warning-text)] rounded-lg p-2 warning-banner">
-                      Simulation mode enabled. Real GPS positions are disabled for this convoy.
+                      Simulation mode enabled. This convoy is simulation-only — real GPS positions
+                      are permanently disabled for it.
                     </p>
 
                     <div className="flex items-center gap-2">
