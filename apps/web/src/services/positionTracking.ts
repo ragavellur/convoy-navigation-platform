@@ -102,6 +102,30 @@ export function setPositionPublishingEnabled(enabled: boolean): void {
   }
 }
 
+/**
+ * Check whether a convoy's simulation is currently active by reading the
+ * convoy's settings directly. This is the authoritative gate for GPS
+ * publishing so that no client-local state (stale realtime, mount races)
+ * can overwrite simulated positions with real GPS fixes.
+ */
+export async function isConvoySimulationActive(convoyId: string): Promise<boolean> {
+  try {
+    const { data } = await supabase
+      .from('convoys')
+      .select('settings')
+      .eq('id', convoyId)
+      .maybeSingle()
+    if (!data?.settings) return false
+    const settings =
+      typeof data.settings === 'string'
+        ? (JSON.parse(data.settings) as Record<string, unknown>)
+        : (data.settings as Record<string, unknown>)
+    return settings.simulation_active === true
+  } catch {
+    return false
+  }
+}
+
 export function isPositionPublishingEnabled(): boolean {
   return publishingEnabled
 }
@@ -201,6 +225,10 @@ export async function publishPosition(params: {
     return null
   }
 
+  if (await isConvoySimulationActive(params.convoyId)) {
+    return null
+  }
+
   if (!hasMovedSignificantly(params.lat, params.lng, params.vehicleId)) {
     return null
   }
@@ -281,6 +309,10 @@ export async function flushPendingPositions(): Promise<number> {
   let flushed = 0
 
   for (const pos of pending) {
+    if (await isConvoySimulationActive(pos.convoyId)) {
+      await removePendingPosition(pos.id)
+      continue
+    }
     try {
       const payload = buildPayload({
         vehicleId: pos.vehicleId,
@@ -326,6 +358,7 @@ export async function subscribeToConvoyPositions(
       'postgres_changes',
       { event: '*', schema: 'public', table: 'positions', filter: `convoy=eq.${convoyId}` },
       (payload) => {
+        if (!payload.new) return
         const row = payload.new as {
           id: string
           vehicle: string

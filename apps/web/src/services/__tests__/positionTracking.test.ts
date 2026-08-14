@@ -152,6 +152,35 @@ describe('position publishing gate', () => {
     const result = await publishPosition({ vehicleId: 'v1', convoyId: 'c1', lat: 10, lng: 20 })
     expect(result).not.toBeNull()
   })
+
+  it('blocks publishPosition while the convoy simulation is active', async () => {
+    harness
+      .mockFor('convoys', 'select')
+      .mockResolvedValueOnce({ data: { settings: { simulation_active: true } }, error: null })
+    const result = await publishPosition({ vehicleId: 'v1', convoyId: 'c1', lat: 10, lng: 20 })
+    expect(result).toBeNull()
+    expect(harness.findOps('positions')).toHaveLength(0)
+  })
+
+  it('publishes when the convoy simulation is not active', async () => {
+    harness
+      .mockFor('convoys', 'select')
+      .mockResolvedValueOnce({ data: { settings: { simulation_active: false } }, error: null })
+    harness.mockFor('positions', 'select').mockResolvedValueOnce({ data: null, error: null })
+    harness.mockFor('positions', 'upsert').mockResolvedValueOnce({ data: positionRow, error: null })
+    const result = await publishPosition({ vehicleId: 'v1', convoyId: 'c1', lat: 10, lng: 20 })
+    expect(result).not.toBeNull()
+  })
+
+  it('does not queue pending positions while the convoy simulation is active', async () => {
+    harness
+      .mockFor('convoys', 'select')
+      .mockResolvedValueOnce({ data: { settings: { simulation_active: true } }, error: null })
+    vi.stubGlobal('navigator', { onLine: false })
+    const result = await publishPosition({ vehicleId: 'v1', convoyId: 'c1', lat: 10, lng: 20 })
+    expect(result).toBeNull()
+    expect(mocks.mockQueuePendingPosition).not.toHaveBeenCalled()
+  })
 })
 
 describe('flushPendingPositions', () => {
@@ -171,6 +200,20 @@ describe('flushPendingPositions', () => {
     expect(count).toBe(1)
     expect(mocks.mockRemovePendingPosition).toHaveBeenCalledWith('p1')
   })
+
+  it('drops pending positions for a convoy with an active simulation', async () => {
+    mocks.mockGetPendingPositions.mockResolvedValueOnce([
+      { id: 'p1', vehicleId: 'v1', convoyId: 'c1', lat: 10, lng: 20 },
+    ])
+    harness
+      .mockFor('convoys', 'select')
+      .mockResolvedValueOnce({ data: { settings: { simulation_active: true } }, error: null })
+    mocks.mockRemovePendingPosition.mockResolvedValueOnce(undefined)
+    const count = await flushPendingPositions()
+    expect(count).toBe(0)
+    expect(mocks.mockRemovePendingPosition).toHaveBeenCalledWith('p1')
+    expect(harness.findOps('positions')).toHaveLength(0)
+  })
 })
 
 describe('subscribeToConvoyPositions', () => {
@@ -189,6 +232,14 @@ describe('subscribeToConvoyPositions', () => {
     handler({ eventType: 'INSERT', new: positionRow })
     expect(onPosition).toHaveBeenCalledTimes(1)
     expect(onPosition.mock.calls[0][0]).toMatchObject({ id: 'p1', lat: 10, lng: 20, convoy: 'c1' })
+  })
+
+  it('ignores DELETE events without crashing', async () => {
+    const onPosition = vi.fn()
+    await subscribeToConvoyPositions('c1', onPosition)
+    const handler = harness.channels[0].handlers[0].handler
+    expect(() => handler({ eventType: 'DELETE', new: null, old: positionRow })).not.toThrow()
+    expect(onPosition).not.toHaveBeenCalled()
   })
 
   it('cleans up previous subscription', async () => {

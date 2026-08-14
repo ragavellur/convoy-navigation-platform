@@ -196,6 +196,29 @@ function ConvoyDetailPage() {
   }, [id, loadConvoy, loadMembers])
 
   useEffect(() => {
+    if (!id) return
+    const simChannel = supabase
+      .channel(`convoy-detail-sim-${id}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'convoys', filter: `id=eq.${id}` },
+        (payload) => {
+          const record = payload.new as { settings?: unknown; phase?: string }
+          const settings = (
+            typeof record.settings === 'string'
+              ? (JSON.parse(record.settings) as Record<string, unknown>)
+              : record.settings || {}
+          ) as Record<string, unknown>
+          setSimRunning(settings.simulation_active === true)
+        },
+      )
+      .subscribe()
+    return () => {
+      void supabase.removeChannel(simChannel)
+    }
+  }, [id])
+
+  useEffect(() => {
     if (!id || !simRunning) return
     const tick = () => {
       simulationTick(id).catch(() => {})

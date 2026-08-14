@@ -464,13 +464,20 @@ function MapPage() {
             .eq('status', 'active')
             .limit(1)
             .maybeSingle(),
-          supabase.from('convoys').select('status').eq('id', convoyId).maybeSingle(),
+          supabase.from('convoys').select('status, settings').eq('id', convoyId).maybeSingle(),
         ])
         convoyStatusRef.current =
           (convoy?.status as 'not_started' | 'active' | 'paused' | 'ended' | undefined) ?? 'active'
-        setPositionPublishingEnabled(convoyStatusRef.current === 'active')
+        const rawSettings = convoy?.settings as unknown
+        const settings = (
+          typeof rawSettings === 'string'
+            ? (JSON.parse(rawSettings) as Record<string, unknown>)
+            : rawSettings || {}
+        ) as Record<string, unknown>
+        const simActive = settings.simulation_active === true
+        setPositionPublishingEnabled(convoyStatusRef.current === 'active' && !simActive)
         vehicleId = memberRecord?.vehicle || null
-        if (vehicleId && convoyStatusRef.current === 'active') {
+        if (vehicleId && convoyStatusRef.current === 'active' && !simActive) {
           startHeartbeat(vehicleId, convoyId)
         }
       } catch {
@@ -715,9 +722,10 @@ function MapPage() {
 
     const init = async () => {
       await Promise.all([resolveVehicleId(), checkSimulation()])
+      await publish()
     }
 
-    init()
+    setPositionPublishingEnabled(false)
 
     const simChannel = supabase
       .channel(`convoy-sim-${convoyId}`)
@@ -736,8 +744,8 @@ function MapPage() {
           setSimChecked(true)
           if (record.status) {
             convoyStatusRef.current = record.status as 'not_started' | 'active' | 'paused' | 'ended'
-            setPositionPublishingEnabled(convoyStatusRef.current === 'active' && !simulationActive)
           }
+          setPositionPublishingEnabled(convoyStatusRef.current === 'active' && !simulationActive)
         },
       )
       .subscribe()
@@ -762,9 +770,9 @@ function MapPage() {
       }).catch(() => {})
     }
 
-    publish()
-
     const unsub = geoStream.onPosition(() => publish())
+
+    void init()
 
     return () => {
       unsub()
