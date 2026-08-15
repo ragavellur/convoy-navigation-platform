@@ -1564,6 +1564,12 @@
           "title": "Share my location: revocable live-location links + Google sign-in with silent account merge",
           "status": "in-progress",
           "priority": "high"
+        },
+        {
+          "id": "TASK-220",
+          "title": "Improve Indian address search (Nominatim India filter + multilingual + formatted display)",
+          "status": "in-progress",
+          "priority": "high"
         }
       ]
     }
