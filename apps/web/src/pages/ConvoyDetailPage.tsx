@@ -2,7 +2,21 @@ import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import supabase from '../services/supabaseClient'
 import { generateDeepLink } from '../services/deepLink'
-import { shareViaWhatsApp, shareViaSMS, shareViaEmail } from '../services/share'
+import {
+  shareViaWhatsApp,
+  shareViaSMS,
+  shareViaEmail,
+  shareUrlViaWhatsApp,
+  shareUrlViaSMS,
+  shareUrlViaEmail,
+  shareUrlNative,
+} from '../services/share'
+import {
+  createLocationShare,
+  findActiveShare,
+  revokeShare,
+  buildShareUrl,
+} from '../services/shareLocation'
 import ConvoyTypeBadge from '../components/ConvoyTypeBadge'
 import StatusBadge from '../components/StatusBadge'
 import { subscribeToConvoyNotifications, type ConvoyNotification } from '../services/notifications'
@@ -76,6 +90,13 @@ function ConvoyDetailPage() {
   const [waitAtMeeting, setWaitAtMeeting] = useState(true)
   const [simLoading, setSimLoading] = useState(false)
   const [simError, setSimError] = useState('')
+
+  const [showShareModal, setShowShareModal] = useState(false)
+  const [shareLoading, setShareLoading] = useState(false)
+  const [shareError, setShareError] = useState('')
+  const [shareUrl, setShareUrl] = useState('')
+  const [shareId, setShareId] = useState('')
+  const [shareCopied, setShareCopied] = useState(false)
 
   const isHost = convoy?.owner === user?.id
 
@@ -308,6 +329,56 @@ function ConvoyDetailPage() {
     await navigator.clipboard.writeText(link)
   }
 
+  const openShareModal = async () => {
+    if (!convoy) return
+    setShowShareModal(true)
+    setShareLoading(true)
+    setShareError('')
+    setShareCopied(false)
+    try {
+      const existing = await findActiveShare(convoy.id)
+      if (existing) {
+        setShareId(existing.id)
+        setShareUrl(buildShareUrl(existing.token))
+        return
+      }
+      const created = await createLocationShare(convoy.id, convoy.name)
+      if (!created) {
+        setShareError('Could not create a share link. Please try again.')
+        return
+      }
+      setShareId(created.shareId)
+      setShareUrl(buildShareUrl(created.token))
+    } catch (err) {
+      setShareError(err instanceof Error ? err.message : 'Failed to create share link')
+    } finally {
+      setShareLoading(false)
+    }
+  }
+
+  const handleCopyShareUrl = async () => {
+    if (!shareUrl) return
+    await navigator.clipboard.writeText(shareUrl)
+    setShareCopied(true)
+    setTimeout(() => setShareCopied(false), 2000)
+  }
+
+  const handleRevokeShare = async () => {
+    if (!shareId) return
+    setShareLoading(true)
+    setShareError('')
+    try {
+      await revokeShare(shareId)
+      setShowShareModal(false)
+      setShareUrl('')
+      setShareId('')
+    } catch (err) {
+      setShareError(err instanceof Error ? err.message : 'Failed to revoke share link')
+    } finally {
+      setShareLoading(false)
+    }
+  }
+
   const handleGoToMap = () => {
     navigate(`/map?convoy=${id}`)
   }
@@ -537,6 +608,14 @@ function ConvoyDetailPage() {
                 >
                   Open Map
                 </button>
+                {isHost && (
+                  <button
+                    onClick={openShareModal}
+                    className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg text-[var(--primary)] hover:bg-[var(--surface-hover)] transition-colors border border-[var(--primary-border-strong)]"
+                  >
+                    Share Live Location
+                  </button>
+                )}
               </div>
             </div>
             <div className="space-y-3">
@@ -817,6 +896,124 @@ function ConvoyDetailPage() {
           </div>
         </div>
       </div>
+
+      {showShareModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl p-6 space-y-4 card">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold text-[var(--text)]">Share live location</h3>
+              <button
+                onClick={() => setShowShareModal(false)}
+                className="p-1 text-[var(--text2)] hover:text-[var(--text)] transition-colors"
+                aria-label="Close"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {shareLoading ? (
+              <p className="text-sm text-[var(--text2)]">Creating your share link…</p>
+            ) : shareUrl ? (
+              <>
+                <p className="text-xs text-[var(--text2)]">
+                  Anyone signed in with this link can watch this trip live on the map. The link
+                  stays active until you revoke it.
+                </p>
+                <div className="flex items-center gap-2">
+                  <input
+                    readOnly
+                    value={shareUrl}
+                    onFocus={(e) => e.currentTarget.select()}
+                    className="input-field flex-1 px-3 py-2 text-xs rounded-lg bg-[var(--surface)] text-[var(--text)] border border-[var(--border)]"
+                  />
+                  <button
+                    onClick={handleCopyShareUrl}
+                    className="shrink-0 inline-flex items-center px-3 py-2 text-xs font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-500 transition-colors"
+                  >
+                    {shareCopied ? 'Copied!' : 'Copy'}
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() =>
+                      shareUrlViaWhatsApp(
+                        shareUrl,
+                        `Track my live location${convoy?.name ? ` on "${convoy.name}"` : ''}!`,
+                      )
+                    }
+                    className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg text-[var(--text2)] hover:text-[var(--text)] transition-colors border border-[var(--border)]"
+                  >
+                    WhatsApp
+                  </button>
+                  <button
+                    onClick={() =>
+                      shareUrlViaSMS(
+                        shareUrl,
+                        `Track my live location${convoy?.name ? ` on "${convoy.name}"` : ''}!`,
+                      )
+                    }
+                    className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg text-[var(--text2)] hover:text-[var(--text)] transition-colors border border-[var(--border)]"
+                  >
+                    SMS
+                  </button>
+                  <button
+                    onClick={() =>
+                      shareUrlViaEmail(
+                        shareUrl,
+                        `Live location: ${convoy?.name || 'My trip'}`,
+                        'Track my live location on the map.',
+                      )
+                    }
+                    className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg text-[var(--text2)] hover:text-[var(--text)] transition-colors border border-[var(--border)]"
+                  >
+                    Email
+                  </button>
+                  <button
+                    onClick={() =>
+                      void shareUrlNative(
+                        shareUrl,
+                        `Live location: ${convoy?.name || 'My trip'}`,
+                        'Track my live location on the map.',
+                      )
+                    }
+                    className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg text-[var(--text2)] hover:text-[var(--text)] transition-colors border border-[var(--border)]"
+                  >
+                    More
+                  </button>
+                </div>
+                <button
+                  onClick={handleRevokeShare}
+                  disabled={shareLoading}
+                  className="w-full inline-flex justify-center px-3 py-2 text-xs font-medium rounded-lg text-[var(--error-text)] hover:bg-[var(--error-bg)] transition-colors border border-[var(--danger-border-light)] disabled:opacity-50"
+                >
+                  Revoke link (stop access)
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="text-sm text-[var(--text2)]">
+                  {shareError || 'Something went wrong creating the share link.'}
+                </p>
+                {shareError && (
+                  <button
+                    onClick={openShareModal}
+                    className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-500 transition-colors"
+                  >
+                    Retry
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

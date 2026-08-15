@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import GoogleSignInButton from '../components/GoogleSignInButton'
 
 function RegisterPage() {
   const [name, setName] = useState('')
@@ -77,7 +78,15 @@ function RegisterPage() {
             </Link>
           </p>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <div className="space-y-4">
+          <GoogleSignInButton redirectTo="/" label="Sign up with Google" />
+          <div className="flex items-center gap-3">
+            <div className="flex-1 border-t border-[var(--border)]" />
+            <span className="text-xs text-[var(--text2)]">or register with email</span>
+            <div className="flex-1 border-t border-[var(--border)]" />
+          </div>
+        </div>
+        <form className="mt-4 space-y-6" onSubmit={handleSubmit}>
           {confirmationSent && (
             <div className="success-banner rounded-xl p-4">
               <div className="text-sm text-[var(--success-text)]">

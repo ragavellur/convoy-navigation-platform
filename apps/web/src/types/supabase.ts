@@ -481,12 +481,72 @@ export type Database = {
         }
         Relationships: []
       }
+      location_shares: {
+        Row: {
+          convoy: string
+          created_at: string
+          display_name: string | null
+          id: string
+          owner: string
+          status: string
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          convoy: string
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          owner?: string
+          status?: string
+          token: string
+          updated_at?: string
+        }
+        Update: {
+          convoy?: string
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          owner?: string
+          status?: string
+          token?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'location_shares_convoy_fkey'
+            columns: ['convoy']
+            isOneToOne: false
+            referencedRelation: 'convoys'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'location_shares_owner_fkey'
+            columns: ['owner']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      resolve_share_token: {
+        Args: {
+          token: string
+        }
+        Returns: {
+          convoy: string
+          convoy_name: string | null
+          owner_name: string | null
+          phase: string
+          display_name: string | null
+          status: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

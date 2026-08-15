@@ -51,3 +51,31 @@ export async function shareNative(
     return false
   }
 }
+
+export function shareUrlViaWhatsApp(url: string, message: string): void {
+  const text = `${message}\n${url}`
+  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
+}
+
+export function shareUrlViaSMS(url: string, message: string): void {
+  const body = `${message}\n${url}`
+  window.open(`sms:?body=${encodeURIComponent(body)}`, '_blank')
+}
+
+export function shareUrlViaEmail(url: string, subject: string, body: string): void {
+  const fullBody = `${body}\n\n${url}`
+  window.open(
+    `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(fullBody)}`,
+    '_blank',
+  )
+}
+
+export async function shareUrlNative(url: string, title: string, text: string): Promise<boolean> {
+  if (!navigator.share) return false
+  try {
+    await navigator.share({ title, text, url })
+    return true
+  } catch {
+    return false
+  }
+}

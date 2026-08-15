@@ -13,7 +13,7 @@ import { vi } from 'vitest'
  *     return { default: harness.supabase }
  *   })
  */
-export type SupabaseOp = 'select' | 'insert' | 'upsert' | 'update' | 'delete'
+export type SupabaseOp = 'select' | 'insert' | 'upsert' | 'update' | 'delete' | 'rpc'
 
 export interface RecordedOp {
   table: string
@@ -60,6 +60,14 @@ export interface AuthMock {
   user: { id: string } | null
 }
 
+export interface AuthMockAPI {
+  getSession: () => Promise<{ data: { session: AuthMock['session'] } }>
+  getUser: () => Promise<{ data: { user: AuthMock['user'] } }>
+  signInWithOAuth: ReturnType<typeof vi.fn>
+  linkIdentity: ReturnType<typeof vi.fn>
+  getUserIdentities: ReturnType<typeof vi.fn>
+}
+
 export interface QueryBuilder {
   select: (columns: string) => QueryBuilder
   eq: (column: string, value: unknown) => QueryBuilder
@@ -82,13 +90,11 @@ export interface QueryBuilder {
 export interface SupabaseHarness {
   supabase: {
     from: (table: string) => QueryBuilder
+    rpc: (fn: string, args: Record<string, unknown>) => Promise<SupabaseResult>
     channel: (name: string) => ChannelAPI
     removeChannel: (channel: ChannelAPI) => void
     removeAllChannels: () => void
-    auth: {
-      getSession: () => Promise<{ data: { session: AuthMock['session'] } }>
-      getUser: () => Promise<{ data: { user: AuthMock['user'] } }>
-    }
+    auth: AuthMockAPI
   }
   ops: RecordedOp[]
   channels: ChannelMock[]
@@ -180,6 +186,13 @@ export function createHarness(): SupabaseHarness {
 
   const supabase: SupabaseHarness['supabase'] = {
     from: (table: string) => createBuilder(table),
+    rpc(fn: string, args: Record<string, unknown>) {
+      const recorded: RecordedOp = { table: fn, op: 'rpc', payload: args, filters: {} }
+      ops.push(recorded)
+      const key = `${fn}|rpc`
+      const handler = (handlers.get(key) ?? defaultResult) as (op: RecordedOp) => SupabaseResult
+      return Promise.resolve(handler(recorded))
+    },
     channel(name: string): ChannelAPI {
       const record: ChannelMock = { name, handlers: [], removed: false }
       channels.push(record)
@@ -212,6 +225,9 @@ export function createHarness(): SupabaseHarness {
     auth: {
       getSession: () => Promise.resolve({ data: { session: auth.session } }),
       getUser: () => Promise.resolve({ data: { user: auth.user } }),
+      signInWithOAuth: vi.fn(async () => ({ data: { url: '' }, error: null })),
+      linkIdentity: vi.fn(async () => ({ data: { url: '' }, error: null })),
+      getUserIdentities: vi.fn(async () => ({ data: { identities: [] }, error: null })),
     },
   }
 

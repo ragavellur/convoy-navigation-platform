@@ -7,6 +7,9 @@ import Layout from './components/Layout'
 import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
+import AuthCallbackPage from './pages/AuthCallbackPage'
+import LinkAccountPage from './pages/LinkAccountPage'
+import SharePage from './pages/SharePage'
 import MapPage from './pages/MapPage'
 import ConvoyPage from './pages/ConvoyPage'
 import ConvoyDetailPage from './pages/ConvoyDetailPage'
@@ -31,6 +34,9 @@ function App() {
                   <Route index element={<HomePage />} />
                   <Route path="login" element={<LoginPage />} />
                   <Route path="register" element={<RegisterPage />} />
+                  <Route path="auth/callback" element={<AuthCallbackPage />} />
+                  <Route path="link-account" element={<LinkAccountPage />} />
+                  <Route path="s/:token" element={<SharePage />} />
                   <Route path="join" element={<JoinPage />} />
                   <Route
                     path="map"
