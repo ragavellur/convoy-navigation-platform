@@ -1558,6 +1558,12 @@
           "title": "Simulation mode: render convoy members at join locations (no GPS publish, no join dots, locate/focus use join point)",
           "status": "done",
           "priority": "high"
+        },
+        {
+          "id": "TASK-216",
+          "title": "Share my location: revocable live-location links + Google sign-in with silent account merge",
+          "status": "in-progress",
+          "priority": "high"
         }
       ]
     }

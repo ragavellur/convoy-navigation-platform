@@ -394,6 +394,10 @@
 - [ ] [TASK-214] Tag v2.0.0 + production smoke test
 - [x] [TASK-215] Simulation mode: render convoy members at join locations (no GPS publish, no join dots, locate/focus use join point)
 
+### 🚧 In Progress
+
+- [ ] [TASK-216] Share my location: revocable live-location links + Google sign-in with silent account merge
+
 ---
 
 ## Sprint 12: Deploy & Launch (Week 23-24)
