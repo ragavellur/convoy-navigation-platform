@@ -118,6 +118,10 @@ function MapPage() {
   const computedAssemblyPoint: { lat: number; lng: number } | null = useMemo(() => {
     return assemblyPoint
   }, [assemblyPoint])
+  const isConvoyMember = useMemo(
+    () => members.some((m) => m.userId === user?.id),
+    [members, user?.id],
+  )
   const { theme } = useTheme()
 
   const memberVehicleMap = useRef<
@@ -638,6 +642,7 @@ function MapPage() {
 
   useEffect(() => {
     if (!simChecked || simActiveRef.current) return
+    if (!isConvoyMember) return
     if (!position || !routeRef.current) return
     const geometry = routeRef.current.geometry as RouteGeometry
     const offNow = checkOffRoute(position.lat, position.lng, geometry)
@@ -647,10 +652,11 @@ function MapPage() {
       notifyOffRoute(convoyId, user?.name || 'A member')
     }
     if (!offNow) offRoutePushSentRef.current = false
-  }, [position, convoyId, simActive, simChecked, routeRef, user])
+  }, [position, convoyId, simActive, simChecked, routeRef, user, isConvoyMember])
 
   useEffect(() => {
     if (!routeData || !position) return
+    if (!isConvoyMember) return
     if (offRouteTimerRef.current) clearInterval(offRouteTimerRef.current)
     offRouteTimerRef.current = setInterval(() => {
       if (!simCheckedRef.current || simActiveRef.current) return
@@ -667,7 +673,7 @@ function MapPage() {
     return () => {
       if (offRouteTimerRef.current) clearInterval(offRouteTimerRef.current)
     }
-  }, [routeData, position, convoyId, simActive, simChecked, user])
+  }, [routeData, position, convoyId, simActive, simChecked, user, isConvoyMember])
 
   useEffect(() => {
     if (!convoyId) return
