@@ -1,5 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { searchPlaces, NominatimResult } from '../services/nominatim'
+import {
+  searchPlaces,
+  localizedName,
+  formatIndianAddress,
+  NominatimResult,
+} from '../services/nominatim'
 import type { SearchResult } from '../types'
 
 interface SearchBarProps {
@@ -19,17 +24,30 @@ export default function SearchBar({ onResultSelect, onHoverResult, mapBounds }: 
   const dropdownRef = useRef<HTMLDivElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const toSearchResult = useCallback((result: NominatimResult): SearchResult => {
-    const boundingBox = result.boundingbox.map(Number) as [number, number, number, number]
-    return {
-      id: String(result.place_id),
-      name: result.display_name.split(',')[0],
-      displayName: result.display_name,
-      lat: parseFloat(result.lat),
-      lng: parseFloat(result.lon),
-      boundingBox,
-    }
+  const shortAddressName = useCallback((result: NominatimResult): string => {
+    const localized = localizedName(result)
+    if (localized) return localized
+    const address = result.address
+    if (address?.road) return address.road
+    if (address?.suburb) return address.suburb
+    if (address?.city) return address.city
+    return result.display_name.split(',')[0]
   }, [])
+
+  const toSearchResult = useCallback(
+    (result: NominatimResult): SearchResult => {
+      const boundingBox = result.boundingbox.map(Number) as [number, number, number, number]
+      return {
+        id: String(result.place_id),
+        name: shortAddressName(result),
+        displayName: result.display_name,
+        lat: parseFloat(result.lat),
+        lng: parseFloat(result.lon),
+        boundingBox,
+      }
+    },
+    [shortAddressName],
+  )
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -59,7 +77,7 @@ export default function SearchBar({ onResultSelect, onHoverResult, mapBounds }: 
           query,
           limit: 6,
           viewbox: mapBounds,
-          bounded: false,
+          bounded: true,
         })
         setResults(searchResults)
         setIsOpen(searchResults.length > 0)
@@ -186,10 +204,10 @@ export default function SearchBar({ onResultSelect, onHoverResult, mapBounds }: 
               }`}
             >
               <div className="text-sm font-medium text-[var(--text)] truncate">
-                {result.display_name.split(',')[0]}
+                {shortAddressName(result)}
               </div>
               <div className="text-xs text-[var(--text2)] truncate mt-0.5">
-                {result.display_name}
+                {formatIndianAddress(result)}
               </div>
             </button>
           ))}
