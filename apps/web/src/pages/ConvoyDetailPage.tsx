@@ -288,8 +288,9 @@ function ConvoyDetailPage() {
   const handleStartConvoy = async () => {
     if (!id || !convoy) return
     try {
-      await supabase.from('convoys').update({ status: 'active' }).eq('id', id)
-      setConvoy({ ...convoy, status: 'active' })
+      const nextPhase = convoy.phase === 'completed' ? 'forming' : convoy.phase
+      await supabase.from('convoys').update({ status: 'active', phase: nextPhase }).eq('id', id)
+      setConvoy({ ...convoy, status: 'active', phase: nextPhase })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to start convoy')
     }
@@ -560,6 +561,18 @@ function ConvoyDetailPage() {
         </div>
       )}
 
+      {convoy.status === 'ended' && isHost && (
+        <div className="mb-4 p-3 rounded-xl text-sm info-banner flex justify-between items-center gap-3">
+          <span>This convoy's session has ended. You can start it again to resume.</span>
+          <button
+            onClick={handleStartConvoy}
+            className="shrink-0 inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg text-white bg-green-600 hover:bg-green-500 transition-colors"
+          >
+            Start Again
+          </button>
+        </div>
+      )}
+
       {showNotifications && notifications.length > 0 && (
         <div className="mb-4 p-3 rounded-xl text-sm info-banner flex justify-between items-center">
           <span>{notifications[0].message}</span>
@@ -683,6 +696,14 @@ function ConvoyDetailPage() {
                     className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg text-[var(--success-text)] hover:bg-[var(--success-bg)] transition-colors border border-[var(--success-border-light)]"
                   >
                     Start Convoy
+                  </button>
+                )}
+                {convoy.status === 'ended' && (
+                  <button
+                    onClick={handleStartConvoy}
+                    className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg text-[var(--success-text)] hover:bg-[var(--success-bg)] transition-colors border border-[var(--success-border-light)]"
+                  >
+                    Start Again
                   </button>
                 )}
                 <button
@@ -898,16 +919,16 @@ function ConvoyDetailPage() {
       </div>
 
       {showShareModal && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl p-6 space-y-4 card">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/70">
+          <div className="w-full max-w-md rounded-2xl p-6 space-y-4 bg-[var(--bg)] border border-[var(--border)]">
             <div className="flex justify-between items-center">
               <h3 className="text-lg font-semibold text-[var(--text)]">Share live location</h3>
               <button
                 onClick={() => setShowShareModal(false)}
-                className="p-1 text-[var(--text2)] hover:text-[var(--text)] transition-colors"
+                className="p-2 rounded-lg border border-[var(--border)] bg-[var(--surface-hover)] text-[var(--text)] hover:bg-[var(--surface)] transition-colors"
                 aria-label="Close"
               >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"

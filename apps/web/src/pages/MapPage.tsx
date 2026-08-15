@@ -786,13 +786,42 @@ function MapPage() {
 
   useEffect(() => {
     if (!convoyId || !simActive) return
+    if (convoyOwner !== user?.id) return
     const tick = () => {
       simulationTick(convoyId).catch(() => {})
     }
     tick()
     const timer = setInterval(tick, 2000)
     return () => clearInterval(timer)
-  }, [convoyId, simActive])
+  }, [convoyId, simActive, convoyOwner, user?.id])
+
+  const resolveMeetingPoint = useCallback(
+    async (id: string): Promise<{ lat: number; lng: number } | null> => {
+      const { data: convoy } = await supabase
+        .from('convoys')
+        .select('source_lat, source_lng, owner')
+        .eq('id', id)
+        .maybeSingle()
+      if (convoy?.source_lat != null && convoy?.source_lng != null) {
+        return { lat: convoy.source_lat, lng: convoy.source_lng }
+      }
+      if (convoy?.owner) {
+        const { data: member } = await supabase
+          .from('convoy_members')
+          .select('join_lat, join_lng')
+          .eq('convoy', id)
+          .eq('user', convoy.owner)
+          .eq('status', 'active')
+          .limit(1)
+          .maybeSingle()
+        if (member?.join_lat != null && member?.join_lng != null) {
+          return { lat: member.join_lat, lng: member.join_lng }
+        }
+      }
+      return null
+    },
+    [],
+  )
 
   useEffect(() => {
     if (!convoyId) return
@@ -808,9 +837,8 @@ function MapPage() {
         setConvoyPhase(convoy.phase || 'forming')
         setConvoyOwner(convoy.owner)
         setAssembledMembers((convoy.assembled_members as unknown as string[] | null) || [])
-        if (convoy.source_lat != null && convoy.source_lng != null) {
-          setAssemblyPoint({ lat: convoy.source_lat, lng: convoy.source_lng })
-        }
+        const mp = await resolveMeetingPoint(convoyId)
+        if (mp) setAssemblyPoint(mp)
       } catch {
         /* ignore */
       }
@@ -844,7 +872,7 @@ function MapPage() {
     return () => {
       void supabase.removeChannel(convoyChannel)
     }
-  }, [convoyId])
+  }, [convoyId, resolveMeetingPoint])
 
   useEffect(() => {
     if (!convoyId) {
@@ -1267,21 +1295,24 @@ function MapPage() {
           .eq('id', convoyId)
           .maybeSingle()
         if (cancelled || !convoy) return
-        if (
-          convoy.source_lat == null ||
-          convoy.source_lng == null ||
-          convoy.dest_lat == null ||
-          convoy.dest_lng == null
-        )
-          return
+        if (convoy.dest_lat == null || convoy.dest_lng == null) return
 
         clearAllRouteLayers()
 
         for (const marker of markersRef.current) marker.remove()
         markersRef.current = []
 
-        const meetingPoint: [number, number] = [convoy.source_lng, convoy.source_lat]
         const destination: [number, number] = [convoy.dest_lng, convoy.dest_lat]
+
+        let meetingPoint: [number, number] | null = null
+        if (convoy.source_lat != null && convoy.source_lng != null) {
+          meetingPoint = [convoy.source_lng, convoy.source_lat]
+        } else {
+          const fallback = await resolveMeetingPoint(convoyId)
+          if (fallback) meetingPoint = [fallback.lng, fallback.lat]
+        }
+        if (!meetingPoint) return
+        meetingPointRef.current = { lat: meetingPoint[1], lng: meetingPoint[0] }
 
         const sourceMarker = new maplibregl.Marker({ color: '#22c55e' })
           .setLngLat(meetingPoint)
@@ -1350,8 +1381,8 @@ function MapPage() {
           )
           map.current!.fitBounds(bounds, { padding: 60, duration: 1000 })
         }
-      } catch {
-        // Route calculation failed
+      } catch (err) {
+        console.warn('[MapPage] route calculation failed:', err)
       }
     }
 
@@ -1359,7 +1390,7 @@ function MapPage() {
     return () => {
       cancelled = true
     }
-  }, [convoyId, mapLoaded, convoyPhase, user])
+  }, [convoyId, mapLoaded, convoyPhase, user, resolveMeetingPoint])
 
   const ownerUserId = convoyOwner
   const { routes: assemblyRoutes } = useAssemblyRoutes({
@@ -1392,6 +1423,7 @@ function MapPage() {
   useEffect(() => {
     if (convoyPhase !== 'assembling' || !computedAssemblyPoint || !convoyId) return
     if (simActiveRef.current) return
+    if (convoyOwner !== user?.id) return
 
     const arrivedIds: string[] = []
     for (const m of members) {
@@ -1422,13 +1454,22 @@ function MapPage() {
         /* persisted */
       })
     return () => clearTimeout(timer)
-  }, [convoyPhase, members, computedAssemblyPoint, convoyOwner, assembledMembers, convoyId])
+  }, [
+    convoyPhase,
+    members,
+    computedAssemblyPoint,
+    convoyOwner,
+    assembledMembers,
+    convoyId,
+    user?.id,
+  ])
 
   useEffect(() => {
     if (!convoyId) return
 
     const ownerId = convoyOwner
     if (!ownerId) return
+    if (ownerId !== user?.id) return
 
     if (convoyPhase === 'assembling') {
       const startingPoints = members
@@ -1451,7 +1492,7 @@ function MapPage() {
     }, 3000)
 
     return () => clearTimeout(timer)
-  }, [convoyPhase, convoyId, members, convoyOwner])
+  }, [convoyPhase, convoyId, members, convoyOwner, user?.id])
 
   useEffect(() => {
     if (!map.current || !mapLoaded) return
