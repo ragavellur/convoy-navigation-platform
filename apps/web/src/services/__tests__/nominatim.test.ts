@@ -55,20 +55,17 @@ describe('searchPlaces', () => {
     expect(result[0].display_name).toBe('Test Place')
   })
 
-  it('falls back to public nominatim when local fails', async () => {
-    mockFetch
-      .mockRejectedValueOnce(new Error('Local unavailable'))
-      .mockResolvedValueOnce(okResponse([resultWith({ display_name: 'Public Place' })]))
-    const result = await searchPlaces({ query: 'test' })
-    expect(result).toHaveLength(1)
-    expect(result[0].display_name).toBe('Public Place')
+  it('throws when the configured endpoint fails', async () => {
+    mockFetch.mockRejectedValueOnce(new Error('Public down'))
+    await expect(searchPlaces({ query: 'test' })).rejects.toThrow('Public down')
   })
 
-  it('throws when both local and public fail', async () => {
-    mockFetch
-      .mockRejectedValueOnce(new Error('Local down'))
-      .mockRejectedValueOnce(new Error('Public down'))
-    await expect(searchPlaces({ query: 'test' })).rejects.toThrow('Public down')
+  it('never queries localhost', async () => {
+    mockFetch.mockResolvedValueOnce(okResponse([resultWith()]))
+    await searchPlaces({ query: 'pune' })
+    const { url } = requestAt(0)
+    expect(url.host).toBe('nominatim.openstreetmap.org')
+    expect(url.protocol).toBe('https:')
   })
 
   it('scopes search to India by default', async () => {
@@ -106,8 +103,6 @@ describe('searchPlaces', () => {
   it('tries structured postalcode search first when query contains an Indian PIN', async () => {
     mockFetch
       .mockResolvedValueOnce(okResponse([]))
-      .mockResolvedValueOnce(okResponse([]))
-      .mockResolvedValueOnce(okResponse([]))
       .mockResolvedValueOnce(
         okResponse([resultWith({ place_id: 9, display_name: 'MG Road, Bangalore' })]),
       )
@@ -119,9 +114,25 @@ describe('searchPlaces', () => {
     expect(structured.url.searchParams.get('street')).toBe('MG Road Bangalore')
     expect(structured.url.searchParams.get('q')).toBeNull()
 
-    const fallback = requestAt(3)
+    const fallback = requestAt(1)
     expect(fallback.url.searchParams.get('q')).toBe('MG Road Bangalore 560001')
     expect(fallback.url.searchParams.get('postalcode')).toBeNull()
+  })
+
+  it('retries without viewbox when bounded search returns empty', async () => {
+    mockFetch
+      .mockResolvedValueOnce(okResponse([]))
+      .mockResolvedValueOnce(okResponse([resultWith({ place_id: 11, display_name: 'Pune' })]))
+    const result = await searchPlaces({ query: 'pune', viewbox: [73.7, 18.4, 74, 18.6] })
+
+    const bounded = requestAt(0)
+    expect(bounded.url.searchParams.get('bounded')).toBe('1')
+    expect(bounded.url.searchParams.get('viewbox')).toBe('73.7,18.4,74,18.6')
+
+    const unbounded = requestAt(1)
+    expect(unbounded.url.searchParams.get('viewbox')).toBeNull()
+    expect(unbounded.url.searchParams.get('bounded')).toBeNull()
+    expect(result[0].display_name).toBe('Pune')
   })
 })
 

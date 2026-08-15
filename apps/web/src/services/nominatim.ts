@@ -1,8 +1,13 @@
-const LOCAL_NOMINATIM_URL = 'http://localhost:8080'
 const PUBLIC_NOMINATIM_URL = 'https://nominatim.openstreetmap.org'
 const USER_AGENT = 'ConvoyNavigationPlatform/1.0'
 const DEFAULT_COUNTRYCODES = 'in'
 const PIN_PATTERN = /\b\d{6}\b/
+const REQUEST_TIMEOUT_MS = 8000
+
+function resolveNominatimUrl(): string {
+  const fromEnv = import.meta.env.VITE_NOMINATIM_URL as string | undefined
+  return fromEnv && fromEnv.trim() ? fromEnv.trim() : PUBLIC_NOMINATIM_URL
+}
 
 const INDIC_LANGUAGES = [
   'hi',
@@ -109,6 +114,7 @@ async function fetchFromNominatim(
 ): Promise<NominatimResult[]> {
   const response = await fetch(`${baseUrl}/search?${params.toString()}`, {
     headers: { 'Accept-Language': resolveAcceptLanguage(), ...headers },
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   })
   if (!response.ok) {
     throw new Error(`Nominatim search failed: ${response.status}`)
@@ -118,20 +124,34 @@ async function fetchFromNominatim(
 
 async function trySearch(params: SearchParams): Promise<NominatimResult[]> {
   const sp = buildSearchParams(params)
+  const configured = resolveNominatimUrl()
 
-  try {
-    const results = await fetchFromNominatim(LOCAL_NOMINATIM_URL, sp)
-    if (results.length > 0) return results
-  } catch {
-    // Local Nominatim unavailable, fall through to public
+  const attempts: Array<[string, Record<string, string>]> = []
+  attempts.push([
+    configured,
+    configured === PUBLIC_NOMINATIM_URL ? { 'User-Agent': USER_AGENT } : {},
+  ])
+  if (configured !== PUBLIC_NOMINATIM_URL) {
+    attempts.push([PUBLIC_NOMINATIM_URL, { 'User-Agent': USER_AGENT }])
   }
 
-  try {
-    return await fetchFromNominatim(PUBLIC_NOMINATIM_URL, sp, { 'User-Agent': USER_AGENT })
-  } catch (error) {
-    console.error('Nominatim search error (local + public failed):', error)
-    throw error
+  let lastError: unknown = null
+  let anyRequestSucceeded = false
+  for (const [url, headers] of attempts) {
+    try {
+      const results = await fetchFromNominatim(url, sp, headers)
+      if (results.length > 0) return results
+      anyRequestSucceeded = true
+    } catch (error) {
+      lastError = error
+    }
   }
+
+  if (!anyRequestSucceeded && lastError) {
+    console.error('Nominatim search error (all endpoints failed):', lastError)
+    throw lastError
+  }
+  return []
 }
 
 function extractPin(query: string): string | null {
@@ -139,13 +159,13 @@ function extractPin(query: string): string | null {
   return match ? match[0] : null
 }
 
-function structuredByPin(query: string, pin: string): SearchParams | null {
-  const street = query
+function structuredByPin(params: SearchParams, pin: string): SearchParams {
+  const street = params.query
     .replace(PIN_PATTERN, '')
     .trim()
     .replace(/^,+|,+$/g, '')
-  if (!street) return { query, postalcode: pin }
-  return { query, postalcode: pin, street }
+  if (!street) return { ...params, postalcode: pin, street: undefined }
+  return { ...params, postalcode: pin, street }
 }
 
 export async function searchPlaces(params: SearchParams): Promise<NominatimResult[]> {
@@ -153,7 +173,12 @@ export async function searchPlaces(params: SearchParams): Promise<NominatimResul
   if (!query || query.length < 2) return []
 
   const pin = extractPin(query)
-  const candidates = pin ? [structuredByPin(query, pin) as SearchParams, params] : [params]
+  const candidates: SearchParams[] = []
+  if (pin) candidates.push(structuredByPin(params, pin))
+  candidates.push(params)
+  if (params.viewbox) {
+    candidates.push({ ...params, viewbox: undefined, bounded: undefined })
+  }
 
   for (const candidate of candidates) {
     const results = await trySearch(candidate)
@@ -171,7 +196,7 @@ export async function reverseGeocode(lat: number, lon: number): Promise<Nominati
   })
 
   try {
-    const response = await fetch(`${LOCAL_NOMINATIM_URL}/reverse?${params.toString()}`, {
+    const response = await fetch(`${resolveNominatimUrl()}/reverse?${params.toString()}`, {
       headers: {
         'Accept-Language': resolveAcceptLanguage(),
         'User-Agent': USER_AGENT,
