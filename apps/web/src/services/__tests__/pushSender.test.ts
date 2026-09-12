@@ -14,6 +14,7 @@ import {
   notifyChatMessage,
   notifySimulationStarted,
   notifySimulationStopped,
+  notifyPanic,
 } from '../pushSender'
 
 const mockFetch = vi.fn()
@@ -94,5 +95,28 @@ describe('pushSender', () => {
     mockFetch.mockResolvedValueOnce({ ok: true })
     await notifyConvoyEnded('c1')
     expect(mockFetch).not.toHaveBeenCalled()
+  })
+
+  it('notifyPanic posts to the panic endpoint', async () => {
+    mockFetch.mockResolvedValueOnce({ ok: true })
+    await notifyPanic('c1')
+    expect(mockFetch).toHaveBeenCalledTimes(1)
+    const [url, init] = mockFetch.mock.calls[0]
+    expect(url).toBe('https://convoy.test/functions/v1/push-notifications/push/panic')
+    expect(init.method).toBe('POST')
+    expect(init.headers.Authorization).toBe('Bearer tok-123')
+    expect(JSON.parse(init.body)).toEqual({ convoyId: 'c1' })
+  })
+
+  it('notifyPanic does nothing without a session', async () => {
+    harness.auth.session = null
+    mockFetch.mockResolvedValueOnce({ ok: true })
+    await notifyPanic('c1')
+    expect(mockFetch).not.toHaveBeenCalled()
+  })
+
+  it('notifyPanic handles fetch failure gracefully', async () => {
+    mockFetch.mockRejectedValueOnce(new Error('Network error'))
+    await expect(notifyPanic('c1')).resolves.not.toThrow()
   })
 })

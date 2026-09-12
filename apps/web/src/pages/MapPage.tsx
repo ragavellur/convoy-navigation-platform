@@ -29,7 +29,8 @@ import supabase from '../services/supabaseClient'
 import { useAuth } from '../hooks/useAuth'
 import { useConvoyRoster, haversineDistance } from '../stores/ConvoyRosterContext'
 import { useTheme, getMapStyleUrl } from '../stores/ThemeContext'
-import { notifyOffRoute } from '../services/pushSender'
+import { notifyOffRoute, notifyPanic } from '../services/pushSender'
+import { subscribeToConvoyAlerts, type ConvoyAlert } from '../services/notifications'
 import { clearAssemblyPoint } from '../services/sessionState'
 import { calculateAssemblyPoint, simulationTick } from '../services/simulation'
 import { useAssemblyRoutes } from '../hooks/useAssemblyRoutes'
@@ -48,6 +49,8 @@ const ASSEMBLY_SOURCE_PREFIX = 'assembly-route-'
 const ASSEMBLY_LAYER_PREFIX = 'assembly-route-line-'
 
 const ASSEMBLY_THRESHOLD_M = 100
+
+const PANIC_COOLDOWN_MS = 30_000
 
 const ASSEMBLY_ROUTE_COLORS = [
   '#f59e0b',
@@ -98,6 +101,9 @@ function MapPage() {
   const [convoyOwner, setConvoyOwner] = useState<string | null>(null)
   const [assembledMembers, setAssembledMembers] = useState<string[]>([])
   const [assemblyPoint, setAssemblyPoint] = useState<{ lat: number; lng: number } | null>(null)
+  const [panicAlert, setPanicAlert] = useState<ConvoyAlert | null>(null)
+  const [panicActive, setPanicActive] = useState(false)
+  const panicTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const { position } = useGeolocation()
   const geoStream = useGeolocationStream({ isInConvoy: !!convoyId })
@@ -800,6 +806,54 @@ function MapPage() {
     const timer = setInterval(tick, 2000)
     return () => clearInterval(timer)
   }, [convoyId, simActive, convoyOwner, user?.id])
+
+  const membersRef = useRef(members)
+  useEffect(() => {
+    membersRef.current = members
+  }, [members])
+
+  useEffect(() => {
+    if (!convoyId) return
+    let unsub: (() => void) | null = null
+    subscribeToConvoyAlerts(convoyId, (alert) => {
+      setPanicAlert(alert)
+      const member = membersRef.current.find((m) => m.userId === alert.user)
+      const target =
+        member?.position ??
+        (member?.joinLat != null && member?.joinLng != null
+          ? { lat: member.joinLat, lng: member.joinLng }
+          : null)
+      if (target && map.current) {
+        map.current.flyTo({ center: [target.lng, target.lat], zoom: 15, duration: 1000 })
+      }
+    })
+      .then((u) => {
+        unsub = u
+      })
+      .catch(() => {})
+    return () => {
+      unsub?.()
+    }
+  }, [convoyId])
+
+  useEffect(() => {
+    return () => {
+      if (panicTimerRef.current) clearTimeout(panicTimerRef.current)
+    }
+  }, [])
+
+  const handlePanic = useCallback(async () => {
+    if (!convoyId || panicTimerRef.current) return
+    setPanicActive(true)
+    try {
+      await notifyPanic(convoyId)
+    } finally {
+      panicTimerRef.current = setTimeout(() => {
+        panicTimerRef.current = null
+        setPanicActive(false)
+      }, PANIC_COOLDOWN_MS)
+    }
+  }, [convoyId])
 
   const resolveMeetingPoint = useCallback(
     async (id: string): Promise<{ lat: number; lng: number } | null> => {
@@ -1834,6 +1888,44 @@ function MapPage() {
           />
         </svg>
       </button>
+      {isConvoyMember && (
+        <button
+          onClick={handlePanic}
+          disabled={panicActive}
+          className="absolute bottom-40 right-4 z-20 flex items-center gap-2 px-5 py-3 rounded-full font-bold text-white transition-all bg-red-600 hover:bg-red-700 disabled:opacity-70 disabled:cursor-default shadow-lg shadow-red-900/30 animate-pulse"
+          aria-label="Press panic button"
+        >
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          {panicActive ? 'Alert Sent' : 'PANIC'}
+        </button>
+      )}
+      {panicAlert && (
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-20 w-[min(92vw,420px)] rounded-2xl border border-[var(--error-border)] bg-[var(--error-bg)] p-4 shadow-2xl">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl leading-none">🚨</span>
+            <div className="flex-1">
+              <p className="font-semibold text-[var(--error-text)]">{panicAlert.message}</p>
+              <p className="text-xs text-[var(--text2)] mt-1">
+                All convoy members have been alerted
+              </p>
+            </div>
+            <button
+              onClick={() => setPanicAlert(null)}
+              className="text-[var(--text2)] hover:text-[var(--text)] text-xl leading-none"
+              aria-label="Dismiss alert"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
       {convoyId && (
         <LocationPermissionPrompt
           permissionState={geoStream.permissionState}

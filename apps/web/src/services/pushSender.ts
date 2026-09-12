@@ -92,3 +92,25 @@ export async function notifySimulationStopped(convoyId: string): Promise<void> {
     url: `/map?convoy=${convoyId}`,
   })
 }
+
+/** Panic alert: any convoy member triggers a convoy-wide alert (push + alert row + chat). */
+export async function notifyPanic(convoyId: string): Promise<void> {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+  if (!session) return
+
+  try {
+    const baseUrl = await getPushServiceUrl()
+    await fetch(`${baseUrl}/push/panic`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ convoyId }),
+    })
+  } catch (err) {
+    console.warn('Panic notification failed:', err)
+  }
+}

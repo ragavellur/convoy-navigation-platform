@@ -11,6 +11,15 @@ export interface ConvoyNotification {
   created: string
 }
 
+export interface ConvoyAlert {
+  id: string
+  convoy: string
+  user: string
+  type: 'panic'
+  message: string
+  created: string
+}
+
 let activeUnsub: (() => void) | null = null
 
 /** Resolve a member's display name (cached). */
@@ -99,4 +108,45 @@ export function unsubscribeAll(): void {
     activeUnsub = null
   }
   void supabase.removeAllChannels()
+}
+
+/** Subscribe to convoy-wide incident alerts (panic button) streamed via realtime. */
+export async function subscribeToConvoyAlerts(
+  convoyId: string,
+  onAlert: (alert: ConvoyAlert) => void,
+): Promise<() => void> {
+  const channel = supabase
+    .channel(`convoy-alerts-${convoyId}`)
+    .on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'convoy_alerts',
+        filter: `convoy=eq.${convoyId}`,
+      },
+      (payload) => {
+        const row = payload.new as {
+          id: string
+          convoy: string
+          user: string
+          type: string
+          message: string
+          created_at: string
+        }
+        onAlert({
+          id: row.id,
+          convoy: row.convoy,
+          user: row.user,
+          type: row.type as ConvoyAlert['type'],
+          message: row.message,
+          created: row.created_at,
+        })
+      },
+    )
+    .subscribe()
+
+  return () => {
+    void supabase.removeChannel(channel)
+  }
 }

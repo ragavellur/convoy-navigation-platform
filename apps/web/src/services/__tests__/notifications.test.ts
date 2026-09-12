@@ -19,6 +19,7 @@ vi.mock('../pushSender', () => ({
 import {
   subscribeToConvoyNotifications,
   subscribeToConvoyStatus,
+  subscribeToConvoyAlerts,
   unsubscribeAll,
 } from '../notifications'
 
@@ -117,6 +118,52 @@ describe('notifications', () => {
   it('subscribeToConvoyNotifications cleans up previous subscription', async () => {
     await subscribeToConvoyNotifications('c1', vi.fn())
     await subscribeToConvoyNotifications('c1', vi.fn())
+    expect(harness.channels[0].removed).toBe(true)
+  })
+
+  it('subscribeToConvoyAlerts subscribes with the convoy filter', async () => {
+    const unsub = await subscribeToConvoyAlerts('c1', vi.fn())
+    expect(typeof unsub).toBe('function')
+    expect(harness.channels[0].name).toBe('convoy-alerts-c1')
+    expect(harness.channels[0].handlers[0].config).toEqual({
+      event: 'INSERT',
+      schema: 'public',
+      table: 'convoy_alerts',
+      filter: 'convoy=eq.c1',
+    })
+  })
+
+  it('invokes onAlert with a mapped panic alert on INSERT', async () => {
+    const onAlert = vi.fn()
+    await subscribeToConvoyAlerts('c1', onAlert)
+    const handler = harness.channels[0].handlers[0].handler
+
+    handler({
+      eventType: 'INSERT',
+      new: {
+        id: 'a1',
+        convoy: 'c1',
+        user: 'u1',
+        type: 'panic',
+        message: 'Alice pressed the panic button',
+        created_at: '2024-01-01T00:00:00Z',
+      },
+    })
+
+    expect(onAlert).toHaveBeenCalledTimes(1)
+    expect(onAlert.mock.calls[0][0]).toEqual({
+      id: 'a1',
+      convoy: 'c1',
+      user: 'u1',
+      type: 'panic',
+      message: 'Alice pressed the panic button',
+      created: '2024-01-01T00:00:00Z',
+    })
+  })
+
+  it('subscribeToConvoyAlerts unsubscribe removes the channel', async () => {
+    const unsub = await subscribeToConvoyAlerts('c1', vi.fn())
+    unsub()
     expect(harness.channels[0].removed).toBe(true)
   })
 })
