@@ -1570,6 +1570,12 @@
           "title": "Improve Indian address search (Nominatim India filter + multilingual + formatted display)",
           "status": "in-progress",
           "priority": "high"
+        },
+        {
+          "id": "TASK-221",
+          "title": "Panic button: notify all convoy members (web push + in-app alert + chat system message)",
+          "status": "in-progress",
+          "priority": "high"
         }
       ]
     }

@@ -1241,6 +1241,16 @@
           "sprint": "Sprint 16",
           "taskId": "TASK-214",
           "priority": "high"
+        },
+        {
+          "id": "V2-17",
+          "title": "Panic button notifies all convoy members",
+          "steps": "Member A starts convoy; member B joins; A presses SOS; A/B/C check",
+          "expected": "Web push received by all members; in-app alert modal; panic system message in chat",
+          "status": "pending",
+          "sprint": "Sprint 16",
+          "taskId": "TASK-221",
+          "priority": "high"
         }
       ]
     }

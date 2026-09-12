@@ -398,6 +398,7 @@
 
 - [ ] [TASK-216] Share my location: revocable live-location links + Google sign-in with silent account merge
 - [ ] [TASK-220] Improve Indian address search (Nominatim India filter + multilingual + formatted display)
+- [ ] [TASK-221] Panic button: notify all convoy members (web push + in-app alert + chat system message)
 
 ---
 
